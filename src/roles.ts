@@ -1,35 +1,40 @@
-import {getSpawn, SpawnConfig} from "./utils";
+import {SpawnConfig} from "./utils";
 
-class BaseRole{
-    protected creep:Creep;
+class BaseRole {
+    protected creep: Creep;
 
     constructor(creep: Creep) {
         this.creep = creep;
     }
+
+    visualizeMoveTo(target: RoomPosition | { pos: RoomPosition },) {
+        this.creep.moveTo(target, {
+            visualizePathStyle: {
+                lineStyle: 'dashed',
+            }
+        });
+    }
 }
 
-export class Harvester extends BaseRole{
+export class Harvester extends BaseRole {
 
-    workHarvest(source:Source){
+    workHarvest(source: Source, structure: Structure) {
+        // console.log('workerHarvest', source, structure);
         if (this.creep.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
             if (this.creep.harvest(source) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(source);
+                this.visualizeMoveTo(source);
             }
         } else {
-            const spawn = getSpawn();
-            if (this.creep.transfer(spawn, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(spawn, {
-                    visualizePathStyle: {
-                        lineStyle: 'dashed',
-                    }
-                });
+            if (this.creep.transfer(structure, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(structure);
             }
         }
     }
 }
 
-export class Builder extends BaseRole{
-    workBuild(source:Source, site:ConstructionSite){
+export class Builder extends BaseRole {
+
+    workBuild(source: Source | StructureContainer, site: ConstructionSite) {
         // console.log('doBuild', creep, source, site);
         const creep = this.creep;
         const memory = creep.memory;
@@ -47,15 +52,18 @@ export class Builder extends BaseRole{
 
         if (memory.state === MEMORY_STATE_BUILD) {
             if (creep.build(site) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(site);
+                this.visualizeMoveTo(site);
             }
         } else if (memory.state === MEMORY_STATE_HARVEST) {
-            if (creep.harvest(source) === ERR_NOT_IN_RANGE) {
-                creep.moveTo(source);
+            const result = source instanceof Source
+                ? creep.harvest(source) : creep.withdraw(source, RESOURCE_ENERGY);
+            if (result === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(source);
             }
         }
     }
 }
+
 export const CONFIG_HARVESTER: SpawnConfig = {
     name: 'harvester1',
     body: [MOVE, WORK, CARRY],

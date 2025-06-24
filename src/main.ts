@@ -1,6 +1,5 @@
-import {Builder, CONFIG_BUILDER, CONFIG_HARVESTER, Harvester} from "./roles";
+import {Builder, CONFIG_BUILDER, CONFIG_HARVESTER, CONFIG_UPGRADER, Harvester, Upgrader} from "./roles";
 import {getSpawn, SpawnConfig, trySpawnCreep} from "./utils";
-
 
 declare global {
 
@@ -73,7 +72,19 @@ export function runBuilder() {
 
 }
 
+function runUpgrader() {
+    const creep = checkCreepExist(CONFIG_UPGRADER);
+    if (!creep) return;
+    const controller = getSpawn().room.controller;
+    const container: StructureContainer | undefined = getSpawn().room.find(FIND_STRUCTURES, {
+        filter: object => object.structureType === STRUCTURE_CONTAINER
+    })[0];
+    if (!container || !controller) return;
+    new Upgrader(creep).workUpgrade(container, controller);
+}
+
 export function loop() {
     runHarvester();
     runBuilder();
+    runUpgrader();
 }

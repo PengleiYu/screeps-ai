@@ -64,12 +64,31 @@ export class Builder extends BaseRole {
     }
 }
 
+export class Upgrader extends BaseRole {
+    workUpgrade(container: StructureContainer, controller: StructureController) {
+        console.log('workUpgrade', container, controller);
+        if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+            if (this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(controller);
+            }
+        } else {
+            if (this.creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(container);
+            }
+        }
+    }
+}
+
 export const CONFIG_HARVESTER: SpawnConfig = {
     name: 'harvester1',
     body: [MOVE, WORK, CARRY],
 }
 export const CONFIG_BUILDER: SpawnConfig = {
     name: 'builder',
+    body: [MOVE, WORK, CARRY],
+}
+export const CONFIG_UPGRADER: SpawnConfig = {
+    name: 'upgrader',
     body: [MOVE, WORK, CARRY],
 }
 

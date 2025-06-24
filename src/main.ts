@@ -1,4 +1,12 @@
-import {Builder, CONFIG_BUILDER, CONFIG_HARVESTER, CONFIG_UPGRADER, Harvester, Upgrader} from "./roles";
+import {
+    Builder,
+    CONFIG_BUILDER,
+    CONFIG_HARVESTER,
+    CONFIG_REPAIRER,
+    CONFIG_UPGRADER,
+    Harvester, Repairer,
+    Upgrader
+} from "./roles";
 import {getSpawn, SpawnConfig, trySpawnCreep} from "./utils";
 
 declare global {
@@ -21,9 +29,13 @@ export function runHarvester() {
     // 寻找资源
     let source = getSpawn().room.find(FIND_SOURCES)[0];
     // 寻找容器，没有则使用孵化器
-    const container = getSpawn().room.find(FIND_STRUCTURES, {
-        filter: object => object.structureType === STRUCTURE_CONTAINER,
-    })[0] ?? getSpawn();
+    const container = getSpawn().room.find(FIND_STRUCTURES,
+            {filter: object => object.structureType === STRUCTURE_CONTAINER})
+            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            .sort((a, b) => {
+                return creep.pos.getRangeTo(a) - creep.pos.getRangeTo(b);
+            })[0]
+        ?? getSpawn();
 
     let harvester = new Harvester(creep);
     harvester.workHarvest(source, container);
@@ -35,15 +47,17 @@ export function runBuilder() {
     // 寻找工地
     const site = room.find(FIND_MY_CONSTRUCTION_SITES)[0];
 
+    // todo 抽象多实体逻辑
     let configs = Array.from({length: 3},
         (_, index) =>
             ({...CONFIG_BUILDER, name: `builder${index}`}),);
 
     if (!site) {
+        // todo 等待前，存储剩余能量
         // 没有工地，在孵化场等待
         for (const config of configs) {
             const creep = checkCreepExist(config, false);
-            if (creep && !creep.pos.inRangeTo(getSpawn(), 10)) {
+            if (creep && !creep.pos.inRangeTo(getSpawn(), 1)) {
                 creep.moveTo(getSpawn())
             }
         }
@@ -83,8 +97,22 @@ function runUpgrader() {
     new Upgrader(creep).workUpgrade(container, controller);
 }
 
+function runRepairer() {
+    const creep = checkCreepExist(CONFIG_REPAIRER);
+    if (!creep) return;
+    const structure = getSpawn().room.find(FIND_STRUCTURES, {
+        filter: object => object.hits < object.hitsMax
+    }).sort((a, b) => a.hits - b.hits)[0]
+    const container = getSpawn().room.find(FIND_STRUCTURES, {
+        filter: object => object.structureType === STRUCTURE_CONTAINER
+    }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)[0]
+
+    new Repairer(creep).workRepair(container, structure);
+}
+
 export function loop() {
     runHarvester();
     runBuilder();
     runUpgrader();
+    runRepairer();
 }

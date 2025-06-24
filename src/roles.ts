@@ -66,10 +66,24 @@ export class Builder extends BaseRole {
 
 export class Upgrader extends BaseRole {
     workUpgrade(container: StructureContainer, controller: StructureController) {
-        console.log('workUpgrade', container, controller);
+        // console.log('workUpgrade', container, controller);
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
             if (this.creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(controller);
+            }
+        } else {
+            if (this.creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(container);
+            }
+        }
+    }
+}
+
+export class Repairer extends BaseRole {
+    workRepair(container: StructureContainer, structure: Structure) {
+        if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+            if (this.creep.repair(structure) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(structure);
             }
         } else {
             if (this.creep.withdraw(container, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
@@ -89,6 +103,10 @@ export const CONFIG_BUILDER: SpawnConfig = {
 }
 export const CONFIG_UPGRADER: SpawnConfig = {
     name: 'upgrader',
+    body: [MOVE, WORK, CARRY, CARRY, CARRY],
+}
+export const CONFIG_REPAIRER: SpawnConfig = {
+    name: 'repairer',
     body: [MOVE, WORK, CARRY],
 }
 

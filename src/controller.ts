@@ -16,15 +16,19 @@ abstract class Controller {
         this.config = config;
     }
 
-    abstract get canSpawn(): boolean;
+    abstract get canWork(): boolean;
 
     run() {
-        if (!this.canSpawn) {
-            return
-        }
         const initConfig = this.config.initConfig;
         const configs = Array.from({length: this.config.maxCount},
             (_, index) => ({...initConfig, name: `${initConfig.name}${index}`}));
+        if (!this.canWork) {
+            for (const config of configs) {
+                const creep = checkCreepExist(config, false);
+                if (creep) this.config.createRole(creep).haveRest();
+            }
+            return
+        }
         let spawnIfNotExist = true;
         for (const config of configs) {
             const creep = checkCreepExist(config, spawnIfNotExist);
@@ -38,7 +42,7 @@ abstract class Controller {
 }
 
 export class HarvestController extends Controller {
-    get canSpawn(): boolean {
+    get canWork(): boolean {
         return true;
     }
 
@@ -62,7 +66,7 @@ export class BuildController extends Controller {
         super(config);
     }
 
-    get canSpawn(): boolean {
+    get canWork(): boolean {
         const site = getSpawn().room.find(FIND_MY_CONSTRUCTION_SITES)[0];
         return !!site;
     }

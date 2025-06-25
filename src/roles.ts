@@ -15,6 +15,32 @@ export abstract class BaseRole<Source, Target> {
         });
     }
 
+    haveRest() {
+        this.putBackEnergy()
+        this.park();
+    }
+
+    private putBackEnergy() {
+        if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) return;
+
+        const storage = this.creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: object => object.structureType === STRUCTURE_CONTAINER || object.structureType === STRUCTURE_STORAGE
+        });
+
+        if (!storage) return;
+        if (this.creep.transfer(storage, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+            this.visualizeMoveTo(storage);
+        }
+    }
+
+    private park() {
+        const spawn = getSpawn();
+        if (!spawn) return;
+        if (!this.creep.pos.inRangeTo(spawn, 2)) {
+            this.visualizeMoveTo(spawn);
+        }
+    }
+
     abstract get source(): Source;
 
     abstract get target(): Target;

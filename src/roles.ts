@@ -158,6 +158,40 @@ export class Repairer extends BaseRole<StructureContainer, Structure> {
     }
 }
 
+export class Transfer extends BaseRole<StructureContainer, Structure> {
+    get source(): StructureContainer {
+        return getSpawn().room.find(FIND_STRUCTURES, {
+            filter: object => object.structureType === STRUCTURE_CONTAINER
+        }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
+            .sort((a, b) =>
+                this.creep.pos.getRangeTo(a) - this.creep.pos.getRangeTo(b))
+            [0];
+    }
+
+    get target(): Structure {
+        const spawn = getSpawn();
+        if (spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0) return spawn;
+        return spawn.room.find(FIND_MY_STRUCTURES, {
+            filter: object => object.structureType === STRUCTURE_STORAGE
+        }).filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            [0];
+    }
+
+    work(): void {
+        // 先不加记忆
+        if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+            if (this.creep.transfer(this.target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(this.target);
+            }
+        } else {
+            if (this.creep.withdraw(this.source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(this.source);
+            }
+        }
+    }
+
+}
+
 export const CONFIG_HARVESTER: SpawnConfig = {
     name: 'harvester1',
     body: [MOVE, WORK, CARRY],
@@ -173,6 +207,10 @@ export const CONFIG_UPGRADER: SpawnConfig = {
 export const CONFIG_REPAIRER: SpawnConfig = {
     name: 'repairer',
     body: [MOVE, WORK, CARRY],
+}
+export const CONFIG_TRANSFER: SpawnConfig = {
+    name: 'transfer',
+    body: [MOVE, WORK, CARRY,],
 }
 
 const MEMORY_STATE_HARVEST = "harvest";

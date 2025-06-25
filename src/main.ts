@@ -2,10 +2,10 @@ import {
     Builder,
     CONFIG_BUILDER,
     CONFIG_HARVESTER,
-    CONFIG_REPAIRER,
+    CONFIG_REPAIRER, CONFIG_TRANSFER,
     CONFIG_UPGRADER,
     Harvester,
-    Repairer,
+    Repairer, Transfer,
     Upgrader
 } from "./roles";
 import {getSpawn, SpawnConfig, trySpawnCreep} from "./utils";
@@ -91,8 +91,16 @@ function runRepairer() {
     new Repairer(creep).work();
 }
 
+function runTransfer() {
+    const creep = checkCreepExist(CONFIG_TRANSFER);
+    if (!creep) return;
+
+    new Transfer(creep).work();
+}
+
 export function loop() {
     runHarvester();
+    runTransfer();
     runBuilder();
     runUpgrader();
     runRepairer();

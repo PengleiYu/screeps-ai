@@ -78,10 +78,10 @@ export class Builder extends BaseRole<Source | StructureContainer, ConstructionS
 
         if (memory.state === MEMORY_STATE_BUILD && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
             memory.state = MEMORY_STATE_HARVEST;
-            console.log('建造者进入采集模式');
+            console.log(`${creep.name}进入采集模式`);
         } else if (memory.state === MEMORY_STATE_HARVEST && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
             memory.state = MEMORY_STATE_BUILD;
-            console.log('建造者进入建造模式');
+            console.log(`${creep.name}进入建造模式`);
         }
 
         if (memory.state === MEMORY_STATE_BUILD) {
@@ -105,6 +105,7 @@ export class Upgrader extends BaseRole<StructureContainer | undefined, Structure
         return getSpawn().room.find(FIND_STRUCTURES, {
             filter: object => object.structureType === STRUCTURE_CONTAINER
         })
+            .filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
             .sort((a, b) =>
                 target.pos.getRangeTo(a) - target.pos.getRangeTo(b))
             [0];
@@ -116,15 +117,16 @@ export class Upgrader extends BaseRole<StructureContainer | undefined, Structure
 
     work(): void {
         // console.log('workUpgrade', container, controller);
-        const target = this.target;
-        const source = this.source;
-        if (!target || !source) return
 
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+            const target = this.target;
+            if (!target) return
             if (this.creep.upgradeController(target) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(target);
             }
         } else {
+            const source = this.source;
+            if (!source) return
             if (this.creep.withdraw(source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(source);
             }

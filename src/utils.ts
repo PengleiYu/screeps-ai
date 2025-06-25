@@ -18,3 +18,9 @@ export function trySpawnCreep(config: SpawnConfig) {
         console.log(config.name, "孵化失败", spawnResult);
     }
 }
+
+export function checkCreepExist(config: SpawnConfig, spawnIfNotExist: boolean = true): Creep | undefined {
+    const creep = Game.creeps[config.name];
+    if (creep) return creep;
+    if (spawnIfNotExist) trySpawnCreep(config);
+}

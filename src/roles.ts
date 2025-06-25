@@ -1,6 +1,6 @@
 import {getSpawn, SpawnConfig} from "./utils";
 
-abstract class BaseRole<Source, Target> {
+export abstract class BaseRole<Source, Target> {
     protected creep: Creep;
 
     constructor(creep: Creep) {
@@ -53,17 +53,19 @@ export class Harvester extends BaseRole<Source, Structure> {
     }
 }
 
-export class Builder extends BaseRole<Source | StructureContainer, ConstructionSite> {
-    get source(): Source | StructureContainer {
+export class Builder extends BaseRole<Source | StructureContainer | undefined, ConstructionSite | undefined> {
+    get source(): Source | StructureContainer | undefined {
         let room = getSpawn().room;
-        return room.find(FIND_STRUCTURES, {
-                filter: object =>
-                    object.structureType === STRUCTURE_CONTAINER,
-            }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)[0]
-            ?? room.find(FIND_SOURCES)[0];
+        const containerArr = room.find(FIND_STRUCTURES, {
+            filter: object =>
+                object.structureType === STRUCTURE_CONTAINER,
+        });
+        // 没有容器则找原始资源
+        if (!containerArr) return room.find(FIND_SOURCES)[0];
+        return containerArr.filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)[0];
     }
 
-    get target(): ConstructionSite<BuildableStructureConstant> {
+    get target(): ConstructionSite | undefined {
         // 寻找工地
         return getSpawn().room.find(FIND_MY_CONSTRUCTION_SITES)[0];
     }
@@ -85,10 +87,16 @@ export class Builder extends BaseRole<Source | StructureContainer, ConstructionS
         }
 
         if (memory.state === MEMORY_STATE_BUILD) {
+            if (!this.target) {
+                return;
+            }
             if (creep.build(this.target) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(this.target);
             }
         } else if (memory.state === MEMORY_STATE_HARVEST) {
+            if (!this.source) {
+                return;
+            }
             const result = this.source instanceof Source
                 ? creep.harvest(this.source) : creep.withdraw(this.source, RESOURCE_ENERGY);
             if (result === ERR_NOT_IN_RANGE) {
@@ -195,7 +203,7 @@ export class Transfer extends BaseRole<StructureContainer, Structure> {
 }
 
 export const CONFIG_HARVESTER: SpawnConfig = {
-    name: 'harvester1',
+    name: 'harvester',
     body: [MOVE, WORK, CARRY],
 }
 export const CONFIG_BUILDER: SpawnConfig = {

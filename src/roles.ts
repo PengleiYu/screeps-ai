@@ -98,11 +98,16 @@ export class Builder extends BaseRole<Source | StructureContainer, ConstructionS
     }
 }
 
-export class Upgrader extends BaseRole<StructureContainer, StructureController | undefined> {
-    get source(): StructureContainer {
+export class Upgrader extends BaseRole<StructureContainer | undefined, StructureController | undefined> {
+    get source(): StructureContainer | undefined {
+        const target = this.target;
+        if (!target) return;
         return getSpawn().room.find(FIND_STRUCTURES, {
             filter: object => object.structureType === STRUCTURE_CONTAINER
-        })[0];
+        })
+            .sort((a, b) =>
+                target.pos.getRangeTo(a) - target.pos.getRangeTo(b))
+            [0];
     }
 
     get target(): StructureController | undefined {
@@ -112,15 +117,16 @@ export class Upgrader extends BaseRole<StructureContainer, StructureController |
     work(): void {
         // console.log('workUpgrade', container, controller);
         const target = this.target;
-        if (!target) return
+        const source = this.source;
+        if (!target || !source) return
 
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
             if (this.creep.upgradeController(target) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(target);
             }
         } else {
-            if (this.creep.withdraw(this.source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.visualizeMoveTo(this.source);
+            if (this.creep.withdraw(source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(source);
             }
         }
     }

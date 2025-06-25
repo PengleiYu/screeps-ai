@@ -63,18 +63,25 @@ export function runBuilder() {
         if (!creep) {
             // creep不存在，已提交孵化，后续不再尝试孵化
             spawnIfNotExist = false;
-            return;
+            continue;
         }
-        let builder = new Builder(creep);
-        builder.work();
+        new Builder(creep).work();
     }
 
 }
 
 function runUpgrader() {
-    const creep = checkCreepExist(CONFIG_UPGRADER);
-    if (!creep) return;
-    new Upgrader(creep).work();
+    const configs = Array.from({length: 3},
+        (_, index) => ({...CONFIG_UPGRADER, name: `upgrader${index}`}))
+    let spawnIfNotExist = true;
+    for (const config of configs) {
+        const creep = checkCreepExist(config, spawnIfNotExist);
+        if (!creep) {
+            spawnIfNotExist = false;
+            continue;
+        }
+        new Upgrader(creep).work();
+    }
 }
 
 function runRepairer() {

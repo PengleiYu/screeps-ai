@@ -4,7 +4,8 @@ import {
     CONFIG_HARVESTER,
     CONFIG_REPAIRER,
     CONFIG_UPGRADER,
-    Harvester, Repairer,
+    Harvester,
+    Repairer,
     Upgrader
 } from "./roles";
 import {getSpawn, SpawnConfig, trySpawnCreep} from "./utils";
@@ -22,23 +23,14 @@ function checkCreepExist(config: SpawnConfig, spawnIfNotExist: boolean = true): 
     if (spawnIfNotExist) trySpawnCreep(config);
 }
 
+// todo 目前所有的role都有相同模式：从一个地方拿资源，到另一个地方干活，
+// todo 应该抽象出来，变化点在于拿资源和干活的地方，不变点是拿资源、移动、干活
+
 export function runHarvester() {
     let creep = checkCreepExist(CONFIG_HARVESTER);
     if (!creep) return;
 
-    // 寻找资源
-    let source = getSpawn().room.find(FIND_SOURCES)[0];
-    // 寻找容器，没有则使用孵化器
-    const container = getSpawn().room.find(FIND_STRUCTURES,
-            {filter: object => object.structureType === STRUCTURE_CONTAINER})
-            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
-            .sort((a, b) => {
-                return creep.pos.getRangeTo(a) - creep.pos.getRangeTo(b);
-            })[0]
-        ?? getSpawn();
-
-    let harvester = new Harvester(creep);
-    harvester.workHarvest(source, container);
+    new Harvester(creep).work();
 }
 
 export function runBuilder() {
@@ -65,13 +57,6 @@ export function runBuilder() {
     }
 
 
-    // 寻找资源容器，若没有则使用资源点
-    const source: StructureContainer | Source = room.find(FIND_STRUCTURES, {
-            filter: object =>
-                object.structureType === STRUCTURE_CONTAINER,
-        }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)[0]
-        ?? room.find(FIND_SOURCES)[0];
-
     let spawnIfNotExist = true;
     for (const config of configs) {
         const creep = checkCreepExist(config, spawnIfNotExist);
@@ -81,7 +66,7 @@ export function runBuilder() {
             return;
         }
         let builder = new Builder(creep);
-        builder.workBuild(source, site);
+        builder.work();
     }
 
 }
@@ -89,25 +74,14 @@ export function runBuilder() {
 function runUpgrader() {
     const creep = checkCreepExist(CONFIG_UPGRADER);
     if (!creep) return;
-    const controller = getSpawn().room.controller;
-    const container: StructureContainer | undefined = getSpawn().room.find(FIND_STRUCTURES, {
-        filter: object => object.structureType === STRUCTURE_CONTAINER
-    })[0];
-    if (!container || !controller) return;
-    new Upgrader(creep).workUpgrade(container, controller);
+    new Upgrader(creep).work();
 }
 
 function runRepairer() {
     const creep = checkCreepExist(CONFIG_REPAIRER);
     if (!creep) return;
-    const structure = getSpawn().room.find(FIND_STRUCTURES, {
-        filter: object => object.hits < object.hitsMax
-    }).sort((a, b) => a.hits - b.hits)[0]
-    const container = getSpawn().room.find(FIND_STRUCTURES, {
-        filter: object => object.structureType === STRUCTURE_CONTAINER
-    }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)[0]
 
-    new Repairer(creep).workRepair(container, structure);
+    new Repairer(creep).work();
 }
 
 export function loop() {

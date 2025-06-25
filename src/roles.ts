@@ -1,4 +1,4 @@
-import {getSpawn, SpawnConfig} from "./utils";
+import {getSpawn} from "./utils";
 
 export abstract class BaseRole<Source, Target> {
 
@@ -18,7 +18,7 @@ export abstract class BaseRole<Source, Target> {
         this.park();
     }
 
-    protected closestCmpFun<T extends RoomPosition | { pos: RoomPosition }>(): (o1: T, o2: T) => number {
+    protected closestCmpFun<T extends RoomPosition | { pos: RoomPosition }>(): (a: T, b: T) => number {
         return (a, b) => this.creep.pos.getRangeTo(a) - this.creep.pos.getRangeTo(b);
     }
 
@@ -237,31 +237,7 @@ export class Transfer extends BaseRole<StructureContainer, Structure> {
             }
         }
     }
-
-}
-
-export const CONFIG_HARVESTER: SpawnConfig = {
-    name: 'harvester',
-    body: [MOVE, WORK, CARRY],
-}
-export const CONFIG_BUILDER: SpawnConfig = {
-    name: 'builder',
-    body: [MOVE, WORK, CARRY],
-}
-export const CONFIG_UPGRADER: SpawnConfig = {
-    name: 'upgrader',
-    body: [MOVE, WORK, CARRY, CARRY, CARRY],
-}
-export const CONFIG_REPAIRER: SpawnConfig = {
-    name: 'repairer',
-    body: [MOVE, WORK, CARRY],
-}
-export const CONFIG_TRANSFER: SpawnConfig = {
-    name: 'transfer',
-    body: [MOVE, WORK, CARRY,],
 }
 
 const MEMORY_STATE_HARVEST = "harvest";
 const MEMORY_STATE_BUILD = "build";
-const MEMORY_STATE_STORE = "store";
-

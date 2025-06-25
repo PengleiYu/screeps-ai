@@ -6,7 +6,7 @@ export const TEMPLATE_CONFIG_HARVESTER: SpawnConfig = {
 }
 export const TEMPLATE_CONFIG_BUILDER: SpawnConfig = {
     name: 'builder',
-    body: [MOVE, WORK, CARRY],
+    body: [MOVE, WORK, CARRY, CARRY],
 }
 export const TEMPLATE_CONFIG_UPGRADER: SpawnConfig = {
     name: 'upgrader',

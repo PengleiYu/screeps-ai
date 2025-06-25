@@ -11,10 +11,8 @@ export interface ControllerConfig {
 
 abstract class Controller {
     // todo 将config拆分为成员变量和方法，由子类提供
-    private readonly config: ControllerConfig;
 
-    protected constructor(config: ControllerConfig) {
-        this.config = config;
+    protected constructor(private config: ControllerConfig) {
     }
 
     abstract get canWork(): boolean;

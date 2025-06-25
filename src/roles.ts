@@ -1,10 +1,8 @@
 import {getSpawn, SpawnConfig} from "./utils";
 
 export abstract class BaseRole<Source, Target> {
-    protected creep: Creep;
 
-    constructor(creep: Creep) {
-        this.creep = creep;
+    constructor(protected creep: Creep) {
     }
 
     visualizeMoveTo(target: RoomPosition | { pos: RoomPosition },) {

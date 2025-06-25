@@ -208,11 +208,20 @@ export class Transfer extends BaseRole<StructureContainer, Structure> {
     }
 
     override findTarget(): Structure {
-        const spawn = getSpawn();
-        if (spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0) return spawn;
-        return spawn.room.find(FIND_MY_STRUCTURES, {
-            filter: object =>
-                object.structureType === STRUCTURE_STORAGE || object.structureType === STRUCTURE_EXTENSION
+        const room = getSpawn().room;
+        // 优先查找孵化建筑
+        const spawnStruct = room.find(FIND_MY_STRUCTURES, {
+            filter: obj => obj.structureType === STRUCTURE_SPAWN || obj.structureType === STRUCTURE_EXTENSION
+        })
+            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            .sort((a, b) =>
+                this.creep.pos.getRangeTo(a) - this.creep.pos.getRangeTo(b))
+            [0];
+        if (spawnStruct) return spawnStruct;
+
+        // 其次查找存储建筑
+        return room.find(FIND_MY_STRUCTURES, {
+            filter: object => object.structureType === STRUCTURE_STORAGE
         })
             .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
             .sort((a, b) =>

@@ -14,8 +14,13 @@ export abstract class BaseRole<Source, Target> {
     }
 
     haveRest() {
+        this.creep.memory.working = false;
         this.putBackEnergy()
         this.park();
+    }
+
+    work(): void {
+        this.creep.memory.working = true;
     }
 
     private putBackEnergy() {
@@ -33,18 +38,17 @@ export abstract class BaseRole<Source, Target> {
 
     private park() {
         const spawn = getSpawn();
-        if (!spawn) return;
         if (!this.creep.pos.inRangeTo(spawn, 2)) {
+            console.log(this.creep.name, 'park')
             this.visualizeMoveTo(spawn);
         }
     }
-
-    abstract work(): void;
 }
 
 export class Harvester extends BaseRole<Source, Structure> {
 
     work(): void {
+        super.work();
         if (this.creep.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
             if (this.creep.harvest(this.source) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(this.source);
@@ -58,9 +62,8 @@ export class Harvester extends BaseRole<Source, Structure> {
 }
 
 export class Builder extends BaseRole<Source | StructureContainer | undefined, ConstructionSite | undefined> {
-
     work(): void {
-        // console.log('doBuild', creep, source, site);
+        super.work();
         const creep = this.creep;
         const memory = creep.memory;
         if (!memory.workState) {
@@ -95,8 +98,7 @@ export class Builder extends BaseRole<Source | StructureContainer | undefined, C
 
 export class Upgrader extends BaseRole<StructureContainer | undefined, StructureController | undefined> {
     work(): void {
-        // console.log('workUpgrade', container, controller);
-
+        super.work();
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
             if (!this.target) return
             if (this.creep.upgradeController(this.target) === ERR_NOT_IN_RANGE) {
@@ -113,7 +115,7 @@ export class Upgrader extends BaseRole<StructureContainer | undefined, Structure
 
 export class Repairer extends BaseRole<StructureContainer, Structure> {
     work(): void {
-        // console.log(`${this.creep.name} work`);
+        super.work();
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
             if (this.creep.repair(this.target) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(this.target);
@@ -128,6 +130,7 @@ export class Repairer extends BaseRole<StructureContainer, Structure> {
 
 export class Transfer extends BaseRole<StructureContainer, Structure> {
     work(): void {
+        super.work();
         // 先不加记忆
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
             if (this.creep.transfer(this.target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {

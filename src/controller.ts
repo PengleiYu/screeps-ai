@@ -9,7 +9,7 @@ import {
 } from "./configs";
 
 // todo 泛型太多，source和target应该可以由role推导出来
-export abstract class Controller<ROLE extends BaseRole<any, any>, SOURCE, TARGET> {
+export abstract class Controller<ROLE extends BaseRole<SOURCE, TARGET>, SOURCE, TARGET> {
     static spawnIfNotExist = true;
 
     protected constructor(protected maxCount: number, private initConfig: SpawnConfig) {
@@ -38,7 +38,7 @@ export abstract class Controller<ROLE extends BaseRole<any, any>, SOURCE, TARGET
     protected abstract findTarget(): TARGET;
 
     protected get canWork(): boolean {
-        return true;
+        return !!this.findTarget();
     }
 
     run() {
@@ -109,10 +109,6 @@ export class BuildController extends Controller<Builder, Source | StructureConta
 
     createRole(creep: Creep): Builder {
         return new Builder(creep, this.findSource(), this.findTarget());
-    }
-
-    get canWork(): boolean {
-        return !!this.findTarget();
     }
 }
 
@@ -196,12 +192,7 @@ export class RepairController extends Controller<Repairer, StructureContainer, S
         }).sort((a, b) => a.hits - b.hits)[0];
     }
 
-
     protected createRole(creep: Creep): Repairer {
         return new Repairer(creep, this.findSource(), this.findTarget());
-    }
-
-    protected get canWork(): boolean {
-        return !!this.findTarget();
     }
 }

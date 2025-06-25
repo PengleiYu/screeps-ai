@@ -12,8 +12,13 @@ declare global {
 function checkCreepExist(config: SpawnConfig, spawnIfNotExist: boolean = true): Creep | undefined {
     const creep = Game.creeps[config.name];
     if (creep) return creep;
-    if (spawnIfNotExist) trySpawnCreep(config);
+    if (spawnIfNotExist) {
+        const roleName = config.name;
+        const roleBody = config.body;
+        trySpawnCreep(roleName, roleBody);
+    }
 }
+
 function runUpgrader() {
     const configs = Array.from({length: 3},
         (_, index) => ({...CONFIG_UPGRADER, name: `upgrader${index}`}))

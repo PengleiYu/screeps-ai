@@ -39,6 +39,7 @@ export abstract class BaseRole<Source, Target> {
         }
     }
 
+    // todo source 和 target应该移入controller中，这样提前做判断
     abstract findSource(): Source;
 
     abstract findTarget(): Target;

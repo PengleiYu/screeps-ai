@@ -10,9 +10,11 @@ import {
 declare global {
 
     interface CreepMemory {
-        state: string,
+        working: boolean;
+        workState: string;
     }
 }
+
 export function loop() {
     Controller.spawnIfNotExist = true;
     new HarvestController().run();

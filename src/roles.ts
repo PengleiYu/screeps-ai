@@ -63,26 +63,24 @@ export class Builder extends BaseRole<Source | StructureContainer | undefined, C
         // console.log('doBuild', creep, source, site);
         const creep = this.creep;
         const memory = creep.memory;
-        if (!memory.state) {
-            memory.state = MEMORY_STATE_HARVEST;
+        if (!memory.workState) {
+            memory.workState = MEMORY_STATE_HARVEST;
         }
 
-        if (memory.state === MEMORY_STATE_BUILD && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-            memory.state = MEMORY_STATE_HARVEST;
-            console.log(`${creep.name}进入采集模式`);
-        } else if (memory.state === MEMORY_STATE_HARVEST && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
-            memory.state = MEMORY_STATE_BUILD;
-            console.log(`${creep.name}进入建造模式`);
+        if (memory.workState === MEMORY_STATE_BUILD && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_HARVEST;
+        } else if (memory.workState === MEMORY_STATE_HARVEST && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_BUILD;
         }
 
-        if (memory.state === MEMORY_STATE_BUILD) {
+        if (memory.workState === MEMORY_STATE_BUILD) {
             if (!this.target) {
                 return;
             }
             if (creep.build(this.target) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(this.target);
             }
-        } else if (memory.state === MEMORY_STATE_HARVEST) {
+        } else if (memory.workState === MEMORY_STATE_HARVEST) {
             if (!this.source) {
                 return;
             }

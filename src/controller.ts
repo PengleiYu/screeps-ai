@@ -8,10 +8,9 @@ import {
     TEMPLATE_CONFIG_UPGRADER
 } from "./configs";
 
+// todo 泛型太多，source和target应该可以由role推导出来
 export abstract class Controller<ROLE extends BaseRole<any, any>, SOURCE, TARGET> {
     static spawnIfNotExist = true;
-
-    protected roleName: string = this.initConfig.name;
 
     protected constructor(protected maxCount: number, private initConfig: SpawnConfig) {
     }
@@ -46,7 +45,6 @@ export abstract class Controller<ROLE extends BaseRole<any, any>, SOURCE, TARGET
         const configs = this.getSpawnConfigs();
         // 不满足工作条件则休息
         if (!this.canWork) {
-            console.log(`角色${this.roleName}无法工作`)
             for (const config of configs) {
                 const creep = checkCreepExist(config, false);
                 if (creep) this.createRole(creep).haveRest();
@@ -204,8 +202,6 @@ export class RepairController extends Controller<Repairer, StructureContainer, S
     }
 
     protected get canWork(): boolean {
-        const ret = !!this.findTarget();
-        // console.log(`repairer can work = ${ret}`);
-        return ret;
+        return !!this.findTarget();
     }
 }

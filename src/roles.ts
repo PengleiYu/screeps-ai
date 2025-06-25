@@ -41,19 +41,19 @@ export abstract class BaseRole<Source, Target> {
         }
     }
 
-    abstract get source(): Source;
+    abstract findSource(): Source;
 
-    abstract get target(): Target;
+    abstract findTarget(): Target;
 
     abstract work(): void;
 }
 
 export class Harvester extends BaseRole<Source, Structure> {
-    get source(): Source {
+    findSource(): Source {
         return getSpawn().room.find(FIND_SOURCES)[0];
     }
 
-    get target(): Structure {
+    findTarget(): Structure {
         return getSpawn().room.find(FIND_STRUCTURES,
                 {filter: object => object.structureType === STRUCTURE_CONTAINER})
                 .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
@@ -64,23 +64,22 @@ export class Harvester extends BaseRole<Source, Structure> {
     }
 
     work(): void {
-        const source1 = this.source;
-        const structure = this.target;
-        // console.log('workerHarvest', source, structure);
+        const source = this.findSource();
+        const target = this.findTarget();
         if (this.creep.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
-            if (this.creep.harvest(source1) === ERR_NOT_IN_RANGE) {
-                this.visualizeMoveTo(source1);
+            if (this.creep.harvest(source) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(source);
             }
         } else {
-            if (this.creep.transfer(structure, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.visualizeMoveTo(structure);
+            if (this.creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(target);
             }
         }
     }
 }
 
 export class Builder extends BaseRole<Source | StructureContainer | undefined, ConstructionSite | undefined> {
-    get source(): Source | StructureContainer | undefined {
+    findSource(): Source | StructureContainer | undefined {
         let room = getSpawn().room;
         const containerArr = room.find(FIND_STRUCTURES, {
             filter: object =>
@@ -91,7 +90,7 @@ export class Builder extends BaseRole<Source | StructureContainer | undefined, C
         return containerArr.filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)[0];
     }
 
-    get target(): ConstructionSite | undefined {
+    findTarget(): ConstructionSite | undefined {
         // 寻找工地
         return getSpawn().room.find(FIND_MY_CONSTRUCTION_SITES)[0];
     }
@@ -113,28 +112,30 @@ export class Builder extends BaseRole<Source | StructureContainer | undefined, C
         }
 
         if (memory.state === MEMORY_STATE_BUILD) {
-            if (!this.target) {
+            const target = this.findTarget();
+            if (!target) {
                 return;
             }
-            if (creep.build(this.target) === ERR_NOT_IN_RANGE) {
-                this.visualizeMoveTo(this.target);
+            if (creep.build(target) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(target);
             }
         } else if (memory.state === MEMORY_STATE_HARVEST) {
-            if (!this.source) {
+            const source = this.findSource();
+            if (!source) {
                 return;
             }
-            const result = this.source instanceof Source
-                ? creep.harvest(this.source) : creep.withdraw(this.source, RESOURCE_ENERGY);
+            const result = source instanceof Source
+                ? creep.harvest(source) : creep.withdraw(source, RESOURCE_ENERGY);
             if (result === ERR_NOT_IN_RANGE) {
-                this.visualizeMoveTo(this.source);
+                this.visualizeMoveTo(source);
             }
         }
     }
 }
 
 export class Upgrader extends BaseRole<StructureContainer | undefined, StructureController | undefined> {
-    get source(): StructureContainer | undefined {
-        const target = this.target;
+    findSource(): StructureContainer | undefined {
+        const target = this.findTarget();
         if (!target) return;
         return getSpawn().room.find(FIND_STRUCTURES, {
             filter: object => object.structureType === STRUCTURE_CONTAINER
@@ -145,7 +146,7 @@ export class Upgrader extends BaseRole<StructureContainer | undefined, Structure
             [0];
     }
 
-    get target(): StructureController | undefined {
+    findTarget(): StructureController | undefined {
         return getSpawn().room.controller;
     }
 
@@ -153,13 +154,13 @@ export class Upgrader extends BaseRole<StructureContainer | undefined, Structure
         // console.log('workUpgrade', container, controller);
 
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
-            const target = this.target;
+            const target = this.findTarget();
             if (!target) return
             if (this.creep.upgradeController(target) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(target);
             }
         } else {
-            const source = this.source;
+            const source = this.findSource();
             if (!source) return
             if (this.creep.withdraw(source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
                 this.visualizeMoveTo(source);
@@ -169,13 +170,13 @@ export class Upgrader extends BaseRole<StructureContainer | undefined, Structure
 }
 
 export class Repairer extends BaseRole<StructureContainer, Structure> {
-    get source(): StructureContainer {
+    findSource(): StructureContainer {
         return getSpawn().room.find(FIND_STRUCTURES, {
             filter: object => object.structureType === STRUCTURE_CONTAINER
         }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)[0];
     }
 
-    get target(): Structure {
+    findTarget(): Structure {
         return getSpawn().room.find(FIND_STRUCTURES, {
             filter: object => object.hits < object.hitsMax
         }).sort((a, b) => a.hits - b.hits)[0];
@@ -183,19 +184,21 @@ export class Repairer extends BaseRole<StructureContainer, Structure> {
 
     work(): void {
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
-            if (this.creep.repair(this.target) === ERR_NOT_IN_RANGE) {
-                this.visualizeMoveTo(this.target);
+            const target = this.findTarget();
+            if (this.creep.repair(target) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(target);
             }
         } else {
-            if (this.creep.withdraw(this.source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.visualizeMoveTo(this.source);
+            const source = this.findSource();
+            if (this.creep.withdraw(source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(source);
             }
         }
     }
 }
 
 export class Transfer extends BaseRole<StructureContainer, Structure> {
-    get source(): StructureContainer {
+    override findSource(): StructureContainer {
         return getSpawn().room.find(FIND_STRUCTURES, {
             filter: object => object.structureType === STRUCTURE_CONTAINER
         }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
@@ -204,24 +207,30 @@ export class Transfer extends BaseRole<StructureContainer, Structure> {
             [0];
     }
 
-    get target(): Structure {
+    override findTarget(): Structure {
         const spawn = getSpawn();
         if (spawn.store.getFreeCapacity(RESOURCE_ENERGY) > 0) return spawn;
         return spawn.room.find(FIND_MY_STRUCTURES, {
-            filter: object => object.structureType === STRUCTURE_STORAGE
-        }).filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            filter: object =>
+                object.structureType === STRUCTURE_STORAGE || object.structureType === STRUCTURE_EXTENSION
+        })
+            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            .sort((a, b) =>
+                this.creep.pos.getRangeTo(a) - this.creep.pos.getRangeTo(b))
             [0];
     }
 
     work(): void {
         // 先不加记忆
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
-            if (this.creep.transfer(this.target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.visualizeMoveTo(this.target);
+            const target = this.findTarget();
+            if (this.creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(target);
             }
         } else {
-            if (this.creep.withdraw(this.source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                this.visualizeMoveTo(this.source);
+            const source = this.findSource();
+            if (this.creep.withdraw(source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                this.visualizeMoveTo(source);
             }
         }
     }

@@ -18,6 +18,10 @@ export abstract class BaseRole<Source, Target> {
         this.park();
     }
 
+    protected closestCmpFun<T extends RoomPosition | { pos: RoomPosition }>(): (o1: T, o2: T) => number {
+        return (a, b) => this.creep.pos.getRangeTo(a) - this.creep.pos.getRangeTo(b);
+    }
+
     private putBackEnergy() {
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) return;
 
@@ -56,9 +60,7 @@ export class Harvester extends BaseRole<Source, Structure> {
         return getSpawn().room.find(FIND_STRUCTURES,
                 {filter: object => object.structureType === STRUCTURE_CONTAINER})
                 .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
-                .sort((a, b) => {
-                    return this.creep.pos.getRangeTo(a) - this.creep.pos.getRangeTo(b);
-                })[0]
+                .sort(this.closestCmpFun())[0]
             ?? getSpawn();
     }
 
@@ -91,7 +93,8 @@ export class Builder extends BaseRole<Source | StructureContainer | undefined, C
 
     findTarget(): ConstructionSite | undefined {
         // 寻找工地
-        return getSpawn().room.find(FIND_MY_CONSTRUCTION_SITES)[0];
+        return getSpawn().room.find(FIND_MY_CONSTRUCTION_SITES)
+            .sort(this.closestCmpFun()) [0];
     }
 
     work(): void {
@@ -140,9 +143,7 @@ export class Upgrader extends BaseRole<StructureContainer | undefined, Structure
             filter: object => object.structureType === STRUCTURE_CONTAINER
         })
             .filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
-            .sort((a, b) =>
-                target.pos.getRangeTo(a) - target.pos.getRangeTo(b))
-            [0];
+            .sort(this.closestCmpFun()) [0];
     }
 
     findTarget(): StructureController | undefined {
@@ -201,9 +202,7 @@ export class Transfer extends BaseRole<StructureContainer, Structure> {
         return getSpawn().room.find(FIND_STRUCTURES, {
             filter: object => object.structureType === STRUCTURE_CONTAINER
         }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
-            .sort((a, b) =>
-                this.creep.pos.getRangeTo(a) - this.creep.pos.getRangeTo(b))
-            [0];
+            .sort(this.closestCmpFun()) [0];
     }
 
     override findTarget(): Structure {
@@ -213,9 +212,7 @@ export class Transfer extends BaseRole<StructureContainer, Structure> {
             filter: obj => obj.structureType === STRUCTURE_SPAWN || obj.structureType === STRUCTURE_EXTENSION
         })
             .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
-            .sort((a, b) =>
-                this.creep.pos.getRangeTo(a) - this.creep.pos.getRangeTo(b))
-            [0];
+            .sort(this.closestCmpFun()) [0];
         if (spawnStruct) return spawnStruct;
 
         // 其次查找存储建筑
@@ -223,9 +220,7 @@ export class Transfer extends BaseRole<StructureContainer, Structure> {
             filter: object => object.structureType === STRUCTURE_STORAGE
         })
             .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
-            .sort((a, b) =>
-                this.creep.pos.getRangeTo(a) - this.creep.pos.getRangeTo(b))
-            [0];
+            .sort(this.closestCmpFun())[0];
     }
 
     work(): void {

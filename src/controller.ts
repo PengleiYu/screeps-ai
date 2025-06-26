@@ -97,7 +97,7 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
 
 export class BuildController extends WorkerController<Builder, Ruin | StructureStorage | StructureContainer | Source, ConstructionSite> {
     protected get creepCount(): number {
-        return 3;
+        return 6;
     }
 
     protected get roleRootName(): string {
@@ -169,6 +169,9 @@ export class SpawnTransferController extends BaseTransferController {
 }
 
 export class ContainerTransferController extends BaseTransferController {
+    protected get creepCount(): number {
+        return 2;
+    }
 
     protected get roleRootName(): string {
         return "containerTransfer";
@@ -194,7 +197,7 @@ export class ContainerTransferController extends BaseTransferController {
     }
 }
 
-export class TowerTransferController extends WorkerController<Transfer, Structure | Ruin, Structure> {
+export class TowerTransferController extends BaseTransferController {
     protected get creepCount(): number {
         return 1;
     }
@@ -203,31 +206,19 @@ export class TowerTransferController extends WorkerController<Transfer, Structur
         return 'towerTransfer';
     }
 
-    protected get roleBody(): BodyPartConstant[] {
-        return BODY_TRANSFER;
-    }
-
-    protected createRole(creep: Creep): Transfer {
-        return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
-    }
-
-    protected findWorkStarter(): Structure | undefined {
-        return getEnergyStorageOfSpawn();
-    }
-
     protected findWorkTarget(): Structure | undefined {
         return getSpawn().room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_TOWER
         })
-            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 200)
-            .sort(getClosestCmpFun(this.findWorkStarter()))
+            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            .sort(getClosestCmpFun(getSpawn()))
             [0];
     }
 }
 
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | undefined> {
     protected get creepCount(): number {
-        return 5;
+        return 10;
     }
 
     protected get roleRootName(): string {

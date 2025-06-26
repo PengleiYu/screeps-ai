@@ -64,7 +64,7 @@ export class Harvester extends BaseRole<Source, Structure> {
     }
 }
 
-export class Builder extends BaseRole<StructureStorage | StructureContainer | Source, ConstructionSite> {
+export class Builder extends BaseRole<Ruin | StructureStorage | StructureContainer | Source, ConstructionSite> {
     work(): void {
         super.work();
         const creep = this.creep;
@@ -97,7 +97,7 @@ export class Builder extends BaseRole<StructureStorage | StructureContainer | So
     }
 }
 
-export class Upgrader extends BaseRole<StructureStorage | StructureContainer, StructureController> {
+export class Upgrader extends BaseRole<Ruin | StructureStorage | StructureContainer, StructureController> {
     work(): void {
         super.work();
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
@@ -135,7 +135,7 @@ export class Repairer extends BaseRole<StructureStorage | StructureContainer, St
     }
 }
 
-export class Transfer extends BaseRole<Structure, Structure> {
+export class Transfer extends BaseRole<Structure | Ruin, Structure> {
     work(): void {
         super.work();
         // 先不加记忆

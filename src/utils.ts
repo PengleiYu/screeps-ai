@@ -65,6 +65,13 @@ export function getEnergyContainerOfSpawn(checkNotEmpty: boolean = true, center:
         [0];
 }
 
+export function getEnergyDropOfSpawn(center: Positionable = getSpawn()): Ruin | undefined {
+    return (getSpawn().room.find(FIND_RUINS, {
+        filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+    }).sort(getClosestCmpFun(center)))
+        [0];
+}
+
 export function getEnergySourceOfSpawn(): Source | undefined {
     return getSpawn().room.find(FIND_SOURCES)
         .sort(getClosestCmpFun(getSpawn()))

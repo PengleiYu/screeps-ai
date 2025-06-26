@@ -74,7 +74,6 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
     }
 }
 
-// todo 收获者角色需要拆分，收获者仅挖矿并存到附近容器，另建孵化辅助兜底角色挖矿、捡矿并运输至孵化器
 export class HarvestController extends WorkerController<Harvester, Source, Structure> {
     protected get creepCount(): number {
         return 3;
@@ -92,15 +91,16 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
         return getEnergySourceOfSpawn();
     }
 
+    // todo 收获者角色需要拆分，收获者仅挖矿并存到附近容器，另建孵化辅助兜底角色挖矿、捡矿并运输至孵化器
     findWorkTarget(): Structure | undefined {
         const starter = this.findWorkStarter();
         if (!starter) return;
         return starter.pos.findInRange(FIND_STRUCTURES, 3, {
-            filter: it => it.structureType === STRUCTURE_CONTAINER
-        }).filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
-            .sort(getClosestCmpFun(starter))[0]
-        // 收获者在没有容器时，运送回孵化器
-        ?? getSpawn().store.getFreeCapacity(RESOURCE_ENERGY) > 0 ? getSpawn() : undefined;
+                filter: it => it.structureType === STRUCTURE_CONTAINER
+            }).filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+                .sort(getClosestCmpFun(starter))[0]
+            // 收获者在没有容器时，运送回孵化器
+            ?? getSpawnStructureNotFull(starter);
     }
 
     createRole(creep: Creep): Harvester {

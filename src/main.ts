@@ -6,6 +6,7 @@ import {
     TransferController,
     UpgradeController, TowerTransferController
 } from "./controller";
+import {ArmyController} from "./army";
 
 declare global {
 
@@ -23,4 +24,5 @@ export function loop() {
     new UpgradeController().run();
     new RepairController().run();
     new TowerTransferController().run();
+    new ArmyController().run();
 }

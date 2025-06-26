@@ -3,8 +3,7 @@ import {
     WorkerController,
     HarvestController,
     RepairController,
-    SpawnStorageTransferController,
-    UpgradeController, TowerTransferController, ContainerTransferController
+    UpgradeController, TowerTransferController, ContainerTransferController, SpawnTransferController
 } from "./controller";
 import {ArmyController} from "./army";
 
@@ -19,7 +18,8 @@ declare global {
 export function loop() {
     WorkerController.spawnIfNotExist = true;
     new HarvestController().run();
-    new SpawnStorageTransferController().run();
+    new SpawnTransferController().run();
+    new ContainerTransferController().run();
     new BuildController().run();
     new UpgradeController().run();
     new RepairController().run();

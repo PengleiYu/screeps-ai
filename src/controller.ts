@@ -130,7 +130,7 @@ export class BuildController extends WorkerController<Builder, Ruin | StructureS
 
 const BODY_TRANSFER = [MOVE, MOVE, CARRY, CARRY,];
 
-export class SpawnStorageTransferController extends WorkerController<Transfer, Structure | Ruin, Structure> {
+abstract class BaseTransferController extends WorkerController<Transfer, Structure | Ruin, Structure> {
     protected get creepCount(): number {
         return 1;
     }
@@ -143,36 +143,35 @@ export class SpawnStorageTransferController extends WorkerController<Transfer, S
         return BODY_TRANSFER;
     }
 
-    override findWorkStarter(): StructureContainer | Ruin | undefined {
-        // 优先散落的资源
-        return getEnergyDropOfSpawn() ?? getEnergyContainerOfSpawn();
+    protected override findWorkStarter(): Structure | Ruin | undefined {
+        const target = this.findWorkTarget();
+        if (!target) return;
+        return getEnergyDropOfSpawn(target)// 优先散落的资源
+            ?? getEnergyStorageOfSpawn(true, target)
+            ?? getEnergyContainerOfSpawn(true, target);
     }
 
-    override findWorkTarget(): Structure | undefined {
-        const source = this.findWorkStarter();
-        if (!source) return;
-
-        // 优先查找孵化建筑
-        const spawnStruct = getSpawnStructureNotFull(source)
-        if (spawnStruct) return spawnStruct;
-
-        // 其次查找存储建筑
-        return getEnergyStorageOfSpawn(false, source);
-    }
-
-
-    createRole(creep: Creep): Transfer {
+    protected override createRole(creep: Creep): Transfer {
         return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
     }
 }
 
-export class ContainerTransferController extends WorkerController<Transfer, Ruin | Structure, Structure> {
-    protected get creepCount(): number {
-        return 1;
-    }
+// 这个角色不太好，应该有一个专门的孵化辅助者，可运输可挖矿
+export class SpawnTransferController extends BaseTransferController {
 
     protected get roleRootName(): string {
-        return "ContainerTransfer";
+        return "spawnTransfer";
+    }
+
+    override findWorkTarget(): Structure | undefined {
+        return getSpawnStructureNotFull(getSpawn());
+    }
+}
+
+export class ContainerTransferController extends BaseTransferController {
+
+    protected get roleRootName(): string {
+        return "containerTransfer";
     }
 
     protected get roleBody(): BodyPartConstant[] {
@@ -181,12 +180,6 @@ export class ContainerTransferController extends WorkerController<Transfer, Ruin
 
     protected createRole(creep: Creep): Transfer {
         return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
-    }
-
-    protected findWorkStarter(): Structure | Ruin | undefined {
-        const target = this.findWorkTarget();
-        if (!target) return;
-        return getEnergyDropOfSpawn(target) ?? getEnergyStorageOfSpawn(true, target);
     }
 
     protected findWorkTarget(): StructureContainer | undefined {
@@ -288,7 +281,7 @@ export class RepairController extends WorkerController<Repairer, StructureStorag
 
     findWorkTarget(): Structure | undefined {
         return getSpawn().room.find(FIND_STRUCTURES, {
-            filter: object => object.hits < object.hitsMax
+            filter: it => it.structureType !== STRUCTURE_WALL && it.hits < it.hitsMax
         }).sort((a, b) => a.hits - b.hits)[0];
     }
 

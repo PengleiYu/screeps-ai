@@ -1,6 +1,6 @@
 import {
     BuildController,
-    Controller,
+    WorkerController,
     HarvestController,
     RepairController,
     TransferController,
@@ -16,7 +16,7 @@ declare global {
 }
 
 export function loop() {
-    Controller.spawnIfNotExist = true;
+    WorkerController.spawnIfNotExist = true;
     new HarvestController().run();
     new TransferController().run();
     new BuildController().run();

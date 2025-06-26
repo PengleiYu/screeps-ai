@@ -18,5 +18,5 @@ export const TEMPLATE_CONFIG_REPAIRER: SpawnConfig = {
 }
 export const TEMPLATE_CONFIG_TRANSFER: SpawnConfig = {
     name: 'transfer',
-    body: [MOVE, WORK, CARRY,],
+    body: [MOVE, MOVE, CARRY, CARRY,],
 }

@@ -20,3 +20,7 @@ export const TEMPLATE_CONFIG_TRANSFER: SpawnConfig = {
     name: 'transfer',
     body: [MOVE, MOVE, CARRY, CARRY,],
 }
+export const TEMPLATE_CONFIG_TOWER_TRANSFER: SpawnConfig = {
+    name: 'towerTransfer',
+    body: [MOVE, MOVE, CARRY, CARRY,],
+}

@@ -5,13 +5,14 @@ import {
     getEnergyContainerOfSpawn,
     getEnergySourceOfSpawn,
     getEnergyStorageOfSpawn,
-    getSpawn, getSpawnStructureNotFull,
+    getSpawn,
+    getSpawnStructureNotFull,
     SpawnConfig
 } from "./utils";
 import {
     TEMPLATE_CONFIG_BUILDER,
     TEMPLATE_CONFIG_HARVESTER,
-    TEMPLATE_CONFIG_REPAIRER,
+    TEMPLATE_CONFIG_REPAIRER, TEMPLATE_CONFIG_TOWER_TRANSFER,
     TEMPLATE_CONFIG_TRANSFER,
     TEMPLATE_CONFIG_UPGRADER
 } from "./configs";
@@ -51,6 +52,9 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
         for (const config of configs) {
             const creep = checkCreepExist(config, WorkerController.spawnIfNotExist);
             if (!creep) {
+                if (!WorkerController.spawnIfNotExist) {
+                    console.log(`欲孵化${config.name}失败`)
+                }
                 WorkerController.spawnIfNotExist = false;
                 continue;
             }
@@ -100,7 +104,7 @@ export class BuildController extends WorkerController<Builder, StructureStorage 
     }
 }
 
-export class TransferController extends WorkerController<Transfer, StructureContainer, Structure> {
+export class TransferController extends WorkerController<Transfer, Structure, Structure> {
 
     constructor() {
         super(1, TEMPLATE_CONFIG_TRANSFER);
@@ -125,6 +129,29 @@ export class TransferController extends WorkerController<Transfer, StructureCont
 
     createRole(creep: Creep): Transfer {
         return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
+    }
+}
+
+export class TowerTransferController extends WorkerController<Transfer, Structure, Structure> {
+    constructor() {
+        super(1, TEMPLATE_CONFIG_TOWER_TRANSFER);
+    }
+
+    protected createRole(creep: Creep): Transfer {
+        return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
+    }
+
+    protected findWorkStarter(): Structure<StructureConstant> | undefined {
+        return getEnergyStorageOfSpawn();
+    }
+
+    protected findWorkTarget(): Structure<StructureConstant> | undefined {
+        return getSpawn().room.find(FIND_MY_STRUCTURES, {
+            filter: it => it.structureType === STRUCTURE_TOWER
+        })
+            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 200)
+            .sort(getClosestCmpFun(this.findWorkStarter()))
+            [0];
     }
 }
 

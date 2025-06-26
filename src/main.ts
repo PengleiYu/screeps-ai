@@ -4,7 +4,7 @@ import {
     HarvestController,
     RepairController,
     TransferController,
-    UpgradeController
+    UpgradeController, TowerTransferController
 } from "./controller";
 
 declare global {
@@ -22,4 +22,5 @@ export function loop() {
     new BuildController().run();
     new UpgradeController().run();
     new RepairController().run();
+    new TowerTransferController().run();
 }

@@ -135,7 +135,7 @@ export class Repairer extends BaseRole<StructureStorage | StructureContainer, St
     }
 }
 
-export class Transfer extends BaseRole<StructureContainer, Structure> {
+export class Transfer extends BaseRole<Structure, Structure> {
     work(): void {
         super.work();
         // 先不加记忆

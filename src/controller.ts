@@ -80,7 +80,13 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
     }
 
     findWorkTarget(): Structure | undefined {
-        return getEnergyContainerOfSpawn(false, this.findWorkStarter())
+        const starter = this.findWorkStarter();
+        if (!starter) return;
+        return starter.pos.findInRange(FIND_STRUCTURES, 3, {
+                filter: it => it.structureType === STRUCTURE_CONTAINER
+            }).filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+                .sort(getClosestCmpFun(starter))[0]
+            // 收获者在没有容器时，运送回孵化器
             ?? getSpawn();
     }
 
@@ -122,6 +128,8 @@ export class BuildController extends WorkerController<Builder, Ruin | StructureS
     }
 }
 
+const BODY_TRANSFER = [MOVE, MOVE, CARRY, CARRY,];
+
 export class SpawnStorageTransferController extends WorkerController<Transfer, Structure | Ruin, Structure> {
     protected get creepCount(): number {
         return 1;
@@ -132,7 +140,7 @@ export class SpawnStorageTransferController extends WorkerController<Transfer, S
     }
 
     protected get roleBody(): BodyPartConstant[] {
-        return [MOVE, CARRY,];
+        return BODY_TRANSFER;
     }
 
     override findWorkStarter(): StructureContainer | Ruin | undefined {
@@ -168,8 +176,7 @@ export class ContainerTransferController extends WorkerController<Transfer, Ruin
     }
 
     protected get roleBody(): BodyPartConstant[] {
-        // todo
-        return [];
+        return BODY_TRANSFER;
     }
 
     protected createRole(creep: Creep): Transfer {
@@ -204,7 +211,7 @@ export class TowerTransferController extends WorkerController<Transfer, Structur
     }
 
     protected get roleBody(): BodyPartConstant[] {
-        return [MOVE, MOVE, CARRY, CARRY,];
+        return BODY_TRANSFER;
     }
 
     protected createRole(creep: Creep): Transfer {
@@ -238,12 +245,19 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
         return [MOVE, WORK, CARRY, CARRY, CARRY];
     }
 
+    // 最近的废墟、容器、仓库
     findWorkStarter(): Ruin | StructureStorage | StructureContainer | undefined {
         const target = this.findWorkTarget();
         if (!target) return;
-        return getEnergyDropOfSpawn(target)
-            ?? getEnergyStorageOfSpawn(true, target)
-            ?? getEnergyContainerOfSpawn(true, target);
+        const ruins = target.room.find(FIND_RUINS, {
+            filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+        });
+        const structures = target.room.find(FIND_STRUCTURES, {
+            filter: it => it.structureType === STRUCTURE_CONTAINER || it.structureType === STRUCTURE_STORAGE
+        }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
+
+        const arr: (Ruin | StructureStorage | StructureContainer)[] = [...ruins, ...structures]
+        return arr.sort(getClosestCmpFun(target))[0];
     }
 
     findWorkTarget(): StructureController | undefined {

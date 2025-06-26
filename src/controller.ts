@@ -17,7 +17,7 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
     protected getSpawnConfigs(): SpawnConfig[] {
         return Array.from({length: this.creepCount},
             (_, index) =>
-                ({name: `${this.roleRootName}${index}`, body: this.roleBody}));
+                ({name: `${this.roleRootName}${index}`, body: this.roleBody, roleName: this.roleRootName}));
     }
 
     protected abstract get creepCount(): number;
@@ -38,6 +38,8 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
 
     run() {
         const configs = this.getSpawnConfigs();
+        this.checkRuntime();
+
         // 不满足工作条件则休息
         if (!this.canWork) {
             console.log(`${this.roleRootName}无法工作，开始休息`)
@@ -58,6 +60,17 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
                 continue;
             }
             this.createRole(creep).work();
+        }
+    }
+
+    private checkRuntime() {
+        const creepsByRole = Object.keys(Game.creeps)
+            .map(key => Game.creeps[key])
+            .filter(creep => creep.memory.role === this.roleRootName);
+        const creepsByName = this.getSpawnConfigs().map(it => checkCreepExist(it, false))
+            .filter(it => it !== undefined);
+        if (creepsByRole.length !== 0 && creepsByName.length === 0) {
+            console.log(`${this.roleRootName}类creep已全部增加role属性`);
         }
     }
 }

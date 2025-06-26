@@ -10,8 +10,9 @@ import {ArmyController} from "./army";
 declare global {
 
     interface CreepMemory {
-        working: boolean;
-        workState: string;
+        role?: string,
+        working?: boolean;
+        workState?: string;
     }
 }
 

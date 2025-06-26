@@ -3,21 +3,26 @@ export type Positionable = { pos: RoomPosition }
 export interface SpawnConfig {
     body: BodyPartConstant[];
     name: string;
+    roleName: string;
 }
 
 export function getSpawn() {
     return Game.spawns['Spawn1'];
 }
 
-export function trySpawnCreep(roleName: string, roleBody: BodyPartConstant[]) {
+export function trySpawnCreep(name: string, roleBody: BodyPartConstant[], roleName?: string) {
     const spawn = getSpawn();
     if (spawn.spawning) {
         return;
     }
-    console.log('开始孵化', roleName)
-    let spawnResult = spawn.spawnCreep(roleBody, roleName,);
+    console.log('开始孵化', name)
+    let spawnResult = spawn.spawnCreep(roleBody, name, {
+        memory: {
+            role: roleName,
+        }
+    });
     if (spawnResult != OK) {
-        console.log(roleName, "孵化失败", spawnResult);
+        console.log(name, "孵化失败", spawnResult);
     }
 }
 
@@ -25,9 +30,10 @@ export function checkCreepExist(config: SpawnConfig, spawnIfNotExist: boolean = 
     const creep = Game.creeps[config.name];
     if (creep) return creep;
     if (spawnIfNotExist) {
-        const roleName = config.name;
+        const name = config.name;
         const roleBody = config.body;
-        trySpawnCreep(roleName, roleBody);
+        const roleName = config.roleName;
+        trySpawnCreep(name, roleBody, roleName);
     }
 }
 

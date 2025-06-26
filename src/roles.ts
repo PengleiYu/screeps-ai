@@ -43,11 +43,17 @@ export abstract class BaseRole<Source, Target> {
     }
 
     private park() {
-        const spawn = getSpawn();
-        if (!this.creep.pos.inRangeTo(spawn, 2)) {
+        const parkingLot = this.findParkingLot();
+        if (!this.creep.pos.isNearTo(parkingLot)) {
             console.log(this.creep.name, 'park')
-            this.visualizeMoveTo(spawn);
+            this.visualizeMoveTo(parkingLot);
         }
+    }
+
+    private findParkingLot() {
+        return this.creep.pos.findClosestByRange(FIND_FLAGS, {
+            filter: it => it.name === 'Parking'
+        }) ?? getSpawn();
     }
 }
 

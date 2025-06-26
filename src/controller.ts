@@ -38,10 +38,11 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
 
     run() {
         const configs = this.getSpawnConfigs();
-        this.checkRuntime();
 
         // 不满足工作条件则休息
-        if (!this.canWork) {
+        const canWork = this.canWork;
+        this.checkRuntime(canWork);
+        if (!canWork) {
             for (const config of configs) {
                 const creep = checkCreepExist(config, false);
                 if (creep) this.createRole(creep).haveRest();
@@ -62,14 +63,14 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
         }
     }
 
-    private checkRuntime() {
+    private checkRuntime(canWork: boolean) {
         const creepsByRole = Object.keys(Game.creeps)
             .map(key => Game.creeps[key])
             .filter(creep => creep.memory.role === this.roleRootName);
         const creepsByName = this.getSpawnConfigs().map(it => checkCreepExist(it, false))
             .filter(it => it !== undefined);
-        if (creepsByRole.length !== 0 && creepsByName.length === 0) {
-            console.log(`${this.roleRootName}类creep已全部增加role属性`);
+        if (canWork && creepsByRole.length !== this.creepCount) {
+            console.log(`${this.roleRootName}类creep未全部增加role属性`);
         }
     }
 }
@@ -266,7 +267,7 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
     }
 }
 
-export class RepairController extends WorkerController<Repairer, StructureStorage | StructureContainer, Structure> {
+export class RepairController extends WorkerController<Repairer, Ruin | StructureStorage | StructureContainer, Structure> {
     protected get creepCount(): number {
         return 1;
     }
@@ -276,17 +277,18 @@ export class RepairController extends WorkerController<Repairer, StructureStorag
     }
 
     protected get roleBody(): BodyPartConstant[] {
-        return [MOVE, WORK, CARRY];
+        return [MOVE, MOVE, WORK, CARRY, CARRY];
     }
 
-    findWorkStarter(): StructureStorage | StructureContainer | undefined {
-        return getEnergyStorageOfSpawn() ?? getEnergyContainerOfSpawn();
+    findWorkStarter(): Ruin | StructureStorage | StructureContainer | undefined {
+        return getEnergyDropOfSpawn() ?? getEnergyStorageOfSpawn() ?? getEnergyContainerOfSpawn();
     }
 
     findWorkTarget(): Structure | undefined {
         return getSpawn().room.find(FIND_STRUCTURES, {
             filter: it => it.structureType !== STRUCTURE_WALL && it.hits < it.hitsMax
-        }).sort((a, b) => a.hits - b.hits)[0];
+        }).sort((a, b) => (a.hitsMax - a.hits) - (b.hitsMax - b.hits))
+            .reverse()[0];
     }
 
     protected createRole(creep: Creep): Repairer {

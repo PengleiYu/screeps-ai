@@ -28,7 +28,7 @@ export abstract class BaseRole<Source, Target> {
         this.creep.memory.working = true;
     }
 
-    private putBackEnergyDone(): boolean {
+    protected putBackEnergyDone(): boolean {
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) return true;
 
         const storage =
@@ -42,7 +42,7 @@ export abstract class BaseRole<Source, Target> {
         return false;
     }
 
-    private park() {
+    protected park() {
         const parkingLot = this.findParkingLot();
         if (!this.creep.pos.isNearTo(parkingLot)) {
             console.log(this.creep.name, 'park')
@@ -58,6 +58,10 @@ export abstract class BaseRole<Source, Target> {
 }
 
 export class Harvester extends BaseRole<Source, Structure> {
+
+    protected putBackEnergyDone(): boolean {
+        return true;// 收获者可以不放回资源
+    }
 
     work(): void {
         super.work();
@@ -129,7 +133,7 @@ export class Upgrader extends BaseRole<Ruin | StructureStorage | StructureContai
     }
 }
 
-export class Repairer extends BaseRole<StructureStorage | StructureContainer, Structure> {
+export class Repairer extends BaseRole<Ruin | StructureStorage | StructureContainer, Structure> {
     work(): void {
         super.work();
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {

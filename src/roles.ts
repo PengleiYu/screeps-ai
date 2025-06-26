@@ -13,8 +13,13 @@ export abstract class BaseRole<Source, Target> {
         });
     }
 
+    // 需要一个状态机：working-clean-park
     haveRest() {
-        this.creep.memory.working = false;
+        const memory = this.creep.memory;
+        if (memory.working) {
+            console.log(`${memory.role}-${this.creep.name} 开始休息`);
+        }
+        memory.working = false;
         const done = this.putBackEnergyDone();
         if (done) this.park();
     }

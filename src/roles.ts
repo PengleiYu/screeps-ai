@@ -15,24 +15,26 @@ export abstract class BaseRole<Source, Target> {
 
     haveRest() {
         this.creep.memory.working = false;
-        this.putBackEnergy()
-        this.park();
+        const done = this.putBackEnergyDone();
+        if (done) this.park();
     }
 
     work(): void {
         this.creep.memory.working = true;
     }
 
-    private putBackEnergy() {
-        if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) return;
+    private putBackEnergyDone(): boolean {
+        if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) return true;
 
         const storage =
-            getEnergyStorageOfSpawn(false) ?? getEnergyContainerOfSpawn(false);
+            getEnergyStorageOfSpawn(false, this.creep)
+            ?? getEnergyContainerOfSpawn(false, this.creep);
+        if (!storage) return true;
 
-        if (!storage) return;
-        if (this.creep.transfer(storage, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-            this.visualizeMoveTo(storage);
-        }
+        if (this.creep.transfer(storage, RESOURCE_ENERGY) !== ERR_NOT_IN_RANGE) return true;
+
+        this.visualizeMoveTo(storage);
+        return false;
     }
 
     private park() {

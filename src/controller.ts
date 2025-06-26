@@ -2,31 +2,29 @@ import {BaseRole, Builder, Harvester, Repairer, Transfer, Upgrader} from "./role
 import {
     checkCreepExist,
     getClosestCmpFun,
-    getEnergyContainerOfSpawn, getEnergyDropOfSpawn,
+    getEnergyContainerOfSpawn,
+    getEnergyDropOfSpawn,
     getEnergySourceOfSpawn,
     getEnergyStorageOfSpawn,
     getSpawn,
     getSpawnStructureNotFull,
     SpawnConfig
 } from "./utils";
-import {
-    TEMPLATE_CONFIG_BUILDER,
-    TEMPLATE_CONFIG_HARVESTER,
-    TEMPLATE_CONFIG_REPAIRER, TEMPLATE_CONFIG_TOWER_TRANSFER,
-    TEMPLATE_CONFIG_TRANSFER,
-    TEMPLATE_CONFIG_UPGRADER
-} from "./configs";
 
 export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, STARTER, TARGET> {
     static spawnIfNotExist = true;
 
-    protected constructor(protected maxCount: number, private initConfig: SpawnConfig) {
+    protected getSpawnConfigs(): SpawnConfig[] {
+        return Array.from({length: this.creepCount},
+            (_, index) =>
+                ({name: `${this.roleRootName}${index}`, body: this.roleBody}));
     }
 
-    protected getSpawnConfigs(): SpawnConfig[] {
-        return Array.from({length: this.maxCount},
-            (_, index) => ({...this.initConfig, name: `${this.initConfig.name}${index}`}));
-    }
+    protected abstract get creepCount(): number;
+
+    protected abstract get roleRootName(): string;
+
+    protected abstract get roleBody(): BodyPartConstant[];
 
     protected abstract createRole(creep: Creep): ROLE;
 
@@ -42,7 +40,7 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
         const configs = this.getSpawnConfigs();
         // 不满足工作条件则休息
         if (!this.canWork) {
-            console.log(`${this.initConfig.name}无法工作，开始休息`)
+            console.log(`${this.roleRootName}无法工作，开始休息`)
             for (const config of configs) {
                 const creep = checkCreepExist(config, false);
                 if (creep) this.createRole(creep).haveRest();
@@ -65,8 +63,16 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
 }
 
 export class HarvestController extends WorkerController<Harvester, Source, Structure> {
-    constructor() {
-        super(3, TEMPLATE_CONFIG_HARVESTER);
+    protected get creepCount(): number {
+        return 3;
+    }
+
+    protected get roleRootName(): string {
+        return 'harvester';
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        return [MOVE, WORK, CARRY];
     }
 
     findWorkStarter(): Source | undefined {
@@ -84,8 +90,16 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
 }
 
 export class BuildController extends WorkerController<Builder, Ruin | StructureStorage | StructureContainer | Source, ConstructionSite> {
-    constructor() {
-        super(3, TEMPLATE_CONFIG_BUILDER);
+    protected get creepCount(): number {
+        return 3;
+    }
+
+    protected get roleRootName(): string {
+        return 'builder';
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        return [MOVE, WORK, CARRY, CARRY];
     }
 
     findWorkStarter(): Ruin | StructureStorage | StructureContainer | Source | undefined {
@@ -109,9 +123,16 @@ export class BuildController extends WorkerController<Builder, Ruin | StructureS
 }
 
 export class SpawnStorageTransferController extends WorkerController<Transfer, Structure | Ruin, Structure> {
+    protected get creepCount(): number {
+        return 1;
+    }
 
-    constructor() {
-        super(1, TEMPLATE_CONFIG_TRANSFER);
+    protected get roleRootName(): string {
+        return 'transfer';
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        return [MOVE, CARRY,];
     }
 
     override findWorkStarter(): StructureContainer | Ruin | undefined {
@@ -138,11 +159,24 @@ export class SpawnStorageTransferController extends WorkerController<Transfer, S
 }
 
 export class ContainerTransferController extends WorkerController<Transfer, Ruin | Structure, Structure> {
+    protected get creepCount(): number {
+        return 1;
+    }
+
+    protected get roleRootName(): string {
+        return "ContainerTransfer";
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        // todo
+        return [];
+    }
+
     protected createRole(creep: Creep): Transfer {
         return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
     }
 
-    protected findWorkStarter(): Structure<StructureConstant> | Ruin | undefined {
+    protected findWorkStarter(): Structure | Ruin | undefined {
         const target = this.findWorkTarget();
         if (!target) return;
         return getEnergyDropOfSpawn(target) ?? getEnergyStorageOfSpawn(true, target);
@@ -158,23 +192,30 @@ export class ContainerTransferController extends WorkerController<Transfer, Ruin
             .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY))
             [0];
     }
-
 }
 
 export class TowerTransferController extends WorkerController<Transfer, Structure | Ruin, Structure> {
-    constructor() {
-        super(1, TEMPLATE_CONFIG_TOWER_TRANSFER);
+    protected get creepCount(): number {
+        return 1;
+    }
+
+    protected get roleRootName(): string {
+        return 'towerTransfer';
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        return [MOVE, MOVE, CARRY, CARRY,];
     }
 
     protected createRole(creep: Creep): Transfer {
         return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
     }
 
-    protected findWorkStarter(): Structure<StructureConstant> | undefined {
+    protected findWorkStarter(): Structure | undefined {
         return getEnergyStorageOfSpawn();
     }
 
-    protected findWorkTarget(): Structure<StructureConstant> | undefined {
+    protected findWorkTarget(): Structure | undefined {
         return getSpawn().room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_TOWER
         })
@@ -185,9 +226,16 @@ export class TowerTransferController extends WorkerController<Transfer, Structur
 }
 
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | undefined> {
+    protected get creepCount(): number {
+        return 5;
+    }
 
-    constructor() {
-        super(5, TEMPLATE_CONFIG_UPGRADER);
+    protected get roleRootName(): string {
+        return 'upgrader';
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        return [MOVE, WORK, CARRY, CARRY, CARRY];
     }
 
     findWorkStarter(): Ruin | StructureStorage | StructureContainer | undefined {
@@ -208,8 +256,16 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
 }
 
 export class RepairController extends WorkerController<Repairer, StructureStorage | StructureContainer, Structure> {
-    constructor() {
-        super(1, TEMPLATE_CONFIG_REPAIRER);
+    protected get creepCount(): number {
+        return 1;
+    }
+
+    protected get roleRootName(): string {
+        return 'repairer';
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        return [MOVE, WORK, CARRY];
     }
 
     findWorkStarter(): StructureStorage | StructureContainer | undefined {

@@ -128,15 +128,11 @@ export class BuildController extends WorkerController<Builder, Ruin | StructureS
     }
 }
 
-const BODY_TRANSFER = [MOVE, MOVE, CARRY, CARRY,];
+const BODY_TRANSFER = [MOVE, MOVE, MOVE, CARRY, CARRY, CARRY,];
 
 abstract class BaseTransferController extends WorkerController<Transfer, Structure | Ruin, Structure> {
     protected get creepCount(): number {
         return 1;
-    }
-
-    protected get roleRootName(): string {
-        return 'transfer';
     }
 
     protected get roleBody(): BodyPartConstant[] {
@@ -165,6 +161,10 @@ export class SpawnTransferController extends BaseTransferController {
 
     override findWorkTarget(): Structure | undefined {
         return getSpawnStructureNotFull(getSpawn());
+    }
+
+    protected get canWork(): boolean {
+        return true;// 需要确保一直存在
     }
 }
 

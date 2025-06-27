@@ -270,35 +270,6 @@ export class TowerTransferController extends BaseTransferController {
     }
 }
 
-export class OverseaTransportController extends WorkerController<OverseaTransporter, RoomPosition, Structure> {
-    protected get roleInstanceMax(): number {
-        return 3;
-    }
-
-    protected get roleBody(): BodyPartConstant[] {
-        const length = (300 + 50 * 10/*extension数量*/) / 50;
-        return Array.from({length: length},
-            (_, index) => index % 2 == 0 ? MOVE : CARRY);
-    }
-
-    protected createRole(creep: Creep): OverseaTransporter {
-        return new OverseaTransporter(creep, this.findWorkStarter(), this.findWorkTarget());
-    }
-
-    protected findWorkStarter(): RoomPosition | undefined {
-        // 隔壁遗址坐标
-        return new RoomPosition(21, 21, 'W56S38');
-    }
-
-    protected findWorkTarget(): Structure | undefined {
-        return getEnergyStorageOfSpawn();
-    }
-
-    protected get roleName(): string {
-        return "overseaTransporter"
-    }
-}
-
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | undefined> {
     protected get roleInstanceMax(): number {
         return 10;
@@ -371,5 +342,34 @@ export class RepairController extends WorkerController<Repairer, Ruin | Structur
                 it.structureType === STRUCTURE_TOWER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
         });
         return !tower && super.canWork;
+    }
+}
+
+export class OverseaTransportController extends WorkerController<OverseaTransporter, RoomPosition, Structure> {
+    protected get roleInstanceMax(): number {
+        return 10;
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        const length = (300 + 50 * 10/*extension数量*/) / 50;
+        return Array.from({length: length},
+            (_, index) => index % 2 == 0 ? MOVE : CARRY);
+    }
+
+    protected createRole(creep: Creep): OverseaTransporter {
+        return new OverseaTransporter(creep, this.findWorkStarter(), this.findWorkTarget());
+    }
+
+    protected findWorkStarter(): RoomPosition | undefined {
+        // 隔壁遗址坐标
+        return new RoomPosition(19, 19, 'W56S38');
+    }
+
+    protected findWorkTarget(): Structure | undefined {
+        return getEnergyStorageOfSpawn();
+    }
+
+    protected get roleName(): string {
+        return "overseaTransporter"
     }
 }

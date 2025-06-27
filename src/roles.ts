@@ -253,10 +253,12 @@ export class OverseaTransporter extends BaseRole<RoomPosition, Structure> {
 
         if (memory.workState === MEMORY_STATE_COLLECTING) {
             if (this.source) {
-                if (!this.creep.pos.isNearTo(this.source)) {
+                // 没到房间，仅移动
+                if (this.creep.room.name !== this.source.roomName) {
                     this.visualizeMoveTo(this.source);
                 } else {
-                    const ruin = this.source.findClosestByPath(FIND_RUINS, {
+                    // 已到房间，找最近的废墟
+                    const ruin = this.creep.pos.findClosestByPath(FIND_RUINS, {
                         filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
                     });
                     if (ruin) {

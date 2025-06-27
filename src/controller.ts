@@ -72,7 +72,7 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
 
 export class SpawnAssistantController extends WorkerController<SpawnAssistant, Source | ResourceWithdrawn, SpawnStruct> {
     protected get roleInstanceMax(): number {
-        return 1;
+        return 2;
     }
 
     protected get roleName(): string {
@@ -110,7 +110,7 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
     }
 
     protected get roleBody(): BodyPartConstant[] {
-        return [MOVE, WORK, CARRY];
+        return [MOVE, WORK, WORK, CARRY];
     }
 
     findWorkStarter(): Source | null {

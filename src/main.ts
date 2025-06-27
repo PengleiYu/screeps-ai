@@ -2,7 +2,7 @@ import {
     BuildController,
     ContainerTransferController,
     HarvestController, OverseaTransportController,
-    RepairController,
+    RepairController, SpawnAssistantController,
     SpawnTransferController, StorageTransferController,
     TowerTransferController,
     UpgradeController
@@ -21,6 +21,7 @@ declare global {
 
 export function loop() {
     globalInfo.canSpawn = true;
+    new SpawnAssistantController().run();
     new HarvestController().run();
     new SpawnTransferController().run();
     new ContainerTransferController().run();

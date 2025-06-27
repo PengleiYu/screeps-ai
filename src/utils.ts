@@ -1,4 +1,6 @@
-export type Positionable = { pos: RoomPosition }
+export type Positionable = { pos: RoomPosition };
+export type ResourceStorable = Structure | Tombstone | Ruin;
+export type SpawnStruct = StructureSpawn | StructureExtension;
 export var globalInfo = {
     canSpawn: true,
 }

@@ -1,4 +1,4 @@
-import {BaseRole, Builder, Harvester, OverseaTransporter, Repairer, Transfer, Upgrader} from "./roles";
+import {BaseRole, Builder, Harvester, OverseaTransporter, Repairer, SpawnAssistant, Transfer, Upgrader} from "./roles";
 import {
     getClosestCmpFun,
     getEnergyContainerOfSpawn,
@@ -6,7 +6,7 @@ import {
     getEnergySourceOfSpawn,
     getEnergyStorageOfSpawn,
     getSpawn,
-    getSpawnStructureNotFull,
+    getSpawnStructureNotFull, ResourceStorable, SpawnStruct,
     trySpawn,
 } from "./utils";
 
@@ -53,6 +53,36 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
             }
         }
     }
+}
+
+export class SpawnAssistantController extends WorkerController<SpawnAssistant, Source | ResourceStorable, SpawnStruct> {
+    protected get roleInstanceMax(): number {
+        return 1;
+    }
+
+    protected get roleName(): string {
+        return "spawnAssistant";
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        return [MOVE, CARRY, WORK];
+    }
+
+    protected createRole(creep: Creep): SpawnAssistant {
+        return new SpawnAssistant(creep, this.findWorkStarter(), this.findWorkTarget());
+    }
+
+    protected findWorkStarter(): Source | ResourceStorable | undefined {
+        return getEnergyStorageOfSpawn()
+            ?? getEnergyDropOfSpawn()
+            ?? getEnergyContainerOfSpawn()
+            ?? getEnergySourceOfSpawn();
+    }
+
+    protected findWorkTarget(): SpawnStruct | undefined {
+        return getSpawnStructureNotFull(getSpawn());
+    }
+
 }
 
 export class HarvestController extends WorkerController<Harvester, Source, Structure> {

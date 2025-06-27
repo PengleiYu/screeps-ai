@@ -1,4 +1,4 @@
-import {getEnergyContainerOfSpawn, getEnergyStorageOfSpawn, getSpawn} from "./utils";
+import {getEnergyContainerOfSpawn, getEnergyStorageOfSpawn, getSpawn, ResourceStorable, SpawnStruct} from "./utils";
 
 export abstract class BaseRole<Source, Target> {
 
@@ -30,6 +30,43 @@ export abstract class BaseRole<Source, Target> {
 
     work(): void {
         this.creep.memory.working = true;
+    }
+
+    protected work2() {
+        this.creep.memory.working = true;
+        this.changeWorkState();
+        const workState = this.creep.memory.workState;
+        switch (workState) {
+            case MEMORY_STATE_COLLECTING:
+                this.doCollecting();
+                break;
+            case MEMORY_STATE_WORKING:
+                this.doWorking();
+                break;
+            default:
+                console.log('未知workState', workState);
+                break;
+        }
+    }
+
+    protected changeWorkState() {
+        const creep = this.creep;
+        const memory = creep.memory;
+        if (!memory.workState) {
+            memory.workState = MEMORY_STATE_COLLECTING;
+        }
+
+        if (memory.workState === MEMORY_STATE_WORKING && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_COLLECTING;
+        } else if (memory.workState === MEMORY_STATE_COLLECTING && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_WORKING;
+        }
+    }
+
+    protected doCollecting() {
+    }
+
+    protected doWorking() {
     }
 
     private putBackEnergyDone(): boolean {
@@ -78,6 +115,28 @@ export class Harvester extends BaseRole<Source, Structure> {
                 }
             }
         }
+    }
+}
+
+export class SpawnAssistant extends BaseRole<Source | ResourceStorable, SpawnStruct> {
+    work() {
+        super.work();
+        // todo 整体改掉
+        this.work2();
+    }
+
+    protected doCollecting() {
+        if (!this.source) return;
+        if (this.source instanceof Source) {
+            if (this.creep.harvest(this.source) === ERR_NOT_IN_RANGE) this.visualizeMoveTo(this.source);
+        } else {
+            if (this.creep.withdraw(this.source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) this.visualizeMoveTo(this.source);
+        }
+    }
+
+    protected doWorking() {
+        if (!this.target) return;
+        if (this.creep.transfer(this.target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) this.visualizeMoveTo(this.target);
     }
 }
 

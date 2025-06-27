@@ -3,7 +3,7 @@ import {
     ContainerTransferController,
     HarvestController,
     RepairController,
-    SpawnTransferController,
+    SpawnTransferController, StorageTransferController,
     TowerTransferController,
     UpgradeController
 } from "./controller";
@@ -30,6 +30,7 @@ export function loop() {
     new TowerTransferController().run();
     new TowerController().run();
     new ContainerTransferController().run();
+    new StorageTransferController().run();
 
     for (const key of Object.keys(Memory.creeps)) {
         if (!Game.creeps[key]) {

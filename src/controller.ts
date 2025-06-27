@@ -184,6 +184,48 @@ export class ContainerTransferController extends BaseTransferController {
     }
 }
 
+export class StorageTransferController extends BaseTransferController {
+    protected get roleInstanceMax(): number {
+        return 3;
+    }
+
+    protected get roleName(): string {
+        return 'storageTransfer';
+    }
+
+    protected override findWorkStarter(): Structure | Ruin | undefined {
+        const target = this.findWorkTarget();
+        if (!target) return;
+
+        // 掉落资源
+        const energyDropOfSpawn = getEnergyDropOfSpawn(target);
+        if (energyDropOfSpawn) return energyDropOfSpawn;
+
+        // 最近的矿点容器
+        return getSpawn().room.find(FIND_SOURCES)
+            .map(source => source.pos.findInRange(FIND_STRUCTURES, 1, {
+                filter: it => it.structureType === STRUCTURE_CONTAINER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+            }))
+            .reduce((previousValue, currentValue) => {
+                previousValue.push(...currentValue)
+                return previousValue;
+            })
+            .filter(it => !!it)
+            .sort(getClosestCmpFun(target))
+            [0];
+    }
+
+    protected findWorkTarget(): Structure | undefined {
+        return getSpawn().room.find(FIND_MY_STRUCTURES, {
+            filter: it => it.structureType === STRUCTURE_STORAGE
+        })
+            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            .sort(getClosestCmpFun(getSpawn()))
+            [0];
+    }
+
+}
+
 export class TowerTransferController extends BaseTransferController {
     protected get roleInstanceMax(): number {
         return 1;

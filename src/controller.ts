@@ -41,17 +41,9 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
         creeps.forEach(it => this.createRole(it).work());
 
         // 数量不足则继续孵化
+        const memory = {role: this.roleName};
         for (let i = creeps.length; i < this.roleInstanceMax; i++) {
-            trySpawn(`${this.roleName}_${i}`, this.roleBody, this.roleName);
-        }
-    }
-
-    private checkRuntime(canWork: boolean) {
-        const creepsByRole = Object.keys(Game.creeps)
-            .map(key => Game.creeps[key])
-            .filter(creep => creep.memory.role === this.roleName);
-        if (canWork && creepsByRole.length !== this.roleInstanceMax) {
-            console.log(`${this.roleName}类creep未全部增加role属性`);
+            trySpawn(`${this.roleName}_${Date.now()}`, this.roleBody, memory);
         }
     }
 }

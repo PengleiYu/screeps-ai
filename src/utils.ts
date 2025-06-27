@@ -7,7 +7,7 @@ export function getSpawn() {
     return Game.spawns['Spawn1'];
 }
 
-export function trySpawn(name: string, body: BodyPartConstant[], role: string): boolean {
+export function trySpawn(name: string, body: BodyPartConstant[], memory: CreepMemory): boolean {
     if (!globalInfo.canSpawn) {
         return false;
     }
@@ -17,12 +17,8 @@ export function trySpawn(name: string, body: BodyPartConstant[], role: string): 
     if (spawn.spawning) {
         return false;
     }
-    const spawnResult = spawn.spawnCreep(body, name, {
-        memory: {
-            role: role,
-        }
-    });
-    console.log(`正在孵化${role}:${name}, result=${spawnResult}`);
+    const spawnResult = spawn.spawnCreep(body, name, {memory: memory});
+    console.log(`正在孵化${memory.role}:${name}, result=${spawnResult}`);
     return spawnResult == OK;
 }
 

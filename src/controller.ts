@@ -111,7 +111,7 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
 
 export class BuildController extends WorkerController<Builder, Ruin | StructureStorage | StructureContainer | Source, ConstructionSite> {
     protected get creepCount(): number {
-        return 6;
+        return 2;
     }
 
     protected get roleRootName(): string {

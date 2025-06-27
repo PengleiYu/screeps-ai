@@ -5,7 +5,7 @@ import {
     RepairController,
     UpgradeController, TowerTransferController, ContainerTransferController, SpawnTransferController
 } from "./controller";
-import {ArmyController} from "./army";
+import {TowerController} from "./army";
 
 declare global {
 
@@ -25,7 +25,7 @@ export function loop() {
     new UpgradeController().run();
     new RepairController().run();
     new TowerTransferController().run();
-    new ArmyController().run();
+    new TowerController().run();
     new ContainerTransferController().run();
 
     for (const key of Object.keys(Memory.creeps)) {

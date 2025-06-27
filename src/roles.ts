@@ -24,7 +24,7 @@ export abstract class BaseRole<Source, Target> {
             console.log(`${memory.role}:${this.creep.name} 开始休息`);
         }
         memory.working = false;
-        const done = !this.canKeepEnergy && this.putBackEnergyDone();
+        const done = this.canKeepEnergy || this.putBackEnergyDone();
         if (done) this.park();
     }
 

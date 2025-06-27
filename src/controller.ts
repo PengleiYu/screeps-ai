@@ -84,7 +84,7 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
 
 export class BuildController extends WorkerController<Builder, Ruin | StructureStorage | StructureContainer | Source, ConstructionSite> {
     protected get roleInstanceMax(): number {
-        return 2;
+        return 5;
     }
 
     protected get roleName(): string {
@@ -197,7 +197,7 @@ export class TowerTransferController extends BaseTransferController {
         return getSpawn().room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_TOWER
         })
-            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 100)
             .sort(getClosestCmpFun(getSpawn()))
             [0];
     }

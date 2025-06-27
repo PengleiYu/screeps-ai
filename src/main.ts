@@ -35,10 +35,12 @@ export function loop() {
 
     new OverseaTransportController().run();
 
-    for (const key of Object.keys(Memory.creeps)) {
-        if (!Game.creeps[key]) {
-            console.log(`${key}已不存在，删除`);
-            delete Memory.creeps[key];
+    if (Game.time % 20 === 0) {
+        for (let name in Memory.creeps) {
+            if (!Game.creeps[name]) {
+                delete Memory.creeps[name];
+                console.log(`${name}已不存在，删除记忆`);
+            }
         }
     }
 }

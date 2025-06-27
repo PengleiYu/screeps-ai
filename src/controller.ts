@@ -75,7 +75,7 @@ export class SpawnAssistantController extends WorkerController<SpawnAssistant, S
     }
 
     protected get roleBody(): BodyPartConstant[] {
-        return [MOVE, CARRY, WORK];
+        return [MOVE, MOVE, CARRY, CARRY, WORK];
     }
 
     protected createRole(creep: Creep): SpawnAssistant {
@@ -91,7 +91,7 @@ export class SpawnAssistantController extends WorkerController<SpawnAssistant, S
 
     protected findWorkTarget(): SpawnStruct | null {
         const result = getSpawnStructureNotFull(getSpawn().pos);
-        console.log('result',result);
+        console.log('result', result);
         return result;
     }
 

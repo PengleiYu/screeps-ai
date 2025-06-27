@@ -179,22 +179,6 @@ abstract class BaseTransferController extends WorkerController<Transfer, Structu
     }
 }
 
-// 这个角色不太好，应该有一个专门的孵化辅助者，可运输可挖矿
-export class SpawnTransferController extends BaseTransferController {
-
-    protected get roleName(): string {
-        return "spawnTransfer";
-    }
-
-    override findWorkTarget(): Structure | undefined {
-        return getSpawnStructureNotFull(getSpawn());
-    }
-
-    protected get mustKeepAlive(): boolean {
-        return true;
-    }
-}
-
 export class ContainerTransferController extends BaseTransferController {
     protected get roleInstanceMax(): number {
         return 2;

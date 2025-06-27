@@ -7,6 +7,27 @@ export function getSpawn() {
     return Game.spawns['Spawn1'];
 }
 
+function getSpawnResultStr(result: ScreepsReturnCode): string {
+    switch (result) {
+        case OK:
+            return 'OK';
+        case ERR_NOT_OWNER:
+            return 'ERR_NOT_OWNER';
+        case ERR_NAME_EXISTS:
+            return 'ERR_NAME_EXISTS';
+        case ERR_BUSY:
+            return 'ERR_BUSY';
+        case ERR_NOT_ENOUGH_ENERGY:
+            return 'ERR_NOT_ENOUGH_ENERGY';
+        case ERR_INVALID_ARGS:
+            return 'ERR_INVALID_ARGS';
+        case ERR_RCL_NOT_ENOUGH:
+            return 'ERR_RCL_NOT_ENOUGH';
+        default:
+            return 'unknown';
+    }
+}
+
 export function trySpawn(name: string, body: BodyPartConstant[], memory: CreepMemory): boolean {
     if (!globalInfo.canSpawn) {
         return false;
@@ -17,9 +38,9 @@ export function trySpawn(name: string, body: BodyPartConstant[], memory: CreepMe
     if (spawn.spawning) {
         return false;
     }
-    const spawnResult = spawn.spawnCreep(body, name, {memory: memory});
-    console.log(`正在孵化${memory.role}:${name}, result=${spawnResult}`);
-    return spawnResult == OK;
+    const result = spawn.spawnCreep(body, name, {memory: memory});
+    console.log(`正在孵化${memory.role}:${name}, result=${getSpawnResultStr(result)}`);
+    return result == OK;
 }
 
 export function getClosestCmpFun<T extends Positionable | undefined, E extends Positionable | undefined>(center: T)

@@ -287,7 +287,7 @@ export class TowerTransferController extends BaseTransferController {
 
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | null> {
     protected get roleInstanceMax(): number {
-        return 10;
+        return 6;
     }
 
     protected get roleName(): string {
@@ -295,7 +295,12 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
     }
 
     protected get roleBody(): BodyPartConstant[] {
-        return [MOVE, WORK, CARRY, CARRY, CARRY];
+        const newVar = [MOVE, WORK, WORK, CARRY,];
+        const arr: BodyPartConstant[] = [];
+        for (let i = 0; i < 3; i++) {
+            arr.push(...newVar);
+        }
+        return arr;
     }
 
     // 最近的废墟、容器、仓库

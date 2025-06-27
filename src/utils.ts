@@ -1,5 +1,5 @@
 export type Positionable = { pos: RoomPosition };
-export type ResourceStorable = Structure | Tombstone | Ruin;
+export type ResourceStorable = Tombstone | Ruin | StructureContainer | StructureStorage;
 export type SpawnStruct = StructureSpawn | StructureExtension;
 export var globalInfo = {
     canSpawn: true,
@@ -98,4 +98,19 @@ export function getSpawnStructureNotFull(center: Positionable): StructureSpawn |
     })
         .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
         .sort(getClosestCmpFun(center)) [0];
+}
+
+export function getClosestResourceStorable(creep: Creep): ResourceStorable | undefined {
+    const filterRetainEnergy = (it: ResourceStorable) => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
+    const tombstone = creep.pos.findClosestByPath(FIND_TOMBSTONES, {filter: filterRetainEnergy});
+    const ruin = creep.pos.findClosestByPath(FIND_RUINS, {filter: filterRetainEnergy});
+    const container: StructureContainer | null = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_CONTAINER && filterRetainEnergy(it),
+    });
+    const storage: StructureStorage | null = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_STORAGE && filterRetainEnergy(it)
+    });
+    const arr = [tombstone, ruin, container, storage];
+    return arr.filter(it => !!it)
+        .sort(getClosestCmpFun(creep))[0]
 }

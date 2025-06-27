@@ -1,4 +1,11 @@
-import {getEnergyContainerOfSpawn, getEnergyStorageOfSpawn, getSpawn, ResourceStorable, SpawnStruct} from "./utils";
+import {
+    getClosestResourceStorable,
+    getEnergyContainerOfSpawn,
+    getEnergyStorageOfSpawn,
+    getSpawn,
+    ResourceStorable,
+    SpawnStruct
+} from "./utils";
 
 export abstract class BaseRole<Source, Target> {
 
@@ -257,10 +264,8 @@ export class OverseaTransporter extends BaseRole<RoomPosition, Structure> {
                 if (this.creep.room.name !== this.source.roomName) {
                     this.visualizeMoveTo(this.source);
                 } else {
-                    // 已到房间，找最近的废墟
-                    const ruin = this.creep.pos.findClosestByPath(FIND_RUINS, {
-                        filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
-                    });
+                    // 已到房间，找最近的存储
+                    const ruin = getClosestResourceStorable(this.creep);
                     if (ruin) {
                         if (this.creep.withdraw(ruin, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
                             this.visualizeMoveTo(ruin);

@@ -1,4 +1,4 @@
-import {BaseRole, Builder, Harvester, Repairer, Transfer, Upgrader} from "./roles";
+import {BaseRole, Builder, Harvester, OverseaTransporter, Repairer, Transfer, Upgrader} from "./roles";
 import {
     getClosestCmpFun,
     getEnergyContainerOfSpawn,
@@ -17,6 +17,7 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
 
     protected abstract get roleBody(): BodyPartConstant[];
 
+    // todo 不应在创建时就指定起点和终点
     protected abstract createRole(creep: Creep): ROLE;
 
     protected abstract findWorkStarter(): STARTER | undefined;
@@ -195,7 +196,7 @@ export class ContainerTransferController extends BaseTransferController {
 
 export class StorageTransferController extends BaseTransferController {
     protected get roleInstanceMax(): number {
-        return 6;
+        return 2;
     }
 
     protected get roleName(): string {
@@ -252,6 +253,35 @@ export class TowerTransferController extends BaseTransferController {
             .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 100)
             .sort(getClosestCmpFun(getSpawn()))
             [0];
+    }
+}
+
+export class OverseaTransportController extends WorkerController<OverseaTransporter, RoomPosition, Structure> {
+    protected get roleInstanceMax(): number {
+        return 3;
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        const length = (300 + 50 * 10/*extension数量*/) / 50;
+        return Array.from({length: length},
+            (_, index) => index % 2 == 0 ? MOVE : CARRY);
+    }
+
+    protected createRole(creep: Creep): OverseaTransporter {
+        return new OverseaTransporter(creep, this.findWorkStarter(), this.findWorkTarget());
+    }
+
+    protected findWorkStarter(): RoomPosition | undefined {
+        // 隔壁遗址坐标
+        return new RoomPosition(21, 21, 'W56S38');
+    }
+
+    protected findWorkTarget(): Structure | undefined {
+        return getEnergyStorageOfSpawn();
+    }
+
+    protected get roleName(): string {
+        return "overseaTransporter"
     }
 }
 

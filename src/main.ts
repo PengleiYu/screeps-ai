@@ -1,7 +1,7 @@
 import {
     BuildController,
     ContainerTransferController,
-    HarvestController,
+    HarvestController, OverseaTransportController,
     RepairController,
     SpawnTransferController, StorageTransferController,
     TowerTransferController,
@@ -20,7 +20,7 @@ declare global {
 }
 
 export function loop() {
-    globalInfo.canSpawn=true;
+    globalInfo.canSpawn = true;
     new HarvestController().run();
     new SpawnTransferController().run();
     new ContainerTransferController().run();
@@ -31,6 +31,7 @@ export function loop() {
     new TowerController().run();
     new ContainerTransferController().run();
     new StorageTransferController().run();
+    new OverseaTransportController().run();
 
     for (const key of Object.keys(Memory.creeps)) {
         if (!Game.creeps[key]) {

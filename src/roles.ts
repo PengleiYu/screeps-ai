@@ -92,22 +92,22 @@ export class Builder extends BaseRole<Ruin | StructureStorage | StructureContain
         const creep = this.creep;
         const memory = creep.memory;
         if (!memory.workState) {
-            memory.workState = MEMORY_STATE_HARVEST;
+            memory.workState = MEMORY_STATE_COLLECTING;
         }
 
-        if (memory.workState === MEMORY_STATE_BUILD && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-            memory.workState = MEMORY_STATE_HARVEST;
-        } else if (memory.workState === MEMORY_STATE_HARVEST && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
-            memory.workState = MEMORY_STATE_BUILD;
+        if (memory.workState === MEMORY_STATE_WORKING && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_COLLECTING;
+        } else if (memory.workState === MEMORY_STATE_COLLECTING && creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_WORKING;
         }
 
-        if (memory.workState === MEMORY_STATE_BUILD) {
+        if (memory.workState === MEMORY_STATE_WORKING) {
             if (this.target) {
                 if (creep.build(this.target) === ERR_NOT_IN_RANGE) {
                     this.visualizeMoveTo(this.target);
                 }
             }
-        } else if (memory.workState === MEMORY_STATE_HARVEST) {
+        } else if (memory.workState === MEMORY_STATE_COLLECTING) {
             if (this.source) {
                 const result = this.source instanceof Source
                     ? creep.harvest(this.source) : creep.withdraw(this.source, RESOURCE_ENERGY);
@@ -177,5 +177,47 @@ export class Transfer extends BaseRole<Structure | Ruin, Structure> {
     }
 }
 
-const MEMORY_STATE_HARVEST = "harvest";
-const MEMORY_STATE_BUILD = "build";
+export class OverseaTransporter extends BaseRole<RoomPosition, Structure> {
+    work() {
+        super.work();
+
+        const memory = this.creep.memory;
+        if (!memory.workState) {
+            memory.workState = MEMORY_STATE_COLLECTING;
+        }
+
+        if (memory.workState === MEMORY_STATE_WORKING && this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_COLLECTING;
+        } else if (memory.workState === MEMORY_STATE_COLLECTING && this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_WORKING;
+        }
+
+        if (memory.workState === MEMORY_STATE_COLLECTING) {
+            if (this.source) {
+                if (!this.creep.pos.isNearTo(this.source)) {
+                    this.visualizeMoveTo(this.source);
+                } else {
+                    const ruin = this.source.findClosestByPath(FIND_RUINS, {
+                        filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+                    });
+                    if (ruin) {
+                        if (this.creep.withdraw(ruin, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                            this.visualizeMoveTo(ruin);
+                        }
+                    }
+                }
+            }
+        } else if (memory.workState === MEMORY_STATE_WORKING) {
+            if (this.target) {
+                const code = this.creep.transfer(this.target, RESOURCE_ENERGY);
+                if (code === ERR_NOT_IN_RANGE) {
+                    this.visualizeMoveTo(this.target);
+                }
+            }
+        }
+    }
+}
+
+// todo 改为枚举
+const MEMORY_STATE_COLLECTING = "harvest";
+const MEMORY_STATE_WORKING = "build";

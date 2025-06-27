@@ -275,4 +275,13 @@ export class RepairController extends WorkerController<Repairer, Ruin | Structur
     protected createRole(creep: Creep): Repairer {
         return new Repairer(creep, this.findWorkStarter(), this.findWorkTarget());
     }
+
+    protected get canWork(): boolean {
+        const tower = getSpawn().pos.findClosestByRange(FIND_MY_STRUCTURES, {
+            filter: it =>
+                // todo 暂定tower有能量即可，后续再改
+                it.structureType === STRUCTURE_TOWER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+        });
+        return !tower && super.canWork;
+    }
 }

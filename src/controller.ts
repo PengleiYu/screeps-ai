@@ -10,13 +10,18 @@ import {
     Upgrader
 } from "./roles";
 import {
-    getClosestCmpFun, getClosestDroppedEnergy, getClosestEnergyStorable, getClosetTombstone,
+    getClosestCmpFun,
+    getClosestDroppedEnergy,
+    getClosestEnergyStorable,
+    getClosetTombstone,
     getEnergyContainerOfSpawn,
     getEnergyDropOfSpawn,
     getEnergySourceOfSpawn,
     getEnergyStorageOfSpawn,
     getSpawn,
-    getSpawnStructureNotFull, ResourceWithdrawn, SpawnStruct,
+    getSpawnStructureNotFull,
+    ResourceWithdrawn,
+    SpawnStruct,
     trySpawn,
 } from "./utils";
 
@@ -90,9 +95,7 @@ export class SpawnAssistantController extends WorkerController<SpawnAssistant, S
     }
 
     protected findWorkTarget(): SpawnStruct | null {
-        const result = getSpawnStructureNotFull(getSpawn().pos);
-        console.log('result', result);
-        return result;
+        return getSpawnStructureNotFull(getSpawn().pos);
     }
 
 }

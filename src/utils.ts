@@ -6,6 +6,19 @@ export var globalInfo = {
     canSpawn: true,
 }
 
+/**
+ * 当前房间某类建筑的剩余可用数量
+ */
+function availableBuildings(room: Room, type: BuildableStructureConstant): number {
+    const controller = room.controller;
+    if (!controller) return 0;
+    const max = CONTROLLER_STRUCTURES[type][controller.level];
+    const current = room.find(FIND_STRUCTURES, {
+        filter: it => it.structureType === type
+    }).length;
+    return max - current;
+}
+
 export function getSpawn() {
     return Game.spawns['Spawn1'];
 }

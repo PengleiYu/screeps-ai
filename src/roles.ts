@@ -13,6 +13,10 @@ export abstract class BaseRole<Source, Target> {
         });
     }
 
+    protected get canKeepEnergy(): boolean {
+        return true;
+    }
+
     // 需要一个状态机：working-clean-park
     haveRest() {
         const memory = this.creep.memory;
@@ -20,7 +24,7 @@ export abstract class BaseRole<Source, Target> {
             console.log(`${memory.role}:${this.creep.name} 开始休息`);
         }
         memory.working = false;
-        const done = this.putBackEnergyDone();
+        const done = !this.canKeepEnergy && this.putBackEnergyDone();
         if (done) this.park();
     }
 
@@ -28,7 +32,7 @@ export abstract class BaseRole<Source, Target> {
         this.creep.memory.working = true;
     }
 
-    protected putBackEnergyDone(): boolean {
+    private putBackEnergyDone(): boolean {
         if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) return true;
 
         const storage =
@@ -42,7 +46,7 @@ export abstract class BaseRole<Source, Target> {
         return false;
     }
 
-    protected park() {
+    private park() {
         const parkingLot = this.findParkingLot();
         if (!this.creep.pos.isNearTo(parkingLot)) {
             console.log(this.creep.name, 'park')
@@ -58,10 +62,6 @@ export abstract class BaseRole<Source, Target> {
 }
 
 export class Harvester extends BaseRole<Source, Structure> {
-
-    protected putBackEnergyDone(): boolean {
-        return true;// 收获者可以不放回资源
-    }
 
     work(): void {
         super.work();
@@ -82,6 +82,11 @@ export class Harvester extends BaseRole<Source, Structure> {
 }
 
 export class Builder extends BaseRole<Ruin | StructureStorage | StructureContainer | Source, ConstructionSite> {
+
+    protected get canKeepEnergy(): boolean {
+        return false;
+    }
+
     work(): void {
         super.work();
         const creep = this.creep;

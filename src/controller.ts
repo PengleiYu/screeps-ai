@@ -135,9 +135,12 @@ abstract class BaseTransferController extends WorkerController<Transfer, Structu
     protected override findWorkStarter(): Structure | Ruin | undefined {
         const target = this.findWorkTarget();
         if (!target) return;
-        return getEnergyDropOfSpawn(target)// 优先散落的资源
-            ?? getEnergyStorageOfSpawn(true, target)
-            ?? getEnergyContainerOfSpawn(true, target);
+
+        const highLevelRes = [getEnergyDropOfSpawn(target)// 优先散落的资源
+            , getEnergyStorageOfSpawn(true, target)]
+            .sort(getClosestCmpFun(target))
+            [0];
+        return highLevelRes ?? getEnergyContainerOfSpawn(true, target);
     }
 
     protected override createRole(creep: Creep): Transfer {
@@ -203,14 +206,15 @@ export class StorageTransferController extends BaseTransferController {
         const target = this.findWorkTarget();
         if (!target) return;
 
-        // 掉落资源
-        const energyDropOfSpawn = getEnergyDropOfSpawn(target);
-        if (energyDropOfSpawn) return energyDropOfSpawn;
+        return this.nearMiningContainer(target) ?? getEnergyDropOfSpawn(target);
+    }
 
+    private nearMiningContainer(target: Structure) {
         // 最近的矿点容器
         return getSpawn().room.find(FIND_SOURCES)
             .map(source => source.pos.findInRange(FIND_STRUCTURES, 1, {
-                filter: it => it.structureType === STRUCTURE_CONTAINER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+                filter: it =>
+                    it.structureType === STRUCTURE_CONTAINER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 150
             }))
             .reduce((previousValue, currentValue) => {
                 previousValue.push(...currentValue)

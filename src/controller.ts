@@ -27,23 +27,29 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
         return !!this.findWorkTarget();
     }
 
+    protected get mustKeepAlive(): boolean {
+        return false;
+    }
+
     run() {
         const creeps = Object.keys(Game.creeps)
             .map(key => Game.creeps[key])
             .filter(creep => creep.memory.role === this.roleName);
 
-        // 不满足工作条件则休息
         if (!this.canWork) {
+            // 不满足工作条件则休息
             creeps.forEach(it => this.createRole(it).haveRest());
-            return
+        } else {
+            // 正常工作
+            creeps.forEach(it => this.createRole(it).work());
         }
-        // 正常工作
-        creeps.forEach(it => this.createRole(it).work());
 
-        // 数量不足则继续孵化
-        const memory = {role: this.roleName};
-        for (let i = creeps.length; i < this.roleInstanceMax; i++) {
-            trySpawn(`${this.roleName}_${Date.now()}`, this.roleBody, memory);
+        if (this.mustKeepAlive || this.canWork) {
+            // 数量不足则继续孵化
+            const memory = {role: this.roleName};
+            for (let i = creeps.length; i < this.roleInstanceMax; i++) {
+                trySpawn(`${this.roleName}_${Date.now()}`, this.roleBody, memory);
+            }
         }
     }
 }
@@ -150,8 +156,8 @@ export class SpawnTransferController extends BaseTransferController {
         return getSpawnStructureNotFull(getSpawn());
     }
 
-    protected get canWork(): boolean {
-        return true;// 需要确保一直存在
+    protected get mustKeepAlive(): boolean {
+        return true;
     }
 }
 
@@ -186,7 +192,7 @@ export class ContainerTransferController extends BaseTransferController {
 
 export class StorageTransferController extends BaseTransferController {
     protected get roleInstanceMax(): number {
-        return 3;
+        return 6;
     }
 
     protected get roleName(): string {

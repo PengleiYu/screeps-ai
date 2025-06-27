@@ -135,3 +135,9 @@ export function getClosestDroppedEnergy(obj: Positionable): Resource<RESOURCE_EN
         filter: it => it.resourceType === RESOURCE_ENERGY,
     });
 }
+
+export function getClosetTombstone(obj: RoomPosition): Tombstone | null {
+    return obj.findClosestByPath(FIND_TOMBSTONES, {
+        filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+    })
+}

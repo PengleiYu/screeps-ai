@@ -10,7 +10,7 @@ import {
     Upgrader
 } from "./roles";
 import {
-    getClosestCmpFun, getClosestDroppedEnergy, getClosestEnergyStorable,
+    getClosestCmpFun, getClosestDroppedEnergy, getClosestEnergyStorable, getClosetTombstone,
     getEnergyContainerOfSpawn,
     getEnergyDropOfSpawn,
     getEnergySourceOfSpawn,
@@ -402,7 +402,11 @@ export class SweepController extends WorkerController<Sweeper, RoomPosition, Str
     }
 
     protected findWorkStarter(): RoomPosition | undefined {
-        return getClosestDroppedEnergy(getSpawn())?.pos;
+        return (
+            getClosestDroppedEnergy(getSpawn())
+            ?? getClosetTombstone(getSpawn().pos)
+        )
+            ?.pos
     }
 
     protected findWorkTarget(): Structure | undefined {

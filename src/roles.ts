@@ -1,6 +1,6 @@
 import {
     getClosestDroppedEnergy,
-    getClosestEnergyWithdrawn,
+    getClosestEnergyWithdrawn, getClosetTombstone,
     getEnergyContainerOfSpawn,
     getEnergyStorageOfSpawn,
     getSpawn,
@@ -315,6 +315,13 @@ export class Sweeper extends BaseRole<RoomPosition, Structure> {
                     if (energy) {
                         if (this.creep.pickup(energy) === ERR_NOT_IN_RANGE) {
                             this.visualizeMoveTo(energy);
+                        }
+                    } else {
+                        const tombstone = getClosetTombstone(this.creep.pos);
+                        if (tombstone) {
+                            if (this.creep.withdraw(tombstone, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                                this.visualizeMoveTo(tombstone);
+                            }
                         }
                     }
                 }

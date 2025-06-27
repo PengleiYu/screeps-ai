@@ -3,7 +3,7 @@ import {
     ContainerTransferController,
     HarvestController, OverseaTransportController,
     RepairController, SpawnAssistantController,
-    StorageTransferController,
+    StorageTransferController, SweepController,
     TowerTransferController,
     UpgradeController
 } from "./controller";
@@ -31,6 +31,8 @@ export function loop() {
     new TowerController().run();
     new ContainerTransferController().run();
     new StorageTransferController().run();
+    new SweepController().run();
+
     new OverseaTransportController().run();
 
     for (const key of Object.keys(Memory.creeps)) {

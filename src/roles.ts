@@ -1,9 +1,10 @@
 import {
-    getClosestResourceStorable,
+    getClosestDroppedEnergy,
+    getClosestEnergyWithdrawn,
     getEnergyContainerOfSpawn,
     getEnergyStorageOfSpawn,
     getSpawn,
-    ResourceStorable,
+    ResourceWithdrawn,
     SpawnStruct
 } from "./utils";
 
@@ -125,7 +126,7 @@ export class Harvester extends BaseRole<Source, Structure> {
     }
 }
 
-export class SpawnAssistant extends BaseRole<Source | ResourceStorable, SpawnStruct> {
+export class SpawnAssistant extends BaseRole<Source | ResourceWithdrawn, SpawnStruct> {
     work() {
         super.work();
         // todo 整体改掉
@@ -265,10 +266,55 @@ export class OverseaTransporter extends BaseRole<RoomPosition, Structure> {
                     this.visualizeMoveTo(this.source);
                 } else {
                     // 已到房间，找最近的存储
-                    const ruin = getClosestResourceStorable(this.creep);
+                    const ruin = getClosestEnergyWithdrawn(this.creep);
                     if (ruin) {
                         if (this.creep.withdraw(ruin, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
                             this.visualizeMoveTo(ruin);
+                        }
+                    }
+                }
+            }
+        } else if (memory.workState === MEMORY_STATE_WORKING) {
+            if (this.target) {
+                const code = this.creep.transfer(this.target, RESOURCE_ENERGY);
+                if (code === ERR_NOT_IN_RANGE) {
+                    this.visualizeMoveTo(this.target);
+                }
+            }
+        }
+    }
+}
+
+export class Sweeper extends BaseRole<RoomPosition, Structure> {
+    protected get canKeepEnergy(): boolean {
+        return false;
+    }
+
+    work() {
+        super.work();
+
+        const memory = this.creep.memory;
+        if (!memory.workState) {
+            memory.workState = MEMORY_STATE_COLLECTING;
+        }
+
+        if (memory.workState === MEMORY_STATE_WORKING && this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_COLLECTING;
+        } else if (memory.workState === MEMORY_STATE_COLLECTING && this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_WORKING;
+        }
+
+        if (memory.workState === MEMORY_STATE_COLLECTING) {
+            if (this.source) {
+                // 没到房间，仅移动
+                if (this.creep.room.name !== this.source.roomName) {
+                    this.visualizeMoveTo(this.source);
+                } else {
+                    // 已到房间，找最近的存储
+                    const energy = getClosestDroppedEnergy(this.creep);
+                    if (energy) {
+                        if (this.creep.pickup(energy) === ERR_NOT_IN_RANGE) {
+                            this.visualizeMoveTo(energy);
                         }
                     }
                 }

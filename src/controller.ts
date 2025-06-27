@@ -1,12 +1,22 @@
-import {BaseRole, Builder, Harvester, OverseaTransporter, Repairer, SpawnAssistant, Transfer, Upgrader} from "./roles";
 import {
-    getClosestCmpFun,
+    BaseRole,
+    Builder,
+    Harvester,
+    OverseaTransporter,
+    Repairer,
+    SpawnAssistant,
+    Sweeper,
+    Transfer,
+    Upgrader
+} from "./roles";
+import {
+    getClosestCmpFun, getClosestDroppedEnergy, getClosestEnergyStorable,
     getEnergyContainerOfSpawn,
     getEnergyDropOfSpawn,
     getEnergySourceOfSpawn,
     getEnergyStorageOfSpawn,
     getSpawn,
-    getSpawnStructureNotFull, ResourceStorable, SpawnStruct,
+    getSpawnStructureNotFull, ResourceWithdrawn, SpawnStruct,
     trySpawn,
 } from "./utils";
 
@@ -55,7 +65,7 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
     }
 }
 
-export class SpawnAssistantController extends WorkerController<SpawnAssistant, Source | ResourceStorable, SpawnStruct> {
+export class SpawnAssistantController extends WorkerController<SpawnAssistant, Source | ResourceWithdrawn, SpawnStruct> {
     protected get roleInstanceMax(): number {
         return 1;
     }
@@ -72,7 +82,7 @@ export class SpawnAssistantController extends WorkerController<SpawnAssistant, S
         return new SpawnAssistant(creep, this.findWorkStarter(), this.findWorkTarget());
     }
 
-    protected findWorkStarter(): Source | ResourceStorable | undefined {
+    protected findWorkStarter(): Source | ResourceWithdrawn | undefined {
         return getEnergyStorageOfSpawn()
             ?? getEnergyDropOfSpawn()
             ?? getEnergyContainerOfSpawn()
@@ -371,5 +381,37 @@ export class OverseaTransportController extends WorkerController<OverseaTranspor
 
     protected get roleName(): string {
         return "overseaTransporter"
+    }
+}
+
+export class SweepController extends WorkerController<Sweeper, RoomPosition, Structure> {
+    protected get roleInstanceMax(): number {
+        return 1;
+    }
+
+    protected get roleName(): string {
+        return 'sweeper';
+    }
+
+    protected get roleBody(): BodyPartConstant[] {
+        return BODY_TRANSFER;
+    }
+
+    protected createRole(creep: Creep): Sweeper {
+        return new Sweeper(creep, this.findWorkStarter(), this.findWorkTarget());
+    }
+
+    protected findWorkStarter(): RoomPosition | undefined {
+        return getClosestDroppedEnergy(getSpawn())?.pos;
+    }
+
+    protected findWorkTarget(): Structure | undefined {
+        const starter = this.findWorkStarter();
+        if (!starter) return;
+        return getClosestEnergyStorable(starter)
+    }
+
+    protected get canWork(): boolean {
+        return !!this.findWorkStarter();
     }
 }

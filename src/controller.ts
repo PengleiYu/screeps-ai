@@ -1,6 +1,5 @@
 import {BaseRole, Builder, Harvester, Repairer, Transfer, Upgrader} from "./roles";
 import {
-    checkCreepExist,
     getClosestCmpFun,
     getEnergyContainerOfSpawn,
     getEnergyDropOfSpawn,
@@ -8,21 +7,13 @@ import {
     getEnergyStorageOfSpawn,
     getSpawn,
     getSpawnStructureNotFull,
-    SpawnConfig
+    trySpawn,
 } from "./utils";
 
 export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, STARTER, TARGET> {
-    static spawnIfNotExist = true;
+    protected abstract get roleInstanceMax(): number;
 
-    protected getSpawnConfigs(): SpawnConfig[] {
-        return Array.from({length: this.creepCount},
-            (_, index) =>
-                ({name: `${this.roleRootName}${index}`, body: this.roleBody, roleName: this.roleRootName}));
-    }
-
-    protected abstract get creepCount(): number;
-
-    protected abstract get roleRootName(): string;
+    protected abstract get roleName(): string;
 
     protected abstract get roleBody(): BodyPartConstant[];
 
@@ -37,50 +28,40 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
     }
 
     run() {
-        const configs = this.getSpawnConfigs();
+        const creeps = Object.keys(Game.creeps)
+            .map(key => Game.creeps[key])
+            .filter(creep => creep.memory.role === this.roleName);
 
         // 不满足工作条件则休息
-        const canWork = this.canWork;
-        this.checkRuntime(canWork);
-        if (!canWork) {
-            for (const config of configs) {
-                const creep = checkCreepExist(config, false);
-                if (creep) this.createRole(creep).haveRest();
-            }
+        if (!this.canWork) {
+            creeps.forEach(it => this.createRole(it).haveRest());
             return
         }
         // 正常工作
-        for (const config of configs) {
-            const creep = checkCreepExist(config, WorkerController.spawnIfNotExist);
-            if (!creep) {
-                if (!WorkerController.spawnIfNotExist) {
-                    console.log(`欲孵化${config.name}失败`)
-                }
-                WorkerController.spawnIfNotExist = false;
-                continue;
-            }
-            this.createRole(creep).work();
+        creeps.forEach(it => this.createRole(it).work());
+
+        // 数量不足则继续孵化
+        for (let i = creeps.length; i < this.roleInstanceMax; i++) {
+            trySpawn(`${this.roleName}_${i}`, this.roleBody, this.roleName);
         }
     }
 
     private checkRuntime(canWork: boolean) {
         const creepsByRole = Object.keys(Game.creeps)
             .map(key => Game.creeps[key])
-            .filter(creep => creep.memory.role === this.roleRootName);
-        const creepsByName = this.getSpawnConfigs().map(it => checkCreepExist(it, false))
-            .filter(it => it !== undefined);
-        if (canWork && creepsByRole.length !== this.creepCount) {
-            console.log(`${this.roleRootName}类creep未全部增加role属性`);
+            .filter(creep => creep.memory.role === this.roleName);
+        if (canWork && creepsByRole.length !== this.roleInstanceMax) {
+            console.log(`${this.roleName}类creep未全部增加role属性`);
         }
     }
 }
 
 export class HarvestController extends WorkerController<Harvester, Source, Structure> {
-    protected get creepCount(): number {
+    protected get roleInstanceMax(): number {
         return 3;
     }
 
-    protected get roleRootName(): string {
+    protected get roleName(): string {
         return 'harvester';
     }
 
@@ -110,11 +91,11 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
 }
 
 export class BuildController extends WorkerController<Builder, Ruin | StructureStorage | StructureContainer | Source, ConstructionSite> {
-    protected get creepCount(): number {
+    protected get roleInstanceMax(): number {
         return 2;
     }
 
-    protected get roleRootName(): string {
+    protected get roleName(): string {
         return 'builder';
     }
 
@@ -145,7 +126,7 @@ export class BuildController extends WorkerController<Builder, Ruin | StructureS
 const BODY_TRANSFER = [MOVE, MOVE, MOVE, CARRY, CARRY, CARRY,];
 
 abstract class BaseTransferController extends WorkerController<Transfer, Structure | Ruin, Structure> {
-    protected get creepCount(): number {
+    protected get roleInstanceMax(): number {
         return 1;
     }
 
@@ -169,7 +150,7 @@ abstract class BaseTransferController extends WorkerController<Transfer, Structu
 // 这个角色不太好，应该有一个专门的孵化辅助者，可运输可挖矿
 export class SpawnTransferController extends BaseTransferController {
 
-    protected get roleRootName(): string {
+    protected get roleName(): string {
         return "spawnTransfer";
     }
 
@@ -183,11 +164,11 @@ export class SpawnTransferController extends BaseTransferController {
 }
 
 export class ContainerTransferController extends BaseTransferController {
-    protected get creepCount(): number {
+    protected get roleInstanceMax(): number {
         return 2;
     }
 
-    protected get roleRootName(): string {
+    protected get roleName(): string {
         return "containerTransfer";
     }
 
@@ -212,11 +193,11 @@ export class ContainerTransferController extends BaseTransferController {
 }
 
 export class TowerTransferController extends BaseTransferController {
-    protected get creepCount(): number {
+    protected get roleInstanceMax(): number {
         return 1;
     }
 
-    protected get roleRootName(): string {
+    protected get roleName(): string {
         return 'towerTransfer';
     }
 
@@ -231,11 +212,11 @@ export class TowerTransferController extends BaseTransferController {
 }
 
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | undefined> {
-    protected get creepCount(): number {
+    protected get roleInstanceMax(): number {
         return 10;
     }
 
-    protected get roleRootName(): string {
+    protected get roleName(): string {
         return 'upgrader';
     }
 
@@ -268,11 +249,11 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
 }
 
 export class RepairController extends WorkerController<Repairer, Ruin | StructureStorage | StructureContainer, Structure> {
-    protected get creepCount(): number {
+    protected get roleInstanceMax(): number {
         return 1;
     }
 
-    protected get roleRootName(): string {
+    protected get roleName(): string {
         return 'repairer';
     }
 

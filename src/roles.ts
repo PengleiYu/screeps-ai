@@ -17,7 +17,7 @@ export abstract class BaseRole<Source, Target> {
     haveRest() {
         const memory = this.creep.memory;
         if (memory.working) {
-            console.log(`${memory.role}-${this.creep.name} 开始休息`);
+            console.log(`${memory.role}:${this.creep.name} 开始休息`);
         }
         memory.working = false;
         const done = this.putBackEnergyDone();

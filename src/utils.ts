@@ -1,40 +1,29 @@
 export type Positionable = { pos: RoomPosition }
-
-export interface SpawnConfig {
-    body: BodyPartConstant[];
-    name: string;
-    roleName: string;
+export var globalInfo = {
+    canSpawn: true,
 }
 
 export function getSpawn() {
     return Game.spawns['Spawn1'];
 }
 
-export function trySpawnCreep(name: string, roleBody: BodyPartConstant[], roleName?: string) {
+export function trySpawn(name: string, body: BodyPartConstant[], role: string): boolean {
+    if (!globalInfo.canSpawn) {
+        return false;
+    }
+    globalInfo.canSpawn = false;
+
     const spawn = getSpawn();
     if (spawn.spawning) {
-        return;
+        return false;
     }
-    console.log('开始孵化', name)
-    let spawnResult = spawn.spawnCreep(roleBody, name, {
+    const spawnResult = spawn.spawnCreep(body, name, {
         memory: {
-            role: roleName,
+            role: role,
         }
     });
-    if (spawnResult != OK) {
-        console.log(name, "孵化失败", spawnResult);
-    }
-}
-
-export function checkCreepExist(config: SpawnConfig, spawnIfNotExist: boolean = true): Creep | undefined {
-    const creep = Game.creeps[config.name];
-    if (creep) return creep;
-    if (spawnIfNotExist) {
-        const name = config.name;
-        const roleBody = config.body;
-        const roleName = config.roleName;
-        trySpawnCreep(name, roleBody, roleName);
-    }
+    console.log(`正在孵化${role}:${name}, result=${spawnResult}`);
+    return spawnResult == OK;
 }
 
 export function getClosestCmpFun<T extends Positionable | undefined, E extends Positionable | undefined>(center: T)

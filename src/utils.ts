@@ -46,7 +46,7 @@ export function trySpawn(name: string, body: BodyPartConstant[], memory: CreepMe
     return result == OK;
 }
 
-export function getClosestCmpFun<T extends RoomPosition | Positionable | undefined, E extends RoomPosition | Positionable | undefined>(center: T)
+export function getClosestCmpFun<T extends RoomPosition | Positionable | null, E extends RoomPosition | Positionable | null>(center: T)
     : (a: E, b: E) => number {
     return (a, b) => {
         if (!center || !a || !b) return 0;
@@ -55,7 +55,7 @@ export function getClosestCmpFun<T extends RoomPosition | Positionable | undefin
     };
 }
 
-export function getEnergyStorageOfSpawn(checkNotEmpty: boolean = true, center: Positionable = getSpawn()): StructureStorage | undefined {
+export function getEnergyStorageOfSpawn(checkNotEmpty: boolean = true, center: Positionable = getSpawn()): StructureStorage | null {
     return getSpawn().room.find(FIND_MY_STRUCTURES, {
         filter: it => it.structureType === STRUCTURE_STORAGE
     })
@@ -68,7 +68,7 @@ export function getEnergyStorageOfSpawn(checkNotEmpty: boolean = true, center: P
         [0];
 }
 
-export function getEnergyContainerOfSpawn(checkNotEmpty: boolean = true, center: Positionable = getSpawn()): StructureContainer | undefined {
+export function getEnergyContainerOfSpawn(checkNotEmpty: boolean = true, center: Positionable = getSpawn()): StructureContainer | null {
     return getSpawn().room.find(FIND_STRUCTURES, {
         filter: it => it.structureType === STRUCTURE_CONTAINER
     })
@@ -81,28 +81,31 @@ export function getEnergyContainerOfSpawn(checkNotEmpty: boolean = true, center:
         [0];
 }
 
-export function getEnergyDropOfSpawn(center: Positionable = getSpawn()): Ruin | undefined {
+export function getEnergyDropOfSpawn(center: Positionable = getSpawn()): Ruin | null {
     return (getSpawn().room.find(FIND_RUINS, {
         filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
     }).sort(getClosestCmpFun(center)))
         [0];
 }
 
-export function getEnergySourceOfSpawn(): Source | undefined {
+export function getEnergySourceOfSpawn(): Source | null {
     return getSpawn().room.find(FIND_SOURCES)
         .sort(getClosestCmpFun(getSpawn()))
         [0];
 }
 
-export function getSpawnStructureNotFull(center: Positionable): StructureSpawn | StructureExtension | undefined {
-    return getSpawn().room.find(FIND_MY_STRUCTURES, {
-        filter: obj => obj.structureType === STRUCTURE_SPAWN || obj.structureType === STRUCTURE_EXTENSION
+export function getSpawnStructureNotFull(center: RoomPosition): StructureSpawn | StructureExtension | null {
+    const extension: StructureExtension | null = center.findClosestByRange(FIND_MY_STRUCTURES, {
+        filter: obj =>
+            obj.structureType === STRUCTURE_EXTENSION && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
     })
-        .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
-        .sort(getClosestCmpFun(center)) [0];
+    if (extension) return extension;
+    return center.findClosestByRange(FIND_MY_SPAWNS, {
+        filter: obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+    })
 }
 
-export function getClosestEnergyWithdrawn(creep: Creep): ResourceWithdrawn | undefined {
+export function getClosestEnergyWithdrawn(creep: Creep): ResourceWithdrawn | null {
     const filterRetainEnergy = (it: ResourceWithdrawn) => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
     const tombstone = creep.pos.findClosestByPath(FIND_TOMBSTONES, {filter: filterRetainEnergy});
     const ruin = creep.pos.findClosestByPath(FIND_RUINS, {filter: filterRetainEnergy});
@@ -117,7 +120,7 @@ export function getClosestEnergyWithdrawn(creep: Creep): ResourceWithdrawn | und
         .sort(getClosestCmpFun(creep))[0]
 }
 
-export function getClosestEnergyStorable(obj: RoomPosition): ResourceStorable | undefined {
+export function getClosestEnergyStorable(obj: RoomPosition): ResourceStorable | null {
     const filterCapacity = (it: ResourceWithdrawn) => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
     const container: StructureContainer | null = obj.findClosestByRange(FIND_STRUCTURES, {
         filter: it => it.structureType === STRUCTURE_CONTAINER && filterCapacity(it),

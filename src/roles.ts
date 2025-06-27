@@ -10,7 +10,7 @@ import {
 
 export abstract class BaseRole<Source, Target> {
 
-    constructor(protected creep: Creep, protected source: Source | undefined, protected target: Target | undefined) {
+    constructor(protected creep: Creep, protected source: Source | null, protected target: Target | null) {
     }
 
     visualizeMoveTo(target: RoomPosition | { pos: RoomPosition },) {

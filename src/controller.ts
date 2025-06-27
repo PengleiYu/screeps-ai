@@ -30,9 +30,9 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
     // todo 不应在创建时就指定起点和终点
     protected abstract createRole(creep: Creep): ROLE;
 
-    protected abstract findWorkStarter(): STARTER | undefined;
+    protected abstract findWorkStarter(): STARTER | null;
 
-    protected abstract findWorkTarget(): TARGET | undefined;
+    protected abstract findWorkTarget(): TARGET | null;
 
     protected get canWork(): boolean {
         return !!this.findWorkTarget();
@@ -82,15 +82,17 @@ export class SpawnAssistantController extends WorkerController<SpawnAssistant, S
         return new SpawnAssistant(creep, this.findWorkStarter(), this.findWorkTarget());
     }
 
-    protected findWorkStarter(): Source | ResourceWithdrawn | undefined {
+    protected findWorkStarter(): Source | ResourceWithdrawn | null {
         return getEnergyStorageOfSpawn()
             ?? getEnergyDropOfSpawn()
             ?? getEnergyContainerOfSpawn()
             ?? getEnergySourceOfSpawn();
     }
 
-    protected findWorkTarget(): SpawnStruct | undefined {
-        return getSpawnStructureNotFull(getSpawn());
+    protected findWorkTarget(): SpawnStruct | null {
+        const result = getSpawnStructureNotFull(getSpawn().pos);
+        console.log('result',result);
+        return result;
     }
 
 }
@@ -108,20 +110,20 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
         return [MOVE, WORK, CARRY];
     }
 
-    findWorkStarter(): Source | undefined {
+    findWorkStarter(): Source | null {
         return getEnergySourceOfSpawn();
     }
 
     // todo 收获者角色需要拆分，收获者仅挖矿并存到附近容器，另建孵化辅助兜底角色挖矿、捡矿并运输至孵化器
-    findWorkTarget(): Structure | undefined {
+    findWorkTarget(): Structure | null {
         const starter = this.findWorkStarter();
-        if (!starter) return;
+        if (!starter) return null;
         return starter.pos.findInRange(FIND_STRUCTURES, 3, {
                 filter: it => it.structureType === STRUCTURE_CONTAINER
             }).filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
                 .sort(getClosestCmpFun(starter))[0]
             // 收获者在没有容器时，运送回孵化器
-            ?? getSpawnStructureNotFull(starter);
+            ?? getSpawnStructureNotFull(starter.pos);
     }
 
     createRole(creep: Creep): Harvester {
@@ -142,16 +144,16 @@ export class BuildController extends WorkerController<Builder, Ruin | StructureS
         return [MOVE, WORK, CARRY, CARRY];
     }
 
-    findWorkStarter(): Ruin | StructureStorage | StructureContainer | Source | undefined {
+    findWorkStarter(): Ruin | StructureStorage | StructureContainer | Source | null {
         const target = this.findWorkTarget();
-        if (!target) return;
+        if (!target) return null;
         return getEnergyDropOfSpawn(target) ??
             getEnergyStorageOfSpawn(true, target) ??
             getEnergyContainerOfSpawn(true, target) ??
             getEnergySourceOfSpawn();
     }
 
-    findWorkTarget(): ConstructionSite | undefined {
+    findWorkTarget(): ConstructionSite | null {
         // 寻找工地
         return getSpawn().room.find(FIND_MY_CONSTRUCTION_SITES)
             .sort(getClosestCmpFun(getSpawn())) [0];
@@ -173,9 +175,9 @@ abstract class BaseTransferController extends WorkerController<Transfer, Structu
         return BODY_TRANSFER;
     }
 
-    protected override findWorkStarter(): Structure | Ruin | undefined {
+    protected override findWorkStarter(): Structure | Ruin | null {
         const target = this.findWorkTarget();
-        if (!target) return;
+        if (!target) return null;
 
         const highLevelRes = [getEnergyDropOfSpawn(target)// 优先散落的资源
             , getEnergyStorageOfSpawn(true, target)]
@@ -206,10 +208,10 @@ export class ContainerTransferController extends BaseTransferController {
         return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
     }
 
-    protected findWorkTarget(): StructureContainer | undefined {
+    protected findWorkTarget(): StructureContainer | null {
         // 控制器附近的容器
         const controller = getSpawn().room.controller;
-        if (!controller) return;
+        if (!controller) return null;
         return controller.pos.findInRange(FIND_STRUCTURES, 3, {
             filter: it => it.structureType === STRUCTURE_CONTAINER
         })
@@ -227,9 +229,9 @@ export class StorageTransferController extends BaseTransferController {
         return 'storageTransfer';
     }
 
-    protected override findWorkStarter(): Structure | Ruin | undefined {
+    protected override findWorkStarter(): Structure | Ruin | null {
         const target = this.findWorkTarget();
-        if (!target) return;
+        if (!target) return null;
 
         return this.nearMiningContainer(target) ?? getEnergyDropOfSpawn(target);
     }
@@ -250,7 +252,7 @@ export class StorageTransferController extends BaseTransferController {
             [0];
     }
 
-    protected findWorkTarget(): Structure | undefined {
+    protected findWorkTarget(): Structure | null {
         return getSpawn().room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_STORAGE
         })
@@ -270,7 +272,7 @@ export class TowerTransferController extends BaseTransferController {
         return 'towerTransfer';
     }
 
-    protected findWorkTarget(): Structure | undefined {
+    protected findWorkTarget(): Structure | null {
         return getSpawn().room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_TOWER
         })
@@ -280,7 +282,7 @@ export class TowerTransferController extends BaseTransferController {
     }
 }
 
-export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | undefined> {
+export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | null> {
     protected get roleInstanceMax(): number {
         return 10;
     }
@@ -294,9 +296,9 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
     }
 
     // 最近的废墟、容器、仓库
-    findWorkStarter(): Ruin | StructureStorage | StructureContainer | undefined {
+    findWorkStarter(): Ruin | StructureStorage | StructureContainer | null {
         const target = this.findWorkTarget();
-        if (!target) return;
+        if (!target) return null;
         const ruins = target.room.find(FIND_RUINS, {
             filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
         });
@@ -308,8 +310,8 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
         return arr.sort(getClosestCmpFun(target))[0];
     }
 
-    findWorkTarget(): StructureController | undefined {
-        return getSpawn().room.controller;
+    findWorkTarget(): StructureController | null {
+        return getSpawn().room.controller ?? null;
     }
 
     createRole(creep: Creep): Upgrader {
@@ -330,11 +332,11 @@ export class RepairController extends WorkerController<Repairer, Ruin | Structur
         return [MOVE, MOVE, WORK, CARRY, CARRY];
     }
 
-    findWorkStarter(): Ruin | StructureStorage | StructureContainer | undefined {
+    findWorkStarter(): Ruin | StructureStorage | StructureContainer | null {
         return getEnergyDropOfSpawn() ?? getEnergyStorageOfSpawn() ?? getEnergyContainerOfSpawn();
     }
 
-    findWorkTarget(): Structure | undefined {
+    findWorkTarget(): Structure | null {
         return getSpawn().room.find(FIND_STRUCTURES, {
             filter: it => it.structureType !== STRUCTURE_WALL && it.hits < it.hitsMax
         }).sort((a, b) => (a.hitsMax - a.hits) - (b.hitsMax - b.hits))
@@ -370,12 +372,12 @@ export class OverseaTransportController extends WorkerController<OverseaTranspor
         return new OverseaTransporter(creep, this.findWorkStarter(), this.findWorkTarget());
     }
 
-    protected findWorkStarter(): RoomPosition | undefined {
+    protected findWorkStarter(): RoomPosition | null {
         // 隔壁遗址坐标
         return new RoomPosition(19, 19, 'W56S38');
     }
 
-    protected findWorkTarget(): Structure | undefined {
+    protected findWorkTarget(): Structure | null {
         return getEnergyStorageOfSpawn();
     }
 
@@ -401,17 +403,17 @@ export class SweepController extends WorkerController<Sweeper, RoomPosition, Str
         return new Sweeper(creep, this.findWorkStarter(), this.findWorkTarget());
     }
 
-    protected findWorkStarter(): RoomPosition | undefined {
+    protected findWorkStarter(): RoomPosition | null {
         return (
             getClosestDroppedEnergy(getSpawn())
             ?? getClosetTombstone(getSpawn().pos)
         )
-            ?.pos
+            ?.pos ?? null;
     }
 
-    protected findWorkTarget(): Structure | undefined {
+    protected findWorkTarget(): Structure | null {
         const starter = this.findWorkStarter();
-        if (!starter) return;
+        if (!starter) return null;
         return getClosestEnergyStorable(starter)
     }
 

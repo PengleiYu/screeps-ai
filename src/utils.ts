@@ -19,6 +19,11 @@ function availableBuildings(room: Room, type: BuildableStructureConstant): numbe
     return max - current;
 }
 
+function bodyCost(body: BodyPartConstant[]): number {
+    return body.map(it => BODYPART_COST[it])
+        .reduce((previousValue, currentValue) => previousValue + currentValue)
+}
+
 export function getSpawn() {
     return Game.spawns['Spawn1'];
 }
@@ -56,6 +61,9 @@ export function trySpawn(name: string, body: BodyPartConstant[], memory: CreepMe
     }
     const result = spawn.spawnCreep(body, name, {memory: memory});
     console.log(`正在孵化${memory.role}:${name}, result=${getSpawnResultStr(result)}`);
+    if (result === ERR_NOT_ENOUGH_ENERGY) {
+        console.log(`孵化需要能量${(bodyCost(body))}, 可用${(spawn.room.energyAvailable)}, 上限${(spawn.room.energyCapacityAvailable)}`);
+    }
     return result == OK;
 }
 

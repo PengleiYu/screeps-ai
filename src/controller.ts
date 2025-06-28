@@ -287,7 +287,7 @@ export class TowerTransferController extends BaseTransferController {
 
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | null> {
     protected get roleInstanceMax(): number {
-        return 6;
+        return 5;
     }
 
     protected get roleName(): string {
@@ -295,8 +295,8 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
     }
 
     protected get roleBody(): BodyPartConstant[] {
-        const newVar = [MOVE, WORK, WORK, CARRY,];
-        const arr: BodyPartConstant[] = [];
+        const newVar = [WORK, WORK, WORK,];
+        const arr: BodyPartConstant[] = [CARRY, MOVE];
         for (let i = 0; i < 3; i++) {
             arr.push(...newVar);
         }

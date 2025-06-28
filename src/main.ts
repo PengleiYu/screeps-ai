@@ -1,13 +1,13 @@
 import {
     BuildController,
     ContainerTransferController,
-    HarvestController, OverseaTransportController,
+    HarvestController, LinkEndController, LinkStartController, OverseaTransportController,
     RepairController, SpawnAssistantController,
     StorageTransferController, SweepController,
     TowerTransferController,
     UpgradeController
 } from "./controller";
-import {TowerController} from "./army";
+import {LinkController, TowerController} from "./army";
 import {globalInfo} from "./utils";
 
 declare global {
@@ -25,6 +25,8 @@ export function loop() {
     new HarvestController().run();
     new ContainerTransferController().run();
     new BuildController().run();
+    new LinkStartController().run();
+    new LinkEndController().run();
     new UpgradeController().run();
     new RepairController().run();
     new TowerTransferController().run();
@@ -34,6 +36,7 @@ export function loop() {
     new SweepController().run();
 
     new OverseaTransportController().run();
+    new LinkController().run();
 
     if (Game.time % 20 === 0) {
         for (let name in Memory.creeps) {

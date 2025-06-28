@@ -300,11 +300,11 @@ export class Sweeper extends BaseRole<RoomPosition, Structure> {
             memory.workState = MEMORY_STATE_COLLECTING;
         }
 
-        // if (memory.workState === MEMORY_STATE_WORKING && this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
-        //     memory.workState = MEMORY_STATE_COLLECTING;
-        // } else if (memory.workState === MEMORY_STATE_COLLECTING && this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
-        //     memory.workState = MEMORY_STATE_WORKING;
-        // }
+        if (memory.workState === MEMORY_STATE_WORKING && this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_COLLECTING;
+        } else if (memory.workState === MEMORY_STATE_COLLECTING && this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+            memory.workState = MEMORY_STATE_WORKING;
+        }
 
         if (memory.workState === MEMORY_STATE_COLLECTING) {
             if (this.source) {

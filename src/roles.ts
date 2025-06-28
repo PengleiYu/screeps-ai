@@ -1,6 +1,6 @@
 import {
-    getClosestDroppedEnergy,
-    getClosestEnergyWithdrawn, getClosetTombstone,
+    getClosestDroppedEnergy, getClosestEnergyStorable,
+    getClosestEnergyWithdrawn, getClosestEnergyWithdrawn2, getClosetTombstone,
     getEnergyContainerOfSpawn,
     getEnergyStorageOfSpawn,
     getSpawn,
@@ -196,9 +196,11 @@ export class Upgrader extends BaseRole<Ruin | StructureStorage | StructureContai
                 }
             }
         } else {
-            if (this.source) {
-                if (this.creep.withdraw(this.source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                    this.visualizeMoveTo(this.source);
+            // todo 临时改动
+            const source = getClosestEnergyWithdrawn2(this.creep.pos);
+            if (source) {
+                if (this.creep.withdraw(source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                    this.visualizeMoveTo(source);
                 }
             }
         }
@@ -266,7 +268,7 @@ export class OverseaTransporter extends BaseRole<RoomPosition, Structure> {
                     this.visualizeMoveTo(this.source);
                 } else {
                     // 已到房间，找最近的存储
-                    const ruin = getClosestEnergyWithdrawn(this.creep);
+                    const ruin = getClosestEnergyWithdrawn(this.creep.pos);
                     if (ruin) {
                         if (this.creep.withdraw(ruin, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
                             this.visualizeMoveTo(ruin);

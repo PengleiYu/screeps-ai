@@ -196,7 +196,7 @@ abstract class BaseTransferController extends WorkerController<Transfer, Structu
 
 export class ContainerTransferController extends BaseTransferController {
     protected get roleInstanceMax(): number {
-        return 4;
+        return 6;
     }
 
     protected get roleName(): string {

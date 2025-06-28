@@ -141,10 +141,11 @@ export function getClosestEnergyWithdrawn(pos: RoomPosition): ResourceWithdrawn 
         .sort(getClosestCmpFun(pos))[0]
 }
 
-export function getClosestEnergyWithdrawn2(pos: RoomPosition): StructureContainer | null {
-    return pos.findInRange(FIND_STRUCTURES, 5, {
-        filter: it => it.structureType === STRUCTURE_CONTAINER,
-    })
+export function getClosestEnergyWithdrawn2(pos: RoomPosition): Structure | null {
+    const findInRange: (StructureContainer | StructureLink)[] = pos.findInRange(FIND_STRUCTURES, 5, {
+        filter: it => it.structureType === STRUCTURE_CONTAINER || it.structureType === STRUCTURE_LINK,
+    });
+    return findInRange
         .filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
         .sort(getClosestCmpFun(pos))
         [0];

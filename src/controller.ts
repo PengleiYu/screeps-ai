@@ -218,7 +218,7 @@ export class ContainerTransferController extends BaseTransferController {
         return controller.pos.findInRange(FIND_STRUCTURES, 3, {
             filter: it => it.structureType === STRUCTURE_CONTAINER
         })
-            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 150)
+            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
             [0];
     }
 }
@@ -287,7 +287,7 @@ export class TowerTransferController extends BaseTransferController {
 
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | null> {
     protected get roleInstanceMax(): number {
-        return 5;
+        return 6;
     }
 
     protected get roleName(): string {

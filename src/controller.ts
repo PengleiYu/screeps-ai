@@ -196,7 +196,7 @@ abstract class BaseTransferController extends WorkerController<Transfer, Structu
 
 export class ContainerTransferController extends BaseTransferController {
     protected get roleInstanceMax(): number {
-        return 1;
+        return 0;
     }
 
     protected get roleName(): string {
@@ -287,7 +287,7 @@ export class TowerTransferController extends BaseTransferController {
 
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | null> {
     protected get roleInstanceMax(): number {
-        return 5;
+        return 1;
     }
 
     protected get roleName(): string {
@@ -455,6 +455,11 @@ export class LinkStartController extends BaseTransferController {
 }
 
 export class LinkEndController extends BaseTransferController {
+
+    protected get roleInstanceMax(): number {
+        return 0;
+    }
+
     protected get roleName(): string {
         return 'LinkEnd';
     }

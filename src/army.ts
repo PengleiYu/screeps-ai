@@ -47,7 +47,7 @@ export class LinkController {
         const endLink = controller.pos.findInRange(FIND_MY_STRUCTURES, 5, {
             filter: it => it.structureType === STRUCTURE_LINK
         })
-            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            .filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) === 0)
             [0];
         if (!endLink) return;
         if (startLink.cooldown) {

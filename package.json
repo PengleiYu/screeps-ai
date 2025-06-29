@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup src/main.ts --out-dir C:\\Users\\yupen\\AppData\\Local\\Screeps\\scripts\\screeps.com\\main",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,6 +11,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-export type Positionable = { pos: RoomPosition };
+export type Positionable = RoomPosition | { pos: RoomPosition };
 export type ResourceStorable = StructureContainer | StructureStorage;
 export type ResourceWithdrawn = Tombstone | Ruin | ResourceStorable;
 export type SpawnStruct = StructureSpawn | StructureExtension;
@@ -165,7 +165,8 @@ export function getClosestEnergyStorable(obj: RoomPosition): ResourceStorable | 
 }
 
 export function getClosestDroppedEnergy(obj: Positionable): Resource<RESOURCE_ENERGY> | null {
-    return obj.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
+    const pos = obj instanceof RoomPosition ? obj : obj.pos;
+    return pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
         filter: it => it.resourceType === RESOURCE_ENERGY,
     });
 }
@@ -174,4 +175,19 @@ export function getClosetTombstone(obj: RoomPosition): Tombstone | null {
     return obj.findClosestByPath(FIND_TOMBSTONES, {
         filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
     })
+}
+
+export function findFlag() {
+    const pos = getSpawn().pos;
+    return pos.findClosestByRange(FIND_FLAGS, {
+        filter: it => it.name === 'Parking'
+    })?.pos ?? pos;
+}
+
+export function mapToObj<K, V>(map: Map<K, V>): { [key: string]: V } {
+    const result: { [key: string]: V } = {};
+    for (const [key, value] of map) {
+        result[String(key)] = value;
+    }
+    return result;
 }

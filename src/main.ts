@@ -9,6 +9,8 @@ import {
 } from "./controller";
 import {LinkController, TowerController} from "./army";
 import {globalInfo} from "./utils";
+import {CreepState} from "./role/role2";
+import {loop2} from "./controller/controller2";
 
 declare global {
 
@@ -16,12 +18,14 @@ declare global {
         role?: string,
         working?: boolean;
         workState?: string;
+        lifeState?: CreepState;
     }
 }
 
 export function loop() {
     globalInfo.canSpawn = true;
-    new SpawnAssistantController().run();
+    // new SpawnAssistantController().run();
+    loop2();
     new HarvestController().run();
     new ContainerTransferController().run();
     new BuildController().run();

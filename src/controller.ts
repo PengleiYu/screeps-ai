@@ -287,7 +287,7 @@ export class TowerTransferController extends BaseTransferController {
 
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | null> {
     protected get roleInstanceMax(): number {
-        return 6;
+        return 5;
     }
 
     protected get roleName(): string {
@@ -307,15 +307,20 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
     findWorkStarter(): Ruin | StructureStorage | StructureContainer | null {
         const target = this.findWorkTarget();
         if (!target) return null;
-        const ruins = target.room.find(FIND_RUINS, {
-            filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
-        });
-        const structures = target.room.find(FIND_STRUCTURES, {
-            filter: it => it.structureType === STRUCTURE_CONTAINER || it.structureType === STRUCTURE_STORAGE
-        }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
 
-        const arr: (Ruin | StructureStorage | StructureContainer)[] = [...ruins, ...structures]
-        return arr.sort(getClosestCmpFun(target))[0];
+        return target.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: it => it.structureType === STRUCTURE_CONTAINER
+        })
+
+        // const ruins = target.room.find(FIND_RUINS, {
+        //     filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+        // });
+        // const structures = target.room.find(FIND_STRUCTURES, {
+        //     filter: it => it.structureType === STRUCTURE_CONTAINER || it.structureType === STRUCTURE_STORAGE
+        // }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0);
+        //
+        // const arr: (Ruin | StructureStorage | StructureContainer)[] = [...ruins, ...structures]
+        // return arr.sort(getClosestCmpFun(target))[0];
     }
 
     findWorkTarget(): StructureController | null {
@@ -460,7 +465,7 @@ export class LinkEndController extends BaseTransferController {
         return controller.pos.findInRange(FIND_STRUCTURES, 5, {
             filter: it => it.structureType === STRUCTURE_CONTAINER
         })
-            .filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
+            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
             [0];
     }
 
@@ -470,7 +475,7 @@ export class LinkEndController extends BaseTransferController {
         return controller.pos.findInRange(FIND_MY_STRUCTURES, 5, {
             filter: it => it.structureType === STRUCTURE_LINK
         })
-            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            .filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
             [0];
     }
 }

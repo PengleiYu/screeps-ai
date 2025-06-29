@@ -197,7 +197,7 @@ export class Upgrader extends BaseRole<Ruin | StructureStorage | StructureContai
             }
         } else {
             // todo 临时改动
-            const source = getClosestEnergyWithdrawn2(this.creep.pos) ?? this.source;
+            const source = getClosestEnergyWithdrawn2(this.source?.pos ?? this.creep.pos) ?? this.source;
             if (source) {
                 if (this.creep.withdraw(source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
                     this.visualizeMoveTo(source);

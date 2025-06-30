@@ -138,7 +138,7 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
 
 export class BuildController extends WorkerController<Builder, Ruin | StructureStorage | StructureContainer | Source, ConstructionSite> {
     protected get roleInstanceMax(): number {
-        return 5;
+        return 3;
     }
 
     protected get roleName(): string {
@@ -198,7 +198,7 @@ abstract class BaseTransferController extends WorkerController<Transfer, Structu
 
 export class ContainerTransferController extends BaseTransferController {
     protected get roleInstanceMax(): number {
-        return 0;
+        return 1;
     }
 
     protected get roleName(): string {

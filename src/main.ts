@@ -24,6 +24,7 @@ declare global {
         workState?: string;
         lifeState?: CreepState;
         logging?: boolean;
+        lastSourceId?: Id<Source>;
     }
 }
 

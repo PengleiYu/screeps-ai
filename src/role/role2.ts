@@ -45,7 +45,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         if (this.logEnable) this.monitor = new StateMonitor(creep.name);
     }
 
-    private log(...data: any[]) {
+    protected log(...data: any[]) {
         if (this.logEnable) console.log(this.creep.name, ...data);
     }
 

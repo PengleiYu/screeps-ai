@@ -3,7 +3,7 @@ import {ActionReturnCode, CanBuild, CanHarvest, CanPickup, CanPutDown, CanUpgrad
 import {CreepContext} from "./base";
 
 export abstract class EnergyAction<T extends Positionable> extends CreepContext {
-    public constructor(creep: Creep, protected target: T) {
+    public constructor(creep: Creep, public target: T) {
         super(creep);
     }
 

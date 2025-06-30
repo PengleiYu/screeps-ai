@@ -296,12 +296,13 @@ export class UpgradeController extends WorkerController<Upgrader, Ruin | Structu
     }
 
     protected get roleBody(): BodyPartConstant[] {
-        const newVar = [WORK, WORK, WORK,];
-        const arr: BodyPartConstant[] = [CARRY, MOVE];
-        for (let i = 0; i < 3; i++) {
-            arr.push(...newVar);
-        }
-        return arr;
+        // const newVar = [WORK, WORK, WORK,];
+        // const arr: BodyPartConstant[] = [CARRY, MOVE];
+        // for (let i = 0; i < 3; i++) {
+        //     arr.push(...newVar);
+        // }
+        // return arr;
+        return [WORK, CARRY, MOVE];
     }
 
     // 最近的废墟、容器、仓库

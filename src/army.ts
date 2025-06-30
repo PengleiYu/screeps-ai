@@ -1,4 +1,4 @@
-import {getSpawn} from "./utils";
+import {getClosestCmpFun, getSpawn} from "./utils";
 
 export class TowerController {
     run() {
@@ -39,17 +39,16 @@ export class LinkController {
         const controller = getSpawn().room.controller;
         if (!controller) return;
 
-        const startLink = getSpawn().pos.findInRange(FIND_MY_STRUCTURES, 5, {
+        const linkArr = getSpawn().room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_LINK
-        }).filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) === 0)
-            [0];
-        if (!startLink) return;
-        const endLink = controller.pos.findInRange(FIND_MY_STRUCTURES, 5, {
-            filter: it => it.structureType === STRUCTURE_LINK
-        })
-            .filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) === 0)
-            [0];
-        if (!endLink) return;
+        }).sort(getClosestCmpFun(getSpawn()));
+        if (linkArr.length < 2) {
+            return;
+        }
+
+        const startLink = linkArr[linkArr.length - 1];
+        const endLink = linkArr[0];
+
         if (startLink.cooldown) {
             console.log(startLink, '冷却剩余', startLink.cooldown);
             return;

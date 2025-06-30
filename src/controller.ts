@@ -460,7 +460,7 @@ export class LinkStartController extends BaseTransferController {
 export class LinkEndController extends BaseTransferController {
 
     protected get roleInstanceMax(): number {
-        return 0;
+        return 1;
     }
 
     protected get roleName(): string {
@@ -468,22 +468,24 @@ export class LinkEndController extends BaseTransferController {
     }
 
     protected findWorkTarget(): Structure<StructureConstant> | null {
-        const controller = getSpawn().room.controller;
-        if (!controller) return null;
-        return controller.pos.findInRange(FIND_STRUCTURES, 5, {
-            filter: it => it.structureType === STRUCTURE_CONTAINER
+        return getSpawn().pos.findInRange(FIND_STRUCTURES, 5, {
+            filter: it => it.structureType === STRUCTURE_LINK
         })
             .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
             [0];
     }
 
     protected override findWorkStarter(): Structure | Ruin | null {
-        const controller = getSpawn().room.controller;
-        if (!controller) return null;
-        return controller.pos.findInRange(FIND_MY_STRUCTURES, 5, {
-            filter: it => it.structureType === STRUCTURE_LINK
+        return getSpawn().pos.findInRange(FIND_MY_STRUCTURES, 5, {
+            filter: it => it.structureType === STRUCTURE_STORAGE
         })
             .filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
             [0];
+    }
+
+    protected get canWork(): boolean {
+        return getSpawn().room.find(FIND_MY_STRUCTURES, {
+            filter: it => it.structureType === STRUCTURE_LINK
+        }).length >= 2;
     }
 }

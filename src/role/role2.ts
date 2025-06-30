@@ -20,7 +20,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 
     private log(...data: any[]) {
-        console.log(this.creep.name, ...data);
+        // console.log(this.creep.name, ...data);
     }
 
     abstract findSource(): EnergyAction<S> ;
@@ -42,21 +42,27 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 
     private moveState(target: CreepState) {
-        this.log('moveState', this.state, target);
         if (this.state === target) {
             return;
         }
         // 状态转移前的检查
         switch (target) {
             case CreepState.HARVEST_SOURCE:
-                if (!this.findSource()) return;
+                if (!this.findSource().isValid()) {
+                    this.log('未找到source，无法进入目标状态', target);
+                    return;
+                }
                 break;
             case CreepState.WORK:
-                if (!this.findWorkTarget()) return;
+                if (!this.findWorkTarget().isValid()) {
+                    this.log('未找到workTarget，无法进入目标状态', target);
+                    return;
+                }
                 break;
             default:
                 break;
         }
+        this.log('状态转移', this.state, '->', target);
         this._state = target;
     }
 

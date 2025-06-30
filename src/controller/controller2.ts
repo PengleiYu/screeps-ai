@@ -24,7 +24,7 @@ function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {
         .reduce((map, key) =>
                 key ? map.set(key, (map.get(key) || 0) + 1) : map,
             new Map<string, number>());
-    console.log('role数量统计', JSON.stringify(mapToObj(map)));
+    // console.log('role数量统计', JSON.stringify(mapToObj(map)));
 
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);

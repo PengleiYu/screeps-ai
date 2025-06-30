@@ -8,27 +8,27 @@ import {
 } from "../types";
 import {EnergyAction, HarvestAction, TransferAction, WithdrawAction} from "./actions";
 
-type StoreFilter = (store: StoreDefinition | Store<any, any>) => boolean;
+type CanWithdrawFilter = (it:CanWithdraw) => boolean;
 
-function findCloseStructure(creep: Creep, constantArr: StructureConstant[], storeFilter: (store: (StoreDefinition | Store<any, any>)) => boolean): StructureHaveStore | null {
+function findCloseStructure(creep: Creep, constantArr: StructureConstant[], storeFilter: CanWithdrawFilter): StructureHaveStore | null {
     return creep.pos.findClosestByPath(FIND_STRUCTURES, {
         filter: (it: StructureHaveStore/*这里忽略类型推断*/) => {
             return constantArr.includes(it.structureType)
-                && 'store' in it
-                && storeFilter(it.store);
+                && storeFilter(it);
         }
     });
 }
 
-export function findSourceAndCanWithdrawNoSpawn(creep: Creep): EnergyAction<Source | CanWithdraw> | null {
+// 最近可获取资源的地方，孵化建筑除外
+export function closestSourceAndCanWithdrawNoSpawn(creep: Creep): EnergyAction<Source | CanWithdraw> | null {
     const pos = creep.pos;
 
     const source = pos.findClosestByPath(FIND_SOURCES, {filter: it => it.energy > 0});
 
-    const filter: StoreFilter = it => it.getUsedCapacity(RESOURCE_ENERGY) > 0;
+    const filter: CanWithdrawFilter = it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
     const haveStore = findCloseStructure(creep, STRUCTURE_HAVE_STORE_NO_SPAWN_CONST, filter);
-    const tombstone = pos.findClosestByPath(FIND_TOMBSTONES, {filter});
-    const ruin = pos.findClosestByPath(FIND_RUINS, {filter});
+    const tombstone = pos.findClosestByPath(FIND_TOMBSTONES, {filter: filter});
+    const ruin: Ruin | null = pos.findClosestByPath(FIND_RUINS, {filter});
 
     const result = [source, tombstone, ruin, haveStore]
         .filter(it => !!it).sort(getClosestCmpFun(pos))[0];
@@ -38,7 +38,8 @@ export function findSourceAndCanWithdrawNoSpawn(creep: Creep): EnergyAction<Sour
     return new WithdrawAction(creep, result);
 }
 
-export function findCanSpawn(creep: Creep): EnergyAction<CanPutDown> | null {
+// 最近的孵化建筑
+export function closestCanSpawn(creep: Creep): EnergyAction<CanPutDown> | null {
     const center = creep.pos;
     const extension: StructureExtension | null = center.findClosestByRange(FIND_MY_STRUCTURES, {
         filter: obj =>
@@ -52,9 +53,10 @@ export function findCanSpawn(creep: Creep): EnergyAction<CanPutDown> | null {
     return null;
 }
 
-export function findCanPutDown(creep: Creep): EnergyAction<CanPutDown> | null {
+// 最近的可放置能量的地方
+export function closestCanPutDown(creep: Creep): EnergyAction<CanPutDown> | null {
     const haveStore = findCloseStructure(creep, STRUCTURE_HAVE_STORE_CONST,
-        it => it.getFreeCapacity(RESOURCE_ENERGY) > 0);
+        it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
     if (!haveStore) return null;
     return new TransferAction(creep, haveStore);
 }

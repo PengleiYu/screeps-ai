@@ -31,7 +31,7 @@ export function loop() {
     globalInfo.canSpawn = true;
     // new SpawnAssistantController().run();
     loop2();
-    new HarvestController().run();
+    // new HarvestController().run();
     new ContainerTransferController().run();
     new BuildController().run();
     new LinkStartController().run();

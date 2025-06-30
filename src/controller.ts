@@ -24,7 +24,7 @@ import {
     SpawnStruct,
     trySpawn,
 } from "./utils";
-import {ROLE_SPAWN_ASSISTANT} from "./constants";
+import {ROLE_HARVESTER, ROLE_SPAWN_ASSISTANT} from "./constants";
 
 export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, STARTER, TARGET> {
     protected abstract get roleInstanceMax(): number;
@@ -101,13 +101,14 @@ export class SpawnAssistantController extends WorkerController<SpawnAssistant, S
 
 }
 
+
 export class HarvestController extends WorkerController<Harvester, Source, Structure> {
     protected get roleInstanceMax(): number {
         return 3;
     }
 
     protected get roleName(): string {
-        return 'harvester';
+        return ROLE_HARVESTER;
     }
 
     protected get roleBody(): BodyPartConstant[] {

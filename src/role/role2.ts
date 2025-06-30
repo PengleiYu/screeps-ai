@@ -17,7 +17,7 @@ class StateMonitor {
     private cntDispatchSameTick: number = 0;
 
     constructor(private tag: string) {
-        loopEventBus.on(EVENT_LOOP_END, (e) => {
+        loopEventBus.once(EVENT_LOOP_END, (e) => {
             if (this.cntDispatchSameTick > 1) {
                 console.log(tag, 'tick', this.lastDispatchTick, 'dispatch调用次数', this.cntDispatchSameTick);
             }

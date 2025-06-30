@@ -1,7 +1,8 @@
-import {ROLE_SPAWN_ASSISTANT} from "../constants";
+import {ROLE_HARVESTER, ROLE_SPAWN_ASSISTANT} from "../constants";
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
 import {mapToObj, trySpawn} from "../utils";
+import {HarvestRole} from "../role/HarvestRole";
 
 export function loop2() {
     Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
@@ -14,6 +15,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
     switch (role) {
         case ROLE_SPAWN_ASSISTANT:
             return new SpawnAssistantRole(creep);
+        case ROLE_HARVESTER:
+            return new HarvestRole(creep);
     }
     // console.log(`未知角色[${role}]`);
     return null;
@@ -46,5 +49,9 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         role: ROLE_SPAWN_ASSISTANT,
         body: [MOVE, MOVE, CARRY, CARRY, WORK],
         maxCnt: 2,
-    },
+    }, {
+        role: ROLE_HARVESTER,
+        body: [MOVE, WORK, WORK, CARRY],
+        maxCnt: 3,
+    }
 ];

@@ -32,7 +32,12 @@ export function closestSourceAndCanWithdrawNoSpawn(creep: Creep): EnergyAction<S
         .filter(it => !!it).sort(getClosestCmpFun(pos))[0];
     if (result) return new WithdrawAction(creep, result);
     //其次能量点
-    const source = pos.findClosestByPath(FIND_SOURCES, {filter: it => it.energy > 0});
+    return closestSource(creep);
+}
+
+// 最近的能量点
+export function closestSource(creep: Creep): EnergyAction<Source> | null {
+    const source = creep.pos.findClosestByPath(FIND_SOURCES, {filter: it => it.energy > 0});
     if (source) return new HarvestAction(creep, source);
     return null;
 }

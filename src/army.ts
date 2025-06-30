@@ -49,7 +49,8 @@ export class LinkController {
         const startLink = linkArr[linkArr.length - 1];
         const endLink = linkArr[0];
 
-        if (startLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0) {
+        if (startLink.store.getFreeCapacity(RESOURCE_ENERGY) > 50
+            && endLink.store.getFreeCapacity(RESOURCE_ENERGY) !== 0) {
             return;
         }
 

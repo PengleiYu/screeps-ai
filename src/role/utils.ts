@@ -8,7 +8,7 @@ import {
 } from "../types";
 import {EnergyAction, HarvestAction, TransferAction, WithdrawAction} from "./actions";
 
-type CanWithdrawFilter = (it:CanWithdraw) => boolean;
+type CanWithdrawFilter = (it: CanWithdraw) => boolean;
 
 function findCloseStructure(creep: Creep, constantArr: StructureConstant[], storeFilter: CanWithdrawFilter): StructureHaveStore | null {
     return creep.pos.findClosestByPath(FIND_STRUCTURES, {
@@ -22,30 +22,31 @@ function findCloseStructure(creep: Creep, constantArr: StructureConstant[], stor
 // 最近可获取资源的地方，孵化建筑除外
 export function closestSourceAndCanWithdrawNoSpawn(creep: Creep): EnergyAction<Source | CanWithdraw> | null {
     const pos = creep.pos;
-
-    const source = pos.findClosestByPath(FIND_SOURCES, {filter: it => it.energy > 0});
-
     const filter: CanWithdrawFilter = it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
     const haveStore = findCloseStructure(creep, STRUCTURE_HAVE_STORE_NO_SPAWN_CONST, filter);
     const tombstone = pos.findClosestByPath(FIND_TOMBSTONES, {filter: filter});
     const ruin: Ruin | null = pos.findClosestByPath(FIND_RUINS, {filter});
 
-    const result = [source, tombstone, ruin, haveStore]
+    // 优先墓碑、遗址、建筑
+    const result = [tombstone, ruin, haveStore]
         .filter(it => !!it).sort(getClosestCmpFun(pos))[0];
-
-    if (!result) return null;
-    if (result instanceof Source) return new HarvestAction(creep, result);
-    return new WithdrawAction(creep, result);
+    if (result) return new WithdrawAction(creep, result);
+    //其次能量点
+    const source = pos.findClosestByPath(FIND_SOURCES, {filter: it => it.energy > 0});
+    if (source) return new HarvestAction(creep, source);
+    return null;
 }
 
 // 最近的孵化建筑
 export function closestCanSpawn(creep: Creep): EnergyAction<CanPutDown> | null {
     const center = creep.pos;
+    // 优先extension
     const extension: StructureExtension | null = center.findClosestByRange(FIND_MY_STRUCTURES, {
         filter: obj =>
             obj.structureType === STRUCTURE_EXTENSION && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
     })
     if (extension) return new TransferAction(creep, extension);
+    // 其次spawn
     const spawn = center.findClosestByRange(FIND_MY_SPAWNS, {
         filter: obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
     });

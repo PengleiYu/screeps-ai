@@ -4,7 +4,7 @@ import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
 import {mapToObj, trySpawn} from "../utils";
 
 export function loop2() {
-    Object.values(Game.creeps).map(roleFactory).forEach(it => it?.run())
+    Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
 
     spawnIfNeed(Object.values(Game.creeps), SPAWN_CONFIGS);
 }
@@ -29,7 +29,7 @@ function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
         if (expectCnt > 0) {
-            const memory = {role: config.role, lifeState: CreepState.NONE,};
+            const memory: CreepMemory = {role: config.role, lifeState: CreepState.NONE, logging: false,};
             trySpawn(config.role + Date.now(), config.body, memory);
         }
     }

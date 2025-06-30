@@ -7,10 +7,13 @@ export abstract class EnergyAction<T extends Positionable> extends CreepContext 
         super(creep);
     }
 
+    printSelf() {
+        console.log('creep', this.creep, 'target', this.target);
+    }
+
     protected abstract actionImpl(): ActionReturnCode;
 
     action() {
-        console.log('action', 'target', this.target);
         if (this.actionImpl() === ERR_NOT_IN_RANGE) {
             this.visualizeMoveTo(this.target);
         }
@@ -79,6 +82,6 @@ export class ParkingAction extends EnergyAction<Positionable> {
     }
 
     isValid(): boolean {
-        return this.creep.pos.isNearTo(this.target);
+        return !this.creep.pos.isNearTo(this.target);
     }
 }

@@ -20,14 +20,14 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 
     private log(...data: any[]) {
-        // console.log(this.creep.name, ...data);
+        if (this.creep.memory.logging) console.log(this.creep.name, ...data);
     }
 
     abstract findSource(): EnergyAction<S> ;
 
     abstract findWorkTarget(): EnergyAction<W> ;
 
-    abstract findSourceStoreSite(): EnergyAction<CanPutDown>;
+    abstract findEnergyStoreSite(): EnergyAction<CanPutDown>;
 
     findParking(): EnergyAction<Positionable> {
         return new ParkingAction(this.creep, findFlag());
@@ -45,25 +45,14 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         if (this.state === target) {
             return;
         }
-        // 状态转移前的检查
+        // 状态转移前的检查，目前不需要
         switch (target) {
-            case CreepState.HARVEST_SOURCE:
-                if (!this.findSource().isValid()) {
-                    this.log('未找到source，无法进入目标状态', target);
-                    return;
-                }
-                break;
-            case CreepState.WORK:
-                if (!this.findWorkTarget().isValid()) {
-                    this.log('未找到workTarget，无法进入目标状态', target);
-                    return;
-                }
-                break;
             default:
                 break;
         }
         this.log('状态转移', this.state, '->', target);
         this._state = target;
+        this.dispatch()
     }
 
     interceptLifeCycle(): boolean {
@@ -71,12 +60,15 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 
     private doHarvest() {
+        this.log('doHarvest');
         if (this.isEnergyFull()) {
+            this.log('能量已满');
             this.moveState(CreepState.WORK);
             return;
         }
         const source = this.findSource();
         if (!source.isValid()) {
+            this.log('source不合法');
             this.moveState(!this.isEnergyEmpty() ? CreepState.WORK : CreepState.NONE);
             return;
         }
@@ -84,28 +76,32 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 
     private doWork() {
+        this.log('doWork');
         if (this.isEnergyEmpty()) {
+            this.log('能量已空');
             this.moveState(CreepState.NONE);
             return;
         }
 
-        const target = this.findWorkTarget();
-        if (!target.isValid()) {
-            const state = CreepState.PUT_BACK_SOURCE;
-            this.moveState(state);
+        const workTarget = this.findWorkTarget();
+        if (!workTarget.isValid()) {
+            this.log('workTarget不合法');
+            this.moveState(CreepState.PUT_BACK_SOURCE);
             return;
         }
-        target.action();
+        workTarget.action();
     }
 
     private doPutBackEnergy() {
+        this.log('doPutBackEnergy');
         if (this.isEnergyEmpty()) {
-            const state = CreepState.NONE;
-            this.moveState(state);
+            this.log('能量已空')
+            this.moveState(CreepState.NONE);
             return;
         }
-        const storeSite = this.findSourceStoreSite();
+        const storeSite = this.findEnergyStoreSite();
         if (!storeSite.isValid()) {
+            this.log('能量存储点不合法')
             this.moveState(CreepState.NONE);
             return;
         }
@@ -113,8 +109,10 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 
     private doParking() {
+        this.log('doParking')
         const parking = this.findParking();
         if (!parking.isValid()) {
+            this.log('parking无法运行');
             this.moveState(CreepState.NONE);
             return;
         }
@@ -122,13 +120,17 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 
     private doNone() {
+        this.log('doNone');
         if (this.interceptLifeCycle()) {
             this.log('拦截运行')
+            this.doParking();
             return;
         } else {
             if (this.isEnergyFull()) {
+                this.log('能量已满');
                 this.moveState(CreepState.WORK);
-            } else if (this.findSource()) {
+            } else if (this.findSource().isValid()) {
+                this.log('source合法');
                 this.moveState(CreepState.HARVEST_SOURCE);
             } else {
                 this.doParking()
@@ -136,8 +138,8 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         }
     }
 
-    public run() {
-        this.log('run', this.state);
+    public dispatch() {
+        this.log('dispatch', this.state);
         switch (this.state) {
             case CreepState.HARVEST_SOURCE:
                 this.doHarvest();

@@ -19,6 +19,7 @@ declare global {
         working?: boolean;
         workState?: string;
         lifeState?: CreepState;
+        logging?: boolean;
     }
 }
 

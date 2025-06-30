@@ -12,7 +12,7 @@ export class SpawnAssistantRole extends StatefulRole<CanHarvest | CanWithdraw, C
         return closestCanSpawn(this.creep) ?? this.invalidAction;
     }
 
-    findSourceStoreSite(): EnergyAction<CanPutDown> {
+    findEnergyStoreSite(): EnergyAction<CanPutDown> {
         return closestCanPutDown(this.creep) ?? this.invalidAction;
     }
 }

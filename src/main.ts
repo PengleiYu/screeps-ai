@@ -44,11 +44,19 @@ export function loop() {
     new LinkController().run();
 
     if (Game.time % 20 === 0) {
-        for (let name in Memory.creeps) {
-            if (!Game.creeps[name]) {
-                delete Memory.creeps[name];
-                console.log(`${name}已不存在，删除记忆`);
-            }
+        lowFrequencyOperation();
+    }
+}
+
+function lowFrequencyOperation() {
+    for (let name in Memory.creeps) {
+        if (!Game.creeps[name]) {
+            delete Memory.creeps[name];
+            console.log(`${name}已不存在，删除记忆`);
         }
+    }
+    if (Game.cpu.bucket >= 10_000) {
+        const result = Game.cpu.generatePixel();
+        console.log('=========================', '生产pixel', result, '=========================');
     }
 }

@@ -289,7 +289,7 @@ export class TowerTransferController extends BaseTransferController {
 
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | null> {
     protected get roleInstanceMax(): number {
-        return 1;
+        return 4;
     }
 
     protected get roleName(): string {

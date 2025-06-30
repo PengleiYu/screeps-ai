@@ -10,28 +10,39 @@ export function loop2() {
     spawnIfNeed(Object.values(Game.creeps), SPAWN_CONFIGS);
 }
 
+function harvesterRoleFactory(creep: Creep): StatefulRole<any, any> | null {
+    const role = creep.memory.role;
+    const harHarvester = new FixedSourceHarvestRole(creep);
+    if (harHarvester.getMemorySource()) {
+        return harHarvester;
+    }
+    const sources = getSpawn().room.find(FIND_SOURCES).sort(getClosestCmpFun(getSpawn()));
+    const nearSource = sources[0];
+    const farSource = sources[sources.length - 1];
+    switch (role) {
+        case ROLE_HARVESTER:
+            harHarvester.setMemorySource(nearSource);
+            break
+        case ROLE_HARVESTER_FAR://先简单处理，未来要根据source可采集位置动态计算body和数量，而且不应该用role区分
+            harHarvester.setMemorySource(farSource);
+            break
+        default:
+            throw new Error(`非法角色${role}`);
+    }
+    return harHarvester;
+}
+
 function roleFactory(creep: Creep): StatefulRole<any, any> | null {
     const role = creep.memory.role;
     switch (role) {
         case ROLE_SPAWN_ASSISTANT:
             return new SpawnAssistantRole(creep);
         case ROLE_HARVESTER:
-            return new FixedSourceHarvestRole(creep);
-        case ROLE_HARVESTER_FAR://先简单处理，未来要根据source可采集位置动态计算body和数量，而且不应该用role区分
-            const harHarvester = new FixedSourceHarvestRole(creep);
-            if (harHarvester.getMemorySource()) {
-                return harHarvester;
-            }
-            const sources = getSpawn().room.find(FIND_SOURCES);
-            if (sources.length > 1) { // 仅处理多于一个的
-                const source = sources.sort(getClosestCmpFun(getSpawn()))
-                    [sources.length - 1];
-                harHarvester.setMemorySource(source);
-                return harHarvester;
-            }
+        case ROLE_HARVESTER_FAR:
+            return harvesterRoleFactory(creep);
+        default:
+            return null;
     }
-    // console.log(`未知角色[${role}]`);
-    return null;
 }
 
 function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {

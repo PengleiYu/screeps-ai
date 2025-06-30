@@ -14,8 +14,11 @@ export abstract class EnergyAction<T extends Positionable> extends CreepContext 
     protected abstract actionImpl(): ActionReturnCode;
 
     action() {
-        if (this.actionImpl() === ERR_NOT_IN_RANGE) {
+        const actionReturnCode = this.actionImpl();
+        if (actionReturnCode === ERR_NOT_IN_RANGE) {
             this.visualizeMoveTo(this.target);
+        } else {
+            this.log('actionReturn code', actionReturnCode);
         }
     }
 

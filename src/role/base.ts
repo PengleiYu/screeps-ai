@@ -22,6 +22,10 @@ function mixCreepFun<TBase extends Constructor<CreepWrapper>>(Base: TBase) {
             return this.creep.memory.logging ?? false;
         }
 
+        protected log(...data: any[]) {
+            if (this.logEnable) console.log(this.creep.name, ...data);
+        }
+
         protected isEnergyFull(): boolean {
             return this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0;
         }

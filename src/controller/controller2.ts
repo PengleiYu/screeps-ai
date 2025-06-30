@@ -74,11 +74,19 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         maxCnt: 2,
     }, {
         role: ROLE_HARVESTER,
-        body: [MOVE, WORK, WORK, CARRY],
-        maxCnt: 3,
+        body: [
+            WORK, WORK, WORK, WORK, WORK,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+            CARRY,
+        ],
+        maxCnt: 1,
     }, {
         role: ROLE_HARVESTER_FAR,
-        body: [MOVE, WORK, CARRY],
+        body: [
+            WORK, WORK, WORK, WORK, WORK,
+            MOVE, MOVE, MOVE, MOVE, MOVE,
+            CARRY,
+        ],
         maxCnt: 1,
     }
 ];

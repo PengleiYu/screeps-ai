@@ -439,6 +439,11 @@ export class SweepController extends WorkerController<Sweeper, RoomPosition, Str
 }
 
 export class LinkStartController extends BaseTransferController {
+
+    protected get roleInstanceMax(): number {
+        return 0;
+    }
+
     protected get roleName(): string {
         return 'LinkStart';
     }

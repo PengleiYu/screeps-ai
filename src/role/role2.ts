@@ -1,4 +1,4 @@
-import {findFlag, Positionable} from "../utils";
+import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../utils";
 import {CanPutDown} from "../types";
 import {EnergyAction, ParkingAction} from "./actions";
 import {CreepContext} from "./base";
@@ -11,16 +11,42 @@ export const enum CreepState {
     // PARKING,
 }
 
+// 用于监控状态机异常
+class StateMonitor {
+    private lastDispatchTick: number = 0;
+    private cntDispatchSameTick: number = 0;
 
+    constructor(private tag: string) {
+        loopEventBus.on(EVENT_LOOP_END, (e) => {
+            if (this.cntDispatchSameTick > 1) {
+                console.log(tag, 'tick', this.lastDispatchTick, 'dispatch调用次数', this.cntDispatchSameTick);
+            }
+        })
+    }
+
+    onDispatch() {
+        if (Game.time == this.lastDispatchTick) {
+            this.cntDispatchSameTick++;
+            return;
+        }
+
+        this.lastDispatchTick = Game.time;
+        this.cntDispatchSameTick = 0;
+    }
+}
+
+// 状态机驱动的role
 export abstract class StatefulRole<S extends Positionable, W extends Positionable> extends CreepContext {
     protected invalidAction = EnergyAction.invalidInstance;
+    private monitor: StateMonitor | undefined;
 
     public constructor(creep: Creep) {
         super(creep);
+        if (this.logEnable) this.monitor = new StateMonitor(creep.name);
     }
 
     private log(...data: any[]) {
-        if (this.creep.memory.logging) console.log(this.creep.name, ...data);
+        if (this.logEnable) console.log(this.creep.name, ...data);
     }
 
     abstract findSource(): EnergyAction<S> ;
@@ -140,6 +166,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     public dispatch() {
         this.log('dispatch', this.state);
+        this.monitor?.onDispatch();
         switch (this.state) {
             case CreepState.HARVEST_SOURCE:
                 this.doHarvest();

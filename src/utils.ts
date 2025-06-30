@@ -1,3 +1,5 @@
+import {EventBus} from "./eventBus";
+
 export type Positionable = RoomPosition | { pos: RoomPosition };
 export type ResourceStorable = StructureContainer | StructureStorage;
 export type ResourceWithdrawn = Tombstone | Ruin | ResourceStorable;
@@ -191,3 +193,6 @@ export function mapToObj<K, V>(map: Map<K, V>): { [key: string]: V } {
     }
     return result;
 }
+
+export const loopEventBus = new EventBus();
+export const EVENT_LOOP_END = "event_loop_end";

@@ -10,7 +10,7 @@ class CreepWrapper {
  */
 function mixCreepFun<TBase extends Constructor<CreepWrapper>>(Base: TBase) {
     return class extends Base {
-        visualizeMoveTo(target: RoomPosition | { pos: RoomPosition },) {
+        protected visualizeMoveTo(target: RoomPosition | { pos: RoomPosition },) {
             this.creep.moveTo(target, {
                 visualizePathStyle: {
                     lineStyle: 'dashed',
@@ -18,11 +18,15 @@ function mixCreepFun<TBase extends Constructor<CreepWrapper>>(Base: TBase) {
             });
         }
 
-        isEnergyFull(): boolean {
+        protected get logEnable(): boolean {
+            return this.creep.memory.logging ?? false;
+        }
+
+        protected isEnergyFull(): boolean {
             return this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0;
         }
 
-        isEnergyEmpty(): boolean {
+        protected isEnergyEmpty(): boolean {
             return this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0;
         }
 

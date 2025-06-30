@@ -1,14 +1,18 @@
 import {
     BuildController,
     ContainerTransferController,
-    HarvestController, LinkEndController, LinkStartController, OverseaTransportController,
-    RepairController, SpawnAssistantController,
-    StorageTransferController, SweepController,
+    HarvestController,
+    LinkEndController,
+    LinkStartController,
+    OverseaTransportController,
+    RepairController,
+    StorageTransferController,
+    SweepController,
     TowerTransferController,
     UpgradeController
 } from "./controller";
 import {LinkController, TowerController} from "./army";
-import {globalInfo} from "./utils";
+import {EVENT_LOOP_END, globalInfo, loopEventBus} from "./utils";
 import {CreepState} from "./role/role2";
 import {loop2} from "./controller/controller2";
 
@@ -46,6 +50,8 @@ export function loop() {
     if (Game.time % 20 === 0) {
         lowFrequencyOperation();
     }
+
+    loopEventBus.emit(EVENT_LOOP_END);
 }
 
 function lowFrequencyOperation() {

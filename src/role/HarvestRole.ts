@@ -1,7 +1,7 @@
 import {StatefulRole} from "./role2";
 import {CanHarvest, CanPutDown, CanWithdraw, StructureHaveStore} from "../types";
 import {EnergyAction, HarvestAction} from "./actions";
-import {closestCanPutDown, closestSource} from "./utils";
+import {closestCanPutDown, closestSource} from "./findUtils";
 
 export class HarvestRole extends StatefulRole<CanHarvest | CanWithdraw, CanPutDown> {
     findSource(): EnergyAction<Source | CanWithdraw> {
@@ -19,27 +19,36 @@ export class HarvestRole extends StatefulRole<CanHarvest | CanWithdraw, CanPutDo
 
 export class FixedSourceHarvestRole extends HarvestRole {
 
-    constructor(creep: Creep, sourceId?: Id<Source>) {
+    constructor(creep: Creep, source?: Source) {
         super(creep);
-        if (sourceId) creep.memory.lastSourceId = sourceId;
+        if (source) this.setMemorySource(source);
     }
 
     findSource(): EnergyAction<Source | CanWithdraw> {
         // 读取记忆的source
-        const lastSourceId = this.creep.memory.lastSourceId;
-        if (lastSourceId) {
-            const source = Game.getObjectById(lastSourceId as Id<Source>)
-            if (source) {
-                this.log('回忆source', source);
-                return new HarvestAction(this.creep, source);
-            }
+        let source = this.getMemorySource();
+        if (source) {
+            this.log('回忆source', source);
+            return new HarvestAction(this.creep, source);
         }
+
         // 重新寻找source，并记忆
         const result = closestSource(this.creep);
         if (result) {
-            this.creep.memory.lastSourceId = result.target.id;
+            this.setMemorySource(result.target);
             this.log('记忆source', result.target);
         }
         return result ?? this.invalidAction;
+    }
+
+    getMemorySource(): Source | null {
+        const lastSourceId = this.creep.memory.lastSourceId;
+        if (!lastSourceId) return null;
+        return Game.getObjectById(lastSourceId as Id<Source>);
+    }
+
+    setMemorySource(source: Source) {
+        this.log('setMemorySource', source, 'called');
+        this.creep.memory.lastSourceId = source.id;
     }
 }

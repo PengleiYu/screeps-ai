@@ -1,5 +1,5 @@
 import {StatefulRole} from "./role2";
-import {closestCanPutDown, closestCanSpawn, closestSourceAndCanWithdrawNoSpawn} from "./utils";
+import {closestCanPutDown, closestCanSpawn, closestSourceAndCanWithdrawNoSpawn} from "./findUtils";
 import {CanHarvest, CanPutDown, CanWithdraw} from "../types";
 import {EnergyAction} from "./actions";
 

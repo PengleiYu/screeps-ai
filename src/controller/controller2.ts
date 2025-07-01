@@ -1,8 +1,9 @@
-import {ROLE_HARVESTER, ROLE_HARVESTER_FAR, ROLE_SPAWN_ASSISTANT} from "../constants";
+import {ROLE_HARVESTER, ROLE_HARVESTER_FAR, ROLE_SPAWN_ASSISTANT, ROLE_UPGRADER} from "../constants";
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
 import {getClosestCmpFun, getSpawn, trySpawn} from "../utils";
 import {FixedSourceHarvestRole} from "../role/HarvestRole";
+import {UpgradeRole} from "../role/UpgradeRole";
 
 export function loop2() {
     Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
@@ -40,6 +41,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
         case ROLE_HARVESTER:
         case ROLE_HARVESTER_FAR:
             return harvesterRoleFactory(creep);
+        case ROLE_UPGRADER:
+            return new UpgradeRole(creep);
         default:
             return null;
     }
@@ -88,5 +91,9 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
             CARRY,
         ],
         maxCnt: 1,
+    }, {
+        role: ROLE_UPGRADER,
+        body: [WORK, MOVE, CARRY],
+        maxCnt: 3,
     }
 ];

@@ -24,7 +24,7 @@ import {
     SpawnStruct,
     trySpawn,
 } from "./utils";
-import {ROLE_HARVESTER, ROLE_SPAWN_ASSISTANT} from "./constants";
+import {ROLE_HARVESTER, ROLE_SPAWN_ASSISTANT, ROLE_UPGRADER} from "./constants";
 
 export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, STARTER, TARGET> {
     protected abstract get roleInstanceMax(): number;
@@ -287,13 +287,14 @@ export class TowerTransferController extends BaseTransferController {
     }
 }
 
+
 export class UpgradeController extends WorkerController<Upgrader, Ruin | StructureStorage | StructureContainer, StructureController | null> {
     protected get roleInstanceMax(): number {
         return 4;
     }
 
     protected get roleName(): string {
-        return 'upgrader';
+        return ROLE_UPGRADER;
     }
 
     protected get roleBody(): BodyPartConstant[] {

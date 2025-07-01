@@ -2,6 +2,7 @@ import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../utils";
 import {CanPutDown} from "../types";
 import {EnergyAction, ParkingAction} from "./actions";
 import {CreepContext} from "./base";
+import {closestCanPutDown} from "./findUtils";
 
 export const enum CreepState {
     NONE,
@@ -49,9 +50,11 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     abstract findWorkTarget(): EnergyAction<W> ;
 
-    abstract findEnergyStoreSite(): EnergyAction<CanPutDown>;
+    protected findEnergyPutDown(): EnergyAction<CanPutDown> {
+        return closestCanPutDown(this.creep) ?? this.invalidAction;
+    }
 
-    findParking(): EnergyAction<Positionable> {
+    protected findParking(): EnergyAction<Positionable> {
         return new ParkingAction(this.creep, findFlag());
     }
 
@@ -121,7 +124,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
             this.moveState(CreepState.NONE);
             return;
         }
-        const storeSite = this.findEnergyStoreSite();
+        const storeSite = this.findEnergyPutDown();
         if (!storeSite.isValid()) {
             this.log('能量存储点不合法')
             this.moveState(CreepState.NONE);
@@ -160,6 +163,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         }
     }
 
+    // todo 好像creep未孵化完成，就在执行任务了
     public dispatch() {
         this.log('dispatch', this.state);
         this.monitor?.onDispatch();

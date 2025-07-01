@@ -11,10 +11,6 @@ export class HarvestRole extends StatefulRole<CanHarvest | CanWithdraw, CanPutDo
     findWorkTarget(): EnergyAction<StructureHaveStore> {
         return closestCanPutDown(this.creep) ?? this.invalidAction;
     }
-
-    findEnergyStoreSite(): EnergyAction<CanPutDown> {
-        return closestCanPutDown(this.creep) ?? this.invalidAction;
-    }
 }
 
 export class FixedSourceHarvestRole extends HarvestRole {
@@ -37,14 +33,15 @@ export class FixedSourceHarvestRole extends HarvestRole {
         if (result) {
             this.setMemorySource(result.target);
             this.log('记忆source', result.target);
+            return result;
         }
-        return result ?? this.invalidAction;
+        return this.invalidAction;
     }
 
     getMemorySource(): Source | null {
         const lastSourceId = this.creep.memory.lastSourceId;
         if (!lastSourceId) return null;
-        return Game.getObjectById(lastSourceId as Id<Source>);
+        return Game.getObjectById(lastSourceId);
     }
 
     setMemorySource(source: Source) {

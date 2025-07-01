@@ -1,11 +1,12 @@
 import {StatefulRole} from "./role2";
 import {CanWithdraw} from "../types";
 import {EnergyAction, UpgradeAction} from "./actions";
-import {closestSourceAndCanWithdrawNoSpawn} from "./findUtils";
+
+import {sourceAndCanWithdrawAction} from "./actionUtils";
 
 export class UpgradeRole extends StatefulRole<Source | CanWithdraw, StructureController> {
     findSource(): EnergyAction<Source | CanWithdraw> {
-        return closestSourceAndCanWithdrawNoSpawn(this.creep) ?? this.invalidAction;
+        return sourceAndCanWithdrawAction(this.creep) ?? this.invalidAction;
     }
 
     findWorkTarget(): EnergyAction<StructureController> {

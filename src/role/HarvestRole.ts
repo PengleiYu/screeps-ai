@@ -1,15 +1,15 @@
 import {StatefulRole} from "./role2";
 import {CanHarvest, CanPutDown, CanWithdraw, StructureHaveStore} from "../types";
 import {EnergyAction, HarvestAction} from "./actions";
-import {closestCanPutDown, closestSource} from "./findUtils";
+import {closestCanPutDownAction, sourceAction} from "./actionUtils";
 
 export class HarvestRole extends StatefulRole<CanHarvest | CanWithdraw, CanPutDown> {
     findSource(): EnergyAction<Source | CanWithdraw> {
-        return closestSource(this.creep) ?? this.invalidAction;
+        return sourceAction(this.creep) ?? this.invalidAction;
     }
 
     findWorkTarget(): EnergyAction<StructureHaveStore> {
-        return closestCanPutDown(this.creep) ?? this.invalidAction;
+        return closestCanPutDownAction(this.creep) ?? this.invalidAction;
     }
 }
 
@@ -29,7 +29,7 @@ export class FixedSourceHarvestRole extends HarvestRole {
         }
 
         // 重新寻找source，并记忆
-        const result = closestSource(this.creep);
+        const result = sourceAction(this.creep);
         if (result) {
             this.setMemorySource(result.target);
             this.log('记忆source', result.target);

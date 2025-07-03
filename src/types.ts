@@ -32,9 +32,7 @@ export type CanGetEnergy = CanHarvest | CanPickup | CanWithdraw;
 export type CanPutEnergy = StructureHaveStore
 
 // 可操作的类型
-export type CanBuild = ConstructionSite;
-export type CanUpgrade = StructureController;
-export type CanWork = CanBuild | CanUpgrade;
+export type CanWork = ConstructionSite | StructureController;
 
 // 大杂烩
 export type ActionReturnCode = CreepActionReturnCode | ScreepsReturnCode

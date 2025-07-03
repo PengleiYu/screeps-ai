@@ -9,6 +9,6 @@ declare global {
         lifeState?: CreepState;
         logging?: boolean;
         lastSourceId?: Id<CanGetEnergy>;
-        lastWorkId?: Id<Structure<StructureConstant>>;//工作目标都是建筑
+        lastWorkId?: Id<Structure>;//工作目标都是建筑
     }
 }

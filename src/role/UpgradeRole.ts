@@ -1,23 +1,24 @@
 import {StatefulRole} from "./role2";
-import {CanWithdraw} from "../types";
+import {CanGetEnergy, CanWithdraw, CanWork} from "../types";
 import {EnergyAction, UpgradeAction} from "./actions";
 
-import {sourceAndCanWithdrawAction} from "./actionUtils";
+import {actionOfGetEnergy, actionOfWork, sourceAndCanWithdrawAction} from "./actionUtils";
+import {closestSourceAndCanWithdrawNoSpawn} from "./findUtils";
 
-export class UpgradeRole extends StatefulRole<Source | CanWithdraw, StructureController> {
-    findSource(): EnergyAction<Source | CanWithdraw> {
-        return sourceAndCanWithdrawAction(this.creep) ?? this.invalidAction;
+export class UpgradeRole extends StatefulRole<CanGetEnergy, CanWork> {
+    findSource(): EnergyAction<CanGetEnergy> {
+        return actionOfGetEnergy(this.creep, closestSourceAndCanWithdrawNoSpawn(this.creep.pos));
     }
 
-    findWorkTarget(): EnergyAction<StructureController> {
+    findWorkTarget(): EnergyAction<CanWork> {
         const memoryWork = this.getMemoryWork();
         if (memoryWork) {
-            return new UpgradeAction(this.creep, memoryWork);
+            return actionOfWork(this.creep, memoryWork);
         }
         const controller = this.creep.room.controller;
         if (controller) {
             this.setMemoryWorkTarget(controller);
-            return new UpgradeAction(this.creep, controller);
+            return actionOfWork(this.creep, controller);
         }
         return this.invalidAction;
     }

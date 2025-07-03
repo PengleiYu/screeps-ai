@@ -1,5 +1,13 @@
-import {EnergyAction, HarvestAction, PickupAction, TransferAction, WithdrawAction} from "./actions";
-import {CanGetEnergy, CanHarvest, CanPickup, CanPutEnergy, CanWithdraw} from "../types";
+import {
+    BuildAction,
+    EnergyAction,
+    HarvestAction,
+    PickupAction,
+    TransferAction,
+    UpgradeAction,
+    WithdrawAction
+} from "./actions";
+import {CanGetEnergy, CanHarvest, CanPickup, CanPutEnergy, CanWithdraw, CanWork} from "../types";
 import {
     closestCanPutDown,
     closestCanSpawn,
@@ -16,6 +24,12 @@ export function actionOfGetEnergy(creep: Creep, source: CanGetEnergy | null): En
 
 export function actionOfPutEnergy(creep: Creep, store: CanPutEnergy | null): EnergyAction<CanPutEnergy> {
     if (store) return new TransferAction(creep, store);
+    return EnergyAction.invalidInstance;
+}
+
+export function actionOfWork(creep: Creep, work: CanWork | null): EnergyAction<CanWork> {
+    if (work instanceof StructureController) return new UpgradeAction(creep, work);
+    if (work instanceof ConstructionSite) return new BuildAction(creep, work);
     return EnergyAction.invalidInstance;
 }
 

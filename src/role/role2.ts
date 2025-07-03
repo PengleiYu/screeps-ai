@@ -20,9 +20,9 @@ class StateMonitor {
     private cntDispatchSameTick: number = 0;
 
     constructor(private tag: string) {
-        loopEventBus.once(EVENT_LOOP_END, (e) => {
+        loopEventBus.once(EVENT_LOOP_END, () => {
             if (this.cntDispatchSameTick > 1) {
-                console.log(tag, 'tick', this.lastDispatchTick, 'dispatch调用次数', this.cntDispatchSameTick);
+                console.log(this.tag, 'tick', this.lastDispatchTick, 'dispatch调用次数', this.cntDispatchSameTick);
             }
         })
     }
@@ -175,9 +175,10 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         }
     }
 
-    public setApproachTarget(position: RoomPosition) {
+    public initialWithPosition(position: RoomPosition) {
         const memory = this.creep.memory;
         memory.targetPosition = MyPosition.fromRoomPosition(position).toJson();
+        // 清除流程相关记忆
         memory.lastSourceId = undefined;
         memory.lastWorkId = undefined;
         this.moveState(CreepState.INITIAL);

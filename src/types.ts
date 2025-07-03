@@ -59,7 +59,6 @@ export class MyPosition {
     }
 
     static fromJson(json: string): MyPosition {
-        console.log('json', json);
         const parse = JSON.parse(json) as IPosition;
         return new MyPosition(parse);
     }

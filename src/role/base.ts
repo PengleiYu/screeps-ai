@@ -1,3 +1,5 @@
+import {ActionReturnCode} from "../types";
+
 type Constructor<T = {}> = new (...args: any[]) => T;
 
 class CreepWrapper {
@@ -21,8 +23,8 @@ class CreepWrapper {
  */
 function mixCreepFun<TBase extends Constructor<CreepWrapper>>(Base: TBase) {
     return class extends Base {
-        protected visualizeMoveTo(target: RoomPosition | { pos: RoomPosition },) {
-            this.creep.moveTo(target, {
+        protected visualizeMoveTo(target: RoomPosition | { pos: RoomPosition },): ActionReturnCode {
+            return this.creep.moveTo(target, {
                 visualizePathStyle: {
                     lineStyle: 'dashed',
                 }

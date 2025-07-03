@@ -86,7 +86,7 @@ export class UpgradeAction extends EnergyAction<StructureController> {
 
 export class MoveAction extends EnergyAction<Positionable> {
     actionImpl(): ActionReturnCode {
-        return this.creep.moveTo(this.target);
+        return this.visualizeMoveTo(this.target);
     }
 
     isValid(): boolean {

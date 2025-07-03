@@ -47,7 +47,7 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
             if (upgradeRole.isJustBorn()) {
                 const controller = creep.room.controller;
                 if (controller) {
-                    upgradeRole.setApproachTarget(controller.pos);
+                    upgradeRole.initialWithPosition(controller.pos);
                 }
             }
             return upgradeRole;

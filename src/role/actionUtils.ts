@@ -26,3 +26,10 @@ export function actionOfWork(creep: Creep, work: CanWork | null): EnergyAction<C
     if (work instanceof ConstructionSite) return new BuildAction(creep, work);
     return EnergyAction.invalidInstance;
 }
+
+export function actionOfWork2(creep: Creep, work: CanWork | CanPutEnergy | null): EnergyAction<CanPutEnergy | CanWork> {
+    if (!work) return EnergyAction.invalidInstance;
+    if (work instanceof StructureController) return new UpgradeAction(creep, work);
+    if (work instanceof ConstructionSite) return new BuildAction(creep, work);
+    return new TransferAction(creep, work);
+}

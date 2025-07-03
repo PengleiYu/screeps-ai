@@ -2,7 +2,7 @@ import {ROLE_HARVESTER, ROLE_HARVESTER_FAR, ROLE_SPAWN_ASSISTANT, ROLE_UPGRADER}
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
 import {getClosestCmpFun, getSpawn, trySpawn} from "../utils";
-import {FixedSourceHarvestRole} from "../role/HarvestRole";
+import {HarvestRole} from "../role/HarvestRole";
 import {UpgradeRole} from "../role/UpgradeRole";
 
 export function loop2() {
@@ -13,7 +13,7 @@ export function loop2() {
 
 function harvesterRoleFactory(creep: Creep): StatefulRole<any, any> | null {
     const role = creep.memory.role;
-    const harHarvester = new FixedSourceHarvestRole(creep);
+    const harHarvester = new HarvestRole(creep);
     if (harHarvester.getMemorySource()) {
         return harHarvester;
     }

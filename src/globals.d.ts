@@ -1,5 +1,5 @@
 import {CreepState} from "./role/role2";
-import {CanGetEnergy} from "./types";
+import {CanGetEnergy, CanPutEnergy, CanWork} from "./types";
 
 declare global {
     interface CreepMemory {
@@ -9,6 +9,6 @@ declare global {
         lifeState?: CreepState;
         logging?: boolean;
         lastSourceId?: Id<CanGetEnergy>;
-        lastWorkId?: Id<Structure>;//工作目标都是建筑
+        lastWorkId?: Id<CanWork | CanPutEnergy>;//工作目标都是建筑
     }
 }

@@ -65,6 +65,10 @@ export class TransferAction extends EnergyAction<CanPutEnergy> {
     actionImpl(): ActionReturnCode {
         return this.creep.transfer(this.target, RESOURCE_ENERGY);
     }
+
+    isValid(): boolean {
+        return this.target.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+    }
 }
 
 export class BuildAction extends EnergyAction<ConstructionSite> {

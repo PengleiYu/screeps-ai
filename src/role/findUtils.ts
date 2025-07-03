@@ -38,6 +38,7 @@ export function closestSource(pos: RoomPosition): Source | null {
     return pos.findClosestByPath(FIND_SOURCES, {filter: it => it.energy > 0});
 }
 
+// 最近的可放置能量的地方
 export function closestCanPutDown(pos: RoomPosition) {
     return findCloseStructure(pos, STRUCTURE_HAVE_STORE_CONST,
         it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0);

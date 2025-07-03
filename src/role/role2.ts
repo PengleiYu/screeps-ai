@@ -3,7 +3,8 @@ import {CanPutEnergy} from "../types";
 import {EnergyAction, ParkingAction} from "./actions";
 import {CreepContext} from "./base";
 
-import {closestCanPutDownAction} from "./actionUtils";
+import {actionOfPutEnergy} from "./actionUtils";
+import {closestCanPutDown} from "./findUtils";
 
 export const enum CreepState {
     NONE = 'none',
@@ -52,7 +53,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     abstract findWorkTarget(): EnergyAction<W> ;
 
     protected findEnergyPutDown(): EnergyAction<CanPutEnergy> {
-        return closestCanPutDownAction(this.creep) ?? this.invalidAction;
+        return actionOfPutEnergy(this.creep, closestCanPutDown(this.creep.pos));
     }
 
     protected findParking(): EnergyAction<Positionable> {

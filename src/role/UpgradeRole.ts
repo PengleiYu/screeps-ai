@@ -1,8 +1,8 @@
 import {StatefulRole} from "./role2";
-import {CanGetEnergy, CanWithdraw, CanWork} from "../types";
-import {EnergyAction, UpgradeAction} from "./actions";
+import {CanGetEnergy, CanWork} from "../types";
+import {EnergyAction} from "./actions";
 
-import {actionOfGetEnergy, actionOfWork, sourceAndCanWithdrawAction} from "./actionUtils";
+import {actionOfGetEnergy, actionOfWork} from "./actionUtils";
 import {closestSourceAndCanWithdrawNoSpawn} from "./findUtils";
 
 export class UpgradeRole extends StatefulRole<CanGetEnergy, CanWork> {

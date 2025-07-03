@@ -27,23 +27,9 @@ export function sourceAndCanWithdrawAction(creep: Creep): EnergyAction<Source | 
     return new WithdrawAction(creep, where);
 }
 
-// 最近的孵化建筑
-export function canSpawnAction(creep: Creep): EnergyAction<CanPutEnergy> | null {
-    const result = closestCanSpawn(creep.pos);
-    if (result) return new TransferAction(creep, result);
-    return null;
-}
-
-// 最近的能量点
-export function sourceAction(creep: Creep): EnergyAction<Source> | null {
-    const source = closestSource(creep.pos);
-    if (source) return new HarvestAction(creep, source);
-    return null;
-}
-
 // 最近的可放置能量的地方
 export function closestCanPutDownAction(creep: Creep): EnergyAction<CanPutEnergy> | null {
-    const haveStore = closestCanPutDown(creep);
+    const haveStore = closestCanPutDown(creep.pos);
     if (haveStore) return new TransferAction(creep, haveStore);
     return null;
 }

@@ -1,14 +1,10 @@
-import {WorkMemoryRole} from "./role2";
+import {MemoryRole} from "./role2";
 import {CanGetEnergy, CanPutEnergy, CanWork} from "../types";
 import {EnergyAction} from "./actions";
 import {actionOfGetEnergy, actionOfPutEnergy} from "./actionUtils";
 import {closestCanPutDown, closestSource} from "./findUtils";
 
-export class HarvestRole extends WorkMemoryRole {
-    constructor(creep: Creep, source?: Source) {
-        super(creep);
-        if (source) this.setMemorySource(source);
-    }
+export class HarvestRole extends MemoryRole {
 
     findCanGetEnergy(): EnergyAction<CanGetEnergy> {
         return actionOfGetEnergy(this.creep, closestSource(this.creep.pos));

@@ -1,9 +1,9 @@
 import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../utils";
-import {CanGetEnergy, CanPickup, CanPutEnergy, CanWork} from "../types";
+import {CanGetEnergy, CanPutEnergy, CanWork} from "../types";
 import {EnergyAction, ParkingAction} from "./actions";
 import {CreepContext} from "./base";
 
-import {actionOfGetEnergy, actionOfPutEnergy, actionOfWork, actionOfWork2} from "./actionUtils";
+import {actionOfGetEnergy, actionOfPutEnergy, actionOfWork2} from "./actionUtils";
 import {closestCanPutDown} from "./findUtils";
 
 export const enum CreepState {
@@ -188,40 +188,33 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 }
 
-export abstract class GetEnergyMemoryRole<W extends Positionable> extends StatefulRole<CanGetEnergy, W> {
+export abstract class MemoryRole extends StatefulRole<CanGetEnergy, CanPutEnergy | CanWork> {
+    constructor(creep: Creep, source?: CanGetEnergy, work?: CanPutEnergy | CanWork) {
+        super(creep);
+        if (source) this.setMemorySource(source);
+        if (work) this.setMemoryWork(work);
+    }
 
+// todo 如果work记忆被修改为其他合法目标会怎样？如何防御？
     findSource(): EnergyAction<CanGetEnergy> {
-        // 优先读取记忆
         const memorySource = this.getMemorySource();
+        console.log('回忆source', memorySource);
         if (memorySource) {
             const result = actionOfGetEnergy(this.creep, memorySource);
-            if (result.isValid()) return result;
+            if (result.isValid()) {
+                this.log('回忆有效');
+                return result;
+            }
         }
-        // 其次即时搜索并记忆
         const result = this.findCanGetEnergy();
+        this.log('回忆无效，搜索到新source', result.target);
         if (result.isValid()) {
+            this.log('记忆source');
             this.setMemorySource(result.target);
         }
         return result;
     }
 
-    abstract findCanGetEnergy(): EnergyAction<CanGetEnergy>;
-
-    protected getMemorySource(): CanGetEnergy | null {
-        const lastSourceId = this.creep.memory.lastSourceId;
-        if (!lastSourceId) return null;
-        return Game.getObjectById(lastSourceId);
-    }
-
-    protected setMemorySource(source: CanGetEnergy) {
-        this.log('setMemorySource', source, 'called');
-        this.creep.memory.lastSourceId = source.id;
-    }
-}
-
-export abstract class WorkMemoryRole extends GetEnergyMemoryRole<CanWork | CanPutEnergy> {
-
-    // todo 如果work记忆被修改为其他合法目标会怎样？如何防御？
     findWorkTarget(): EnergyAction<CanWork | CanPutEnergy> {
         const memoryWork = this.getMemoryWork();
         this.log('回忆work', memoryWork);
@@ -243,6 +236,9 @@ export abstract class WorkMemoryRole extends GetEnergyMemoryRole<CanWork | CanPu
 
     abstract findCanWork(): EnergyAction<CanWork | CanPutEnergy> ;
 
+    abstract findCanGetEnergy(): EnergyAction<CanGetEnergy>;
+
+    // memory相关逻辑是否可以封装到单独对象中
     protected getMemoryWork(): CanWork | null {
         const lastSourceId = this.creep.memory.lastWorkId;
         if (!lastSourceId) return null;
@@ -251,6 +247,17 @@ export abstract class WorkMemoryRole extends GetEnergyMemoryRole<CanWork | CanPu
 
     protected setMemoryWork(work: CanWork | CanPutEnergy) {
         this.log('setMemoryWork', work, 'called');
-        this.creep.memory.lastWorkId = work.id as Id<CanWork|CanPutEnergy>;
+        this.creep.memory.lastWorkId = work.id as Id<CanWork | CanPutEnergy>;
+    }
+
+    public getMemorySource(): CanGetEnergy | null {
+        const lastSourceId = this.creep.memory.lastSourceId;
+        if (!lastSourceId) return null;
+        return Game.getObjectById(lastSourceId);
+    }
+
+    protected setMemorySource(source: CanGetEnergy) {
+        this.log('setMemorySource', source, 'called');
+        this.creep.memory.lastSourceId = source.id;
     }
 }

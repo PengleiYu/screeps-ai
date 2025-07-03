@@ -20,17 +20,18 @@ function harvesterRoleFactory(creep: Creep): StatefulRole<any, any> | null {
     const sources = getSpawn().room.find(FIND_SOURCES).sort(getClosestCmpFun(getSpawn()));
     const nearSource = sources[0];
     const farSource = sources[sources.length - 1];
+    let result: HarvestRole;
     switch (role) {
         case ROLE_HARVESTER:
-            harHarvester.setMemorySource(nearSource);
+            result = new HarvestRole(creep, nearSource);
             break
         case ROLE_HARVESTER_FAR://先简单处理，未来要根据source可采集位置动态计算body和数量，而且不应该用role区分
-            harHarvester.setMemorySource(farSource);
+            result = new HarvestRole(creep, farSource);
             break
         default:
             throw new Error(`非法角色${role}`);
     }
-    return harHarvester;
+    return result;
 }
 
 function roleFactory(creep: Creep): StatefulRole<any, any> | null {

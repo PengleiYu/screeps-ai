@@ -1,15 +1,15 @@
 import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../utils";
-import {CanPutDown} from "../types";
+import {CanPutEnergy} from "../types";
 import {EnergyAction, ParkingAction} from "./actions";
 import {CreepContext} from "./base";
 
 import {closestCanPutDownAction} from "./actionUtils";
 
 export const enum CreepState {
-    NONE,
-    HARVEST_SOURCE,
-    WORK,
-    PUT_BACK_SOURCE,
+    NONE = 'none',
+    HARVEST_SOURCE = 'harvest',
+    WORK = 'work',
+    PUT_BACK_SOURCE = 'putBack',
     // PARKING,
 }
 
@@ -51,7 +51,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     abstract findWorkTarget(): EnergyAction<W> ;
 
-    protected findEnergyPutDown(): EnergyAction<CanPutDown> {
+    protected findEnergyPutDown(): EnergyAction<CanPutEnergy> {
         return closestCanPutDownAction(this.creep) ?? this.invalidAction;
     }
 

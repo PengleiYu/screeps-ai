@@ -1,9 +1,9 @@
 import {StatefulRole} from "./role2";
-import {CanHarvest, CanPutDown, CanWithdraw, StructureHaveStore} from "../types";
+import {CanHarvest, CanPutEnergy, CanWithdraw, StructureHaveStore} from "../types";
 import {EnergyAction, HarvestAction} from "./actions";
 import {closestCanPutDownAction, sourceAction} from "./actionUtils";
 
-export class HarvestRole extends StatefulRole<CanHarvest | CanWithdraw, CanPutDown> {
+export class HarvestRole extends StatefulRole<CanHarvest | CanWithdraw, CanPutEnergy> {
     findSource(): EnergyAction<Source | CanWithdraw> {
         return sourceAction(this.creep) ?? this.invalidAction;
     }

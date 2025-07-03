@@ -1,6 +1,6 @@
 import {getClosestCmpFun,} from "../utils";
 import {
-    CanPutDown,
+    CanPutEnergy,
     CanWithdraw,
     STRUCTURE_HAVE_STORE_CONST,
     STRUCTURE_HAVE_STORE_NO_SPAWN_CONST,
@@ -41,7 +41,7 @@ export function closestCanPutDown(creep: Creep) {
         it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
 }
 
-export function closestCanSpawn(center: RoomPosition): CanPutDown | null {
+export function closestCanSpawn(center: RoomPosition): CanPutEnergy | null {
     // 优先extension
     const extension: StructureExtension | null = center.findClosestByRange(FIND_MY_STRUCTURES, {
         filter: obj =>

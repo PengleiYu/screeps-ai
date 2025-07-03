@@ -1,7 +1,20 @@
+import {ActionReturnCode} from "../types";
+
 type Constructor<T = {}> = new (...args: any[]) => T;
 
 class CreepWrapper {
     constructor(protected creep: Creep) {
+        if (!this.creep) return;
+        const memory = this.creep.memory;
+        if (memory.isJustBorn) {
+            memory.isJustBorn = false;
+            memory.birthTick = Game.time;
+        }
+    }
+
+    public isJustBorn(): boolean {
+        const memory = this.creep.memory;
+        return memory.isJustBorn || memory.birthTick === Game.time;
     }
 }
 
@@ -10,8 +23,8 @@ class CreepWrapper {
  */
 function mixCreepFun<TBase extends Constructor<CreepWrapper>>(Base: TBase) {
     return class extends Base {
-        protected visualizeMoveTo(target: RoomPosition | { pos: RoomPosition },) {
-            this.creep.moveTo(target, {
+        protected visualizeMoveTo(target: RoomPosition | { pos: RoomPosition },): ActionReturnCode {
+            return this.creep.moveTo(target, {
                 visualizePathStyle: {
                     lineStyle: 'dashed',
                 }

@@ -37,3 +37,33 @@ export type CanWork = ConstructionSite | StructureController;
 // 大杂烩
 export type ActionReturnCode = CreepActionReturnCode | ScreepsReturnCode
 
+interface IPosition {
+    roomName?: string;
+    x?: number;
+    y?: number;
+}
+
+export class MyPosition {
+    constructor(private pos: IPosition) {
+    }
+
+    toJson(): string {
+        return JSON.stringify(this.pos);
+    }
+
+    toRoomPosition(): RoomPosition | null {
+        const pos = this.pos;
+        if (pos.roomName != undefined && pos.x != undefined && pos.y != undefined)
+            return new RoomPosition(pos.x, pos.y, pos.roomName);
+        return null;
+    }
+
+    static fromJson(json: string): MyPosition {
+        const parse = JSON.parse(json) as IPosition;
+        return new MyPosition(parse);
+    }
+
+    static fromRoomPosition(pos: RoomPosition) {
+        return new MyPosition({roomName: pos.roomName, x: pos.x, y: pos.y});
+    }
+}

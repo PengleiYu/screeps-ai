@@ -43,7 +43,14 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
         case ROLE_HARVESTER_FAR:
             return harvesterRoleFactory(creep);
         case ROLE_UPGRADER:
-            return new UpgradeRole(creep);
+            const upgradeRole = new UpgradeRole(creep);
+            if (upgradeRole.isJustBorn()) {
+                const controller = creep.room.controller;
+                if (controller) {
+                    upgradeRole.initialWithPosition(controller.pos);
+                }
+            }
+            return upgradeRole;
         default:
             return null;
     }
@@ -59,7 +66,12 @@ function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
         if (expectCnt > 0) {
-            const memory: CreepMemory = {role: config.role, lifeState: CreepState.NONE, logging: false,};
+            const memory: CreepMemory = {
+                role: config.role,
+                lifeState: CreepState.INITIAL,
+                logging: false,
+                isJustBorn: true,
+            };
             trySpawn(config.role + Date.now(), config.body, memory);
         }
     }

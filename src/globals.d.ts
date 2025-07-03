@@ -10,5 +10,8 @@ declare global {
         logging?: boolean;
         lastSourceId?: Id<CanGetEnergy>;
         lastWorkId?: Id<CanWork | CanPutEnergy>;//工作目标都是建筑
+        targetPosition?: string;
+        isJustBorn?: boolean;
+        birthTick?: number;
     }
 }

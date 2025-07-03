@@ -30,6 +30,7 @@ export abstract class EnergyAction<T extends Positionable> extends CreepContext 
     static invalidInstance = new class extends EnergyAction<any> {
         constructor() {
             // 忽略检查
+            // todo 不能传null
             super(null as any, null);
         }
 
@@ -83,7 +84,7 @@ export class UpgradeAction extends EnergyAction<StructureController> {
     }
 }
 
-export class ParkingAction extends EnergyAction<Positionable> {
+export class MoveAction extends EnergyAction<Positionable> {
     actionImpl(): ActionReturnCode {
         return this.creep.moveTo(this.target);
     }

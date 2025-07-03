@@ -1,17 +1,17 @@
 import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../utils";
-import {CanGetEnergy, CanPutEnergy, CanWork} from "../types";
-import {EnergyAction, ParkingAction} from "./actions";
+import {CanGetEnergy, CanPutEnergy, CanWork, MyPosition} from "../types";
+import {EnergyAction, MoveAction} from "./actions";
 import {CreepContext} from "./base";
 
 import {actionOfGetEnergy, actionOfPutEnergy, actionOfWork2} from "./actionUtils";
 import {closestCanPutDown} from "./findUtils";
 
 export const enum CreepState {
+    INITIAL = "initial",
     NONE = 'none',
     HARVEST_SOURCE = 'harvest',
     WORK = 'work',
     PUT_BACK_SOURCE = 'putBack',
-    // PARKING,
 }
 
 // 用于监控状态机异常
@@ -43,7 +43,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     protected invalidAction = EnergyAction.invalidInstance;
     private monitor: StateMonitor | undefined;
 
-    public constructor(creep: Creep) {
+    protected constructor(creep: Creep) {
         super(creep);
         if (this.logEnable) this.monitor = new StateMonitor(creep.name);
     }
@@ -54,10 +54,6 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     protected findEnergyPutDown(): EnergyAction<CanPutEnergy> {
         return actionOfPutEnergy(this.creep, closestCanPutDown(this.creep.pos));
-    }
-
-    protected findParking(): EnergyAction<Positionable> {
-        return new ParkingAction(this.creep, findFlag());
     }
 
     private get state(): CreepState {
@@ -137,13 +133,27 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doParking() {
         this.log('doParking')
-        const parking = this.findParking();
+        const parking = new MoveAction(this.creep, findFlag());
         if (!parking.isValid()) {
             this.log('parking无法运行');
             this.moveState(CreepState.NONE);
             return;
         }
         parking.action();
+    }
+
+    private doApproachTarget() {
+        const target = this.getApproachTarget();
+        this.log('doApproachTarget', target);
+        if (target) {
+            this.log('正在接近目标', target);
+            const action = new MoveAction(this.creep, target);
+            if (action.isValid()) {
+                action.action();
+                return;
+            }
+        }
+        this.moveState(CreepState.NONE);
     }
 
     private doNone() {
@@ -165,11 +175,28 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         }
     }
 
+    public setApproachTarget(position: RoomPosition) {
+        const memory = this.creep.memory;
+        memory.targetPosition = MyPosition.fromRoomPosition(position).toJson();
+        memory.lastSourceId = undefined;
+        memory.lastWorkId = undefined;
+        this.moveState(CreepState.INITIAL);
+    }
+
+    public getApproachTarget(): RoomPosition | null {
+        const position = this.creep.memory.targetPosition;
+        if (!position) return null;
+        return MyPosition.fromJson(position).toRoomPosition();
+    }
+
     // todo 好像creep未孵化完成，就在执行任务了
     public dispatch() {
         this.log('dispatch', this.state);
         this.monitor?.onDispatch();
         switch (this.state) {
+            case CreepState.INITIAL:
+                this.doApproachTarget();
+                break
             case CreepState.HARVEST_SOURCE:
                 this.doHarvest();
                 break;
@@ -198,7 +225,7 @@ export abstract class MemoryRole extends StatefulRole<CanGetEnergy, CanPutEnergy
 // todo 如果work记忆被修改为其他合法目标会怎样？如何防御？
     findSource(): EnergyAction<CanGetEnergy> {
         const memorySource = this.getMemorySource();
-        console.log('回忆source', memorySource);
+        this.log('回忆source', memorySource);
         if (memorySource) {
             const result = actionOfGetEnergy(this.creep, memorySource);
             if (result.isValid()) {

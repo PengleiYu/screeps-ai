@@ -2,6 +2,17 @@ type Constructor<T = {}> = new (...args: any[]) => T;
 
 class CreepWrapper {
     constructor(protected creep: Creep) {
+        if (!this.creep) return;
+        const memory = this.creep.memory;
+        if (memory.isJustBorn) {
+            memory.isJustBorn = false;
+            memory.birthTick = Game.time;
+        }
+    }
+
+    public isJustBorn(): boolean {
+        const memory = this.creep.memory;
+        return memory.isJustBorn || memory.birthTick === Game.time;
     }
 }
 

@@ -25,14 +25,14 @@ export const STRUCTURE_HAVE_STORE_CONST = [
 // 可获取能量的类型
 export type CanHarvest = Source
 export type CanWithdraw = StructureHaveStore | Tombstone | Ruin;
-export type CanPickup = Resource<RESOURCE_ENERGY>
+export type CanPickup = Resource<RESOURCE_ENERGY>;
+export type CanGetEnergy = CanHarvest | CanPickup | CanWithdraw;
 
 // 可存储能量的类型
-export type CanPutDown = StructureHaveStore
+export type CanPutEnergy = StructureHaveStore
 
 // 可操作的类型
-export type CanBuild = ConstructionSite;
-export type CanUpgrade = StructureController;
+export type CanWork = ConstructionSite | StructureController;
 
 // 大杂烩
 export type ActionReturnCode = CreepActionReturnCode | ScreepsReturnCode

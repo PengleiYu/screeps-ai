@@ -1,6 +1,6 @@
 import {getClosestCmpFun,} from "../utils";
 import {
-    CanPutDown,
+    CanPutEnergy,
     CanWithdraw,
     STRUCTURE_HAVE_STORE_CONST,
     STRUCTURE_HAVE_STORE_NO_SPAWN_CONST,
@@ -18,6 +18,7 @@ function findCloseStructure(pos: RoomPosition, constantArr: StructureConstant[],
     });
 }
 
+// 最近可获取能量的地方，除了孵化建筑
 export function closestSourceAndCanWithdrawNoSpawn(pos: RoomPosition): Source | CanWithdraw | null {
     const filter: CanWithdrawFilter = it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
     const haveStore = findCloseStructure(pos, STRUCTURE_HAVE_STORE_NO_SPAWN_CONST, filter);
@@ -32,16 +33,19 @@ export function closestSourceAndCanWithdrawNoSpawn(pos: RoomPosition): Source | 
     return closestSource(pos);
 }
 
+// 最近的能量点
 export function closestSource(pos: RoomPosition): Source | null {
     return pos.findClosestByPath(FIND_SOURCES, {filter: it => it.energy > 0});
 }
 
-export function closestCanPutDown(creep: Creep) {
-    return findCloseStructure(creep.pos, STRUCTURE_HAVE_STORE_CONST,
+// 最近的可放置能量的地方
+export function closestCanPutDown(pos: RoomPosition) {
+    return findCloseStructure(pos, STRUCTURE_HAVE_STORE_CONST,
         it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0);
 }
 
-export function closestCanSpawn(center: RoomPosition): CanPutDown | null {
+// 最近的孵化建筑
+export function closestCanSpawn(center: RoomPosition): CanPutEnergy | null {
     // 优先extension
     const extension: StructureExtension | null = center.findClosestByRange(FIND_MY_STRUCTURES, {
         filter: obj =>

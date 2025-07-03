@@ -1,14 +1,15 @@
 import {StatefulRole} from "./role2";
-import {CanHarvest, CanPutDown, CanWithdraw} from "../types";
+import {CanGetEnergy, CanPutEnergy} from "../types";
 import {EnergyAction} from "./actions";
-import {canSpawnAction, sourceAndCanWithdrawAction} from "./actionUtils";
+import {actionOfGetEnergy, actionOfPutEnergy} from "./actionUtils";
+import {closestCanSpawn, closestSourceAndCanWithdrawNoSpawn} from "./findUtils";
 
-export class SpawnAssistantRole extends StatefulRole<CanHarvest | CanWithdraw, CanPutDown> {
-    findSource(): EnergyAction<Source | CanWithdraw> {
-        return sourceAndCanWithdrawAction(this.creep) ?? this.invalidAction;
+export class SpawnAssistantRole extends StatefulRole<CanGetEnergy, CanPutEnergy> {
+    findSource(): EnergyAction<CanGetEnergy> {
+        return actionOfGetEnergy(this.creep, closestSourceAndCanWithdrawNoSpawn(this.creep.pos));
     }
 
-    findWorkTarget(): EnergyAction<CanPutDown> {
-        return canSpawnAction(this.creep) ?? this.invalidAction;
+    findWorkTarget(): EnergyAction<CanPutEnergy> {
+        return actionOfPutEnergy(this.creep, closestCanSpawn(this.creep.pos));
     }
 }

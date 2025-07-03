@@ -1,15 +1,16 @@
 import {StatefulRole} from "./role2";
-import {CanHarvest, CanPutDown, CanWithdraw, StructureHaveStore} from "../types";
-import {EnergyAction, HarvestAction} from "./actions";
-import {closestCanPutDownAction, sourceAction} from "./actionUtils";
+import {CanGetEnergy, CanPutEnergy} from "../types";
+import {EnergyAction} from "./actions";
+import {actionOfGetEnergy, actionOfPutEnergy} from "./actionUtils";
+import {closestCanPutDown, closestSource} from "./findUtils";
 
-export class HarvestRole extends StatefulRole<CanHarvest | CanWithdraw, CanPutDown> {
-    findSource(): EnergyAction<Source | CanWithdraw> {
-        return sourceAction(this.creep) ?? this.invalidAction;
+export class HarvestRole extends StatefulRole<CanGetEnergy, CanPutEnergy> {
+    findSource(): EnergyAction<CanGetEnergy> {
+        return actionOfGetEnergy(this.creep, closestSource(this.creep.pos));
     }
 
-    findWorkTarget(): EnergyAction<StructureHaveStore> {
-        return closestCanPutDownAction(this.creep) ?? this.invalidAction;
+    findWorkTarget(): EnergyAction<CanPutEnergy> {
+        return actionOfPutEnergy(this.creep, closestCanPutDown(this.creep.pos));
     }
 }
 
@@ -20,16 +21,17 @@ export class FixedSourceHarvestRole extends HarvestRole {
         if (source) this.setMemorySource(source);
     }
 
-    findSource(): EnergyAction<Source | CanWithdraw> {
+    findSource(): EnergyAction<CanGetEnergy> {
         // 读取记忆的source
         let source = this.getMemorySource();
+        // todo 这里是不是要检查类型必须为Source
         if (source) {
             this.log('回忆source', source);
-            return new HarvestAction(this.creep, source);
+            return actionOfGetEnergy(this.creep,source);
         }
 
         // 重新寻找source，并记忆
-        const result = sourceAction(this.creep);
+        const result = super.findSource();
         if (result) {
             this.setMemorySource(result.target);
             this.log('记忆source', result.target);
@@ -38,13 +40,13 @@ export class FixedSourceHarvestRole extends HarvestRole {
         return this.invalidAction;
     }
 
-    getMemorySource(): Source | null {
+    getMemorySource(): CanGetEnergy | null {
         const lastSourceId = this.creep.memory.lastSourceId;
         if (!lastSourceId) return null;
         return Game.getObjectById(lastSourceId);
     }
 
-    setMemorySource(source: Source) {
+    setMemorySource(source: CanGetEnergy) {
         this.log('setMemorySource', source, 'called');
         this.creep.memory.lastSourceId = source.id;
     }

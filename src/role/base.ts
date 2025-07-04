@@ -36,7 +36,26 @@ function mixCreepFun<TBase extends Constructor<CreepWrapper>>(Base: TBase) {
         }
 
         protected log(...data: any[]) {
-            if (this.logEnable) console.log(this.creep.name, ...data);
+            this.colorLog(undefined, ...data);
+        }
+
+        protected err(...data: any[]) {
+            this.colorLog('red', ...data);
+        }
+
+        protected warn(...data: any[]) {
+            this.colorLog('orange', ...data);
+        }
+
+        protected colorLog(color?: string, ...data: any[]) {
+            if (this.logEnable) {
+                if (color) {
+                    const msg = [this.creep.name, ...data].join(' ');
+                    console.log(`<span style="color: ${color}; ">${msg}</span>`);
+                } else {
+                    console.log(this.creep.name, ...data);
+                }
+            }
         }
 
         protected isEnergyFull(resourceType: ResourceConstant): boolean {

@@ -251,12 +251,18 @@ export class Transfer extends BaseRole<Structure | Ruin, Structure> {
             }
         } else {
             if (this.source) {
-                if ('store' in this.source) {
-                    const store = this.source.store as StoreDefinition;
-                    for (const storeKey in store) {
-                        const type = storeKey as ResourceConstant;
-                        if (this.creep.withdraw(this.source, type) === ERR_NOT_IN_RANGE) {
-                            this.visualizeMoveTo(this.source);
+                if (this.expectType) {
+                    if (this.creep.withdraw(this.source, this.expectType) === ERR_NOT_IN_RANGE) {
+                        this.visualizeMoveTo(this.source);
+                    }
+                } else {
+                    if ('store' in this.source) {
+                        const store = this.source.store as StoreDefinition;
+                        for (const storeKey in store) {
+                            const type = storeKey as ResourceConstant;
+                            if (this.creep.withdraw(this.source, type) === ERR_NOT_IN_RANGE) {
+                                this.visualizeMoveTo(this.source);
+                            }
                         }
                     }
                 }

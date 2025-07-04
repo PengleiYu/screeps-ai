@@ -1,9 +1,11 @@
-import {ROLE_HARVESTER, ROLE_HARVESTER_FAR, ROLE_SPAWN_ASSISTANT, ROLE_UPGRADER} from "../constants";
+import {ROLE_HARVESTER, ROLE_HARVESTER_FAR, ROLE_MINE, ROLE_SPAWN_ASSISTANT, ROLE_UPGRADER} from "../constants";
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
 import {getClosestCmpFun, getSpawn, trySpawn} from "../utils";
 import {HarvestRole} from "../role/HarvestRole";
 import {UpgradeRole} from "../role/UpgradeRole";
+import {MineRole} from "../role/MineRole";
+import {closestMineral} from "../role/findUtils";
 
 export function loop2() {
     Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
@@ -51,6 +53,15 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
                 }
             }
             return upgradeRole;
+        case ROLE_MINE:
+            const mineRole = new MineRole(creep);
+            if (mineRole.isJustBorn) {
+                const mineral = closestMineral(creep.pos);
+                if (mineral) {
+                    mineRole.initialWithMineral(mineral.pos, mineral.mineralType);
+                }
+            }
+            return mineRole;
         default:
             return null;
     }
@@ -83,6 +94,11 @@ interface SpawnConfig {
     maxCnt: number;
 }
 
+const HARVESTER_BODY = [
+    WORK, WORK, WORK, WORK, WORK,
+    MOVE, MOVE, MOVE, MOVE, MOVE,
+    CARRY,
+];
 const SPAWN_CONFIGS: SpawnConfig[] = [
     {
         role: ROLE_SPAWN_ASSISTANT,
@@ -90,23 +106,19 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         maxCnt: 2,
     }, {
         role: ROLE_HARVESTER,
-        body: [
-            WORK, WORK, WORK, WORK, WORK,
-            MOVE, MOVE, MOVE, MOVE, MOVE,
-            CARRY,
-        ],
+        body: HARVESTER_BODY,
         maxCnt: 1,
     }, {
         role: ROLE_HARVESTER_FAR,
-        body: [
-            WORK, WORK, WORK, WORK, WORK,
-            MOVE, MOVE, MOVE, MOVE, MOVE,
-            CARRY,
-        ],
+        body: HARVESTER_BODY,
         maxCnt: 1,
     }, {
         role: ROLE_UPGRADER,
         body: [WORK, MOVE, CARRY],
         maxCnt: 3,
+    }, {
+        role: ROLE_MINE,
+        body: HARVESTER_BODY,
+        maxCnt: 1,
     }
 ];

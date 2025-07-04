@@ -62,13 +62,32 @@ export class PickupAction extends EnergyAction<CanPickup> {
     }
 }
 
-export class TransferAction extends EnergyAction<CanPutSource> {
+abstract class TransferAction extends EnergyAction<CanPutSource> {
+    protected abstract get resourceType(): ResourceConstant
+
     actionImpl(): ActionReturnCode {
-        return this.creep.transfer(this.target, RESOURCE_ENERGY);
+        this.log('actionImpl', this.target, this.resourceType);
+        return this.creep.transfer(this.target, this.resourceType);
     }
 
     isValid(): boolean {
-        return this.target.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+        return (this.target.store.getFreeCapacity(this.resourceType) ?? 0) > 0;
+    }
+}
+
+export class TransferEnergyAction extends TransferAction {
+    protected get resourceType(): ResourceConstant {
+        return RESOURCE_ENERGY;
+    }
+}
+
+export class TransferMineralAction<T extends MineralConstant> extends TransferAction {
+    constructor(creep: Creep, target: CanPutSource, private mineralType: T) {
+        super(creep, target);
+    }
+
+    protected get resourceType(): ResourceConstant {
+        return this.mineralType;
     }
 }
 

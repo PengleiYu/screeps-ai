@@ -196,3 +196,9 @@ export function mapToObj<K, V>(map: Map<K, V>): { [key: string]: V } {
 
 export const loopEventBus = new EventBus();
 export const EVENT_LOOP_END = "event_loop_end";
+
+export function assertIsDefined<T>(value: T | null | undefined, msg?: string): asserts value is NonNullable<T> {
+    if (value === null || value === undefined) {
+        throw new Error(msg ?? `Expected value to be defined, but received ${value}`);
+    }
+}

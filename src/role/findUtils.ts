@@ -39,8 +39,13 @@ export function closestEnergy(pos: RoomPosition): Source | null {
 }
 
 // 最近的矿点
-export function closestMineral(pos: RoomPosition): Mineral | null {
-    return pos.findClosestByPath(FIND_MINERALS, {filter: it => it.mineralAmount > 0})
+export function closestMineral(pos: RoomPosition, mineralType?: MineralConstant): Mineral | null {
+    if (mineralType) return pos.findClosestByPath(FIND_MINERALS, {
+        filter: it => it.mineralType === mineralType && it.mineralAmount > 0
+    })
+    else return pos.findClosestByPath(FIND_MINERALS, {
+        filter: it => it.mineralAmount > 0
+    });
 }
 
 // 最近的可放置的地方

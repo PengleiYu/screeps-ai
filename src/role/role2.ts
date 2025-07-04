@@ -43,7 +43,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     protected invalidAction = EnergyAction.invalidInstance;
     private monitor: StateMonitor | undefined;
 
-    protected constructor(creep: Creep) {
+    public constructor(creep: Creep) {
         super(creep);
         if (this.logEnable) this.monitor = new StateMonitor(creep.name);
     }
@@ -52,9 +52,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     abstract findWorkTarget(): EnergyAction<W> ;
 
-    protected getSourceType(): ResourceConstant {
-        return RESOURCE_ENERGY;
-    }
+    protected abstract getSourceType(): ResourceConstant ;
 
     protected findEnergyPutDown(): EnergyAction<CanPutSource> {
         return actionOfPutEnergy(this.creep, closestCanPutDown(this.creep.pos, this.getSourceType()));
@@ -88,7 +86,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doHarvest() {
         this.log('doHarvest');
-        if (this.isEnergyFull()) {
+        if (this.isEnergyFull(this.getSourceType())) {
             this.log('能量已满');
             this.moveState(CreepState.WORK);
             return;
@@ -96,7 +94,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         const source = this.findSource();
         if (!source.isValid()) {
             this.log('source不合法');
-            this.moveState(!this.isEnergyEmpty() ? CreepState.WORK : CreepState.NONE);
+            this.moveState(!this.isEnergyEmpty(this.getSourceType()) ? CreepState.WORK : CreepState.NONE);
             return;
         }
         source.action();
@@ -104,7 +102,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doWork() {
         this.log('doWork');
-        if (this.isEnergyEmpty()) {
+        if (this.isEnergyEmpty(this.getSourceType())) {
             this.log('能量已空');
             this.moveState(CreepState.NONE);
             return;
@@ -121,7 +119,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doPutBackEnergy() {
         this.log('doPutBackEnergy');
-        if (this.isEnergyEmpty()) {
+        if (this.isEnergyEmpty(this.getSourceType())) {
             this.log('能量已空')
             this.moveState(CreepState.NONE);
             return;
@@ -167,7 +165,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
             this.doParking();
             return;
         } else {
-            if (this.isEnergyFull()) {
+            if (this.isEnergyFull(this.getSourceType())) {
                 this.log('能量已满');
                 this.moveState(CreepState.WORK);
             } else if (this.findSource().isValid()) {
@@ -221,24 +219,20 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 }
 
 export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource | CanWork> {
-    constructor(creep: Creep, source?: CanGetSource, work?: CanPutSource | CanWork) {
-        super(creep);
-        if (source) this.setMemorySource(source);
-        if (work) this.setMemoryWork(work);
-    }
 
 // todo 如果work记忆被修改为其他合法目标会怎样？如何防御？
     findSource(): EnergyAction<CanGetSource> {
         const memorySource = this.getMemorySource();
         this.log('回忆source', memorySource);
         if (memorySource) {
-            const result = actionOfGetEnergy(this.creep, memorySource);
+            // const result = actionOfGetEnergy(this.creep, memorySource);
+            const result = this.canGetSource2Action(memorySource);
             if (result.isValid()) {
                 this.log('回忆有效');
                 return result;
             }
         }
-        const result = this.findCanGetEnergy();
+        const result = this.canGetSource2Action(this.findCanGetSource2());
         this.log('回忆无效，搜索到新source', result.target);
         if (result.isValid()) {
             this.log('记忆source');
@@ -251,13 +245,14 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         const memoryWork = this.getMemoryWork();
         this.log('回忆work', memoryWork);
         if (memoryWork) {
-            const result = actionOfWork2(this.creep, memoryWork);
+            // const result = actionOfWork2(this.creep, memoryWork);
+            const result = this.canWork2Action(memoryWork);
             if (result.isValid()) {
                 this.log('回忆有效');
                 return result;
             }
         }
-        const result = this.findCanWork();
+        const result = this.canWork2Action(this.findCanWork2());
         this.log('回忆无效，搜索到新work', result.target);
         if (result.isValid()) {
             this.log('记忆work');
@@ -266,9 +261,23 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         return result;
     }
 
-    abstract findCanWork(): EnergyAction<CanWork | CanPutSource> ;
+    protected abstract canWork2Action(canWork: CanWork | CanPutSource | null): EnergyAction<CanWork | CanPutSource>;
 
-    abstract findCanGetEnergy(): EnergyAction<CanGetSource>;
+    protected abstract canGetSource2Action(canGet: CanGetSource | null): EnergyAction<CanGetSource>;
+
+    protected abstract findCanWork2(): CanWork | CanPutSource | null ;
+
+    protected abstract findCanGetSource2(): CanGetSource | null;
+
+    /**
+     * @deprecated
+     */
+    protected abstract findCanWork(): EnergyAction<CanWork | CanPutSource> ;
+
+    /**
+     * @deprecated
+     */
+    protected abstract findCanGetEnergy(): EnergyAction<CanGetSource>;
 
     // memory相关逻辑是否可以封装到单独对象中
     protected getMemoryWork(): CanWork | null {

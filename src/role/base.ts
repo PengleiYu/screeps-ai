@@ -12,7 +12,7 @@ class CreepWrapper {
         }
     }
 
-    public isJustBorn(): boolean {
+    public get isJustBorn(): boolean {
         const memory = this.creep.memory;
         return memory.isJustBorn || memory.birthTick === Game.time;
     }

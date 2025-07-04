@@ -278,7 +278,7 @@ export abstract class MemoryRole extends StatefulRole<CanGetEnergy, CanPutEnergy
         this.creep.memory.lastWorkId = work.id as Id<CanWork | CanPutEnergy>;
     }
 
-    public getMemorySource(): CanGetEnergy | null {
+    protected getMemorySource(): CanGetEnergy | null {
         const lastSourceId = this.creep.memory.lastSourceId;
         if (!lastSourceId) return null;
         return Game.getObjectById(lastSourceId);

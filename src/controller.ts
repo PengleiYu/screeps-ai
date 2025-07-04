@@ -192,7 +192,7 @@ abstract class BaseTransferController extends WorkerController<Transfer, Structu
     }
 
     protected override createRole(creep: Creep): Transfer {
-        return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
+        return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget(), RESOURCE_ENERGY);
     }
 }
 
@@ -207,10 +207,6 @@ export class ContainerTransferController extends BaseTransferController {
 
     protected get roleBody(): BodyPartConstant[] {
         return BODY_TRANSFER;
-    }
-
-    protected createRole(creep: Creep): Transfer {
-        return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
     }
 
     protected findWorkTarget(): StructureContainer | null {
@@ -243,10 +239,13 @@ export class StorageTransferController extends BaseTransferController {
 
     private nearMiningContainer(target: Structure) {
         // 最近的矿点容器
-        return getSpawn().room.find(FIND_SOURCES)
-            .map(source => source.pos.findInRange(FIND_STRUCTURES, 1, {
+        const sources = getSpawn().room.find(FIND_SOURCES).map(it => it.pos);
+        const minerals = getSpawn().room.find(FIND_MINERALS).map(it => it.pos);
+
+        return [...sources, ...minerals]
+            .map(pos => pos.findInRange(FIND_STRUCTURES, 2, {
                 filter: it =>
-                    it.structureType === STRUCTURE_CONTAINER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 150
+                    it.structureType === STRUCTURE_CONTAINER && it.store.getUsedCapacity() > 150
             }))
             .reduce((previousValue, currentValue) => {
                 previousValue.push(...currentValue)
@@ -261,11 +260,14 @@ export class StorageTransferController extends BaseTransferController {
         return getSpawn().room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_STORAGE
         })
-            .filter(it => it.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
+            .filter(it => it.store.getFreeCapacity() > 0)
             .sort(getClosestCmpFun(getSpawn()))
             [0];
     }
 
+    protected override createRole(creep: Creep): Transfer {
+        return new Transfer(creep, this.findWorkStarter(), this.findWorkTarget());
+    }
 }
 
 export class TowerTransferController extends BaseTransferController {

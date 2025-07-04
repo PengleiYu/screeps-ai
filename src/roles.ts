@@ -227,19 +227,38 @@ export class Repairer extends BaseRole<Ruin | StructureStorage | StructureContai
 }
 
 export class Transfer extends BaseRole<Structure | Ruin, Structure> {
+
+    constructor(creep: Creep, source: Structure | Ruin | null, target: Structure | null, private expectType?: ResourceConstant) {
+        super(creep, source, target);
+    }
+
     work(): void {
         super.work();
         // 先不加记忆
-        if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
+        const store = this.creep.store;
+        let type: ResourceConstant;
+        if (this.expectType && store.getUsedCapacity(this.expectType) > 0) {
+            type = this.expectType;
+        } else {
+            type = (Object.keys(store) as ResourceConstant[])[0];
+        }
+
+        if (type) {
             if (this.target) {
-                if (this.creep.transfer(this.target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
+                if (this.creep.transfer(this.target, type) === ERR_NOT_IN_RANGE) {
                     this.visualizeMoveTo(this.target);
                 }
             }
         } else {
             if (this.source) {
-                if (this.creep.withdraw(this.source, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                    this.visualizeMoveTo(this.source);
+                if ('store' in this.source) {
+                    const store = this.source.store as StoreDefinition;
+                    for (const storeKey in store) {
+                        const type = storeKey as ResourceConstant;
+                        if (this.creep.withdraw(this.source, type) === ERR_NOT_IN_RANGE) {
+                            this.visualizeMoveTo(this.source);
+                        }
+                    }
                 }
             }
         }

@@ -42,6 +42,7 @@ class StateMonitor {
 export abstract class StatefulRole<S extends Positionable, W extends Positionable> extends CreepContext {
     protected invalidAction = EnergyAction.invalidInstance;
     private monitor: StateMonitor | undefined;
+    private moveStateCalledCnt = 0;
 
     public constructor(creep: Creep) {
         super(creep);
@@ -66,8 +67,12 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         this.creep.memory.lifeState = state;
     }
 
-    // todo 存在隐患，递归调用导致栈溢出
     private moveState(target: CreepState) {
+        if (this.moveStateCalledCnt > 10) {
+            console.log('有问题，moveState调用次数过多', this.moveStateCalledCnt);
+            return;
+        }
+        this.moveStateCalledCnt++;
         if (this.state === target) {
             return;
         }
@@ -78,7 +83,9 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         }
         this.log('状态转移', this.state, '->', target);
         this._state = target;
-        this.dispatch()
+        // 这里必须调用，否则会浪费tick
+        // 每种状态的执行必须放在最后，因为执行不是立即生效，所以执行后的检查没有意义
+        this.dispatch();
     }
 
     interceptLifeCycle(): boolean {

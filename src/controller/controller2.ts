@@ -14,24 +14,24 @@ export function loop2() {
 function harvesterRoleFactory(creep: Creep): StatefulRole<any, any> | null {
     const role = creep.memory.role;
     const harHarvester = new HarvestRole(creep);
-    if (harHarvester.getMemorySource()) {
-        return harHarvester;
-    }
+    if (!harHarvester.isJustBorn) return harHarvester;
+
+    // 刚出生时设置移动目标
     const sources = getSpawn().room.find(FIND_SOURCES).sort(getClosestCmpFun(getSpawn()));
-    const nearSource = sources[0];
-    const farSource = sources[sources.length - 1];
-    let result: HarvestRole;
+    let source: Source;
+    // todo 应该想办法把两个role合并
     switch (role) {
         case ROLE_HARVESTER:
-            result = new HarvestRole(creep, nearSource);
+            source = sources[0];
             break
-        case ROLE_HARVESTER_FAR://先简单处理，未来要根据source可采集位置动态计算body和数量，而且不应该用role区分
-            result = new HarvestRole(creep, farSource);
+        case ROLE_HARVESTER_FAR:
+            source = sources[sources.length - 1];
             break
         default:
             throw new Error(`非法角色${role}`);
     }
-    return result;
+    harHarvester.initialWithPosition(source.pos);
+    return harHarvester;
 }
 
 function roleFactory(creep: Creep): StatefulRole<any, any> | null {
@@ -44,7 +44,7 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
             return harvesterRoleFactory(creep);
         case ROLE_UPGRADER:
             const upgradeRole = new UpgradeRole(creep);
-            if (upgradeRole.isJustBorn()) {
+            if (upgradeRole.isJustBorn) {
                 const controller = creep.room.controller;
                 if (controller) {
                     upgradeRole.initialWithPosition(controller.pos);

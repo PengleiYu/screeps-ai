@@ -1,17 +1,13 @@
-import {MemoryRole} from "./role2";
-import {CanGetEnergy, CanWork} from "../types";
-import {EnergyAction} from "./actions";
-
-import {actionOfGetEnergy, actionOfWork} from "./actionUtils";
+import {CanGetSource, CanPutSource, CanWork} from "../types";
 import {closestSourceAndCanWithdrawNoSpawn} from "./findUtils";
+import {EnergyRole} from "./EnergyRole";
 
-export class UpgradeRole extends MemoryRole {
-    findCanGetEnergy(): EnergyAction<CanGetEnergy> {
-        return actionOfGetEnergy(this.creep, closestSourceAndCanWithdrawNoSpawn(this.creep.pos));
+export class UpgradeRole extends EnergyRole {
+    protected findCanWork(): CanWork | CanPutSource | null {
+        return this.creep.room.controller ?? null;
     }
 
-    findCanWork(): EnergyAction<CanWork> {
-        const controller = this.creep.room.controller ?? null;
-        return actionOfWork(this.creep, controller);
+    protected findCanGetSource(): CanGetSource | null {
+        return closestSourceAndCanWithdrawNoSpawn(this.creep.pos);
     }
 }

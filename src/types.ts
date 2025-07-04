@@ -23,13 +23,13 @@ export const STRUCTURE_HAVE_STORE_CONST = [
 
 
 // 可获取能量的类型
-export type CanHarvest = Source
+export type CanHarvest = Source | Mineral;
 export type CanWithdraw = StructureHaveStore | Tombstone | Ruin;
 export type CanPickup = Resource<RESOURCE_ENERGY>;
-export type CanGetEnergy = CanHarvest | CanPickup | CanWithdraw;
+export type CanGetSource = CanHarvest | CanPickup | CanWithdraw;
 
 // 可存储能量的类型
-export type CanPutEnergy = StructureHaveStore
+export type CanPutSource = StructureHaveStore
 
 // 可操作的类型
 export type CanWork = ConstructionSite | StructureController;

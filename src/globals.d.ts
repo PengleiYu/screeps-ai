@@ -1,17 +1,26 @@
 import {CreepState} from "./role/role2";
-import {CanGetEnergy, CanPutEnergy, CanWork} from "./types";
+import {CanGetSource, CanPutSource, CanWork} from "./types";
 
 declare global {
     interface CreepMemory {
         role?: string,
         working?: boolean;
         workState?: string;
+
+        // 状态机
         lifeState?: CreepState;
-        logging?: boolean;
-        lastSourceId?: Id<CanGetEnergy>;
-        lastWorkId?: Id<CanWork | CanPutEnergy>;//工作目标都是建筑
+
+        // 工作需要的记忆
+        lastSourceId?: Id<CanGetSource>;
+        lastWorkId?: Id<CanWork | CanPutSource>;//工作目标都是建筑
         targetPosition?: string;
+        sourceType?: MineralConstant;//目前不设置表示使用能量，后续看是否要改
+
+        // 用于标识首次运行
         isJustBorn?: boolean;
         birthTick?: number;
+
+        // debug
+        logging?: boolean;
     }
 }

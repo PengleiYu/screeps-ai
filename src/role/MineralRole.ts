@@ -1,6 +1,6 @@
 import {MemoryRole} from "./role2";
 import {assertIsDefined} from "../utils";
-import {CanWork, CanPutSource, CanGetSource} from "../types";
+import {CanGetSource, CanPutSource, CanWork} from "../types";
 import {EnergyAction} from "./actions";
 import {actionOfGetEnergy, actionOfPutMineral} from "./actionUtils";
 
@@ -15,7 +15,6 @@ export abstract class MineralRole extends MemoryRole {
 
     protected getSourceType(): MineralConstant {
         const sourceType = this.creep.memory.sourceType;
-        this.log('getSourceType', sourceType);
         assertIsDefined(sourceType);
         return sourceType;
     }

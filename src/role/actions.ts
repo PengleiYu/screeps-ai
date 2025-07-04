@@ -1,5 +1,5 @@
 import {Positionable} from "../utils";
-import {ActionReturnCode, CanHarvest, CanPickup, CanPutEnergy, CanWithdraw} from "../types";
+import {ActionReturnCode, CanHarvest, CanPickup, CanPutSource, CanWithdraw} from "../types";
 import {CreepContext} from "./base";
 
 export abstract class EnergyAction<T extends Positionable> extends CreepContext {
@@ -62,7 +62,7 @@ export class PickupAction extends EnergyAction<CanPickup> {
     }
 }
 
-export class TransferAction extends EnergyAction<CanPutEnergy> {
+export class TransferAction extends EnergyAction<CanPutSource> {
     actionImpl(): ActionReturnCode {
         return this.creep.transfer(this.target, RESOURCE_ENERGY);
     }

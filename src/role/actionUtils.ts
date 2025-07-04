@@ -7,16 +7,16 @@ import {
     UpgradeAction,
     WithdrawAction
 } from "./actions";
-import {CanGetEnergy, CanPutEnergy, CanWork} from "../types";
+import {CanGetSource, CanPutSource, CanWork} from "../types";
 
-export function actionOfGetEnergy(creep: Creep, source: CanGetEnergy | null): EnergyAction<CanGetEnergy> {
-    if (source instanceof Source) return new HarvestAction(creep, source);
+export function actionOfGetEnergy(creep: Creep, source: CanGetSource | null): EnergyAction<CanGetSource> {
+    if (source instanceof Source|| source instanceof Mineral) return new HarvestAction(creep, source);
     if (source instanceof Resource) return new PickupAction(creep, source);
     if (source instanceof Structure) return new WithdrawAction(creep, source);
     return EnergyAction.invalidInstance;
 }
 
-export function actionOfPutEnergy(creep: Creep, store: CanPutEnergy | null): EnergyAction<CanPutEnergy> {
+export function actionOfPutEnergy(creep: Creep, store: CanPutSource | null): EnergyAction<CanPutSource> {
     if (store) return new TransferAction(creep, store);
     return EnergyAction.invalidInstance;
 }
@@ -27,7 +27,7 @@ export function actionOfWork(creep: Creep, work: CanWork | null): EnergyAction<C
     return EnergyAction.invalidInstance;
 }
 
-export function actionOfWork2(creep: Creep, work: CanWork | CanPutEnergy | null): EnergyAction<CanPutEnergy | CanWork> {
+export function actionOfWork2(creep: Creep, work: CanWork | CanPutSource | null): EnergyAction<CanPutSource | CanWork> {
     if (!work) return EnergyAction.invalidInstance;
     if (work instanceof StructureController) return new UpgradeAction(creep, work);
     if (work instanceof ConstructionSite) return new BuildAction(creep, work);

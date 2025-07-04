@@ -1,12 +1,12 @@
 import {MemoryRole} from "./role2";
-import {CanGetEnergy, CanWork} from "../types";
+import {CanGetSource, CanWork} from "../types";
 import {EnergyAction} from "./actions";
 
 import {actionOfGetEnergy, actionOfWork} from "./actionUtils";
 import {closestSourceAndCanWithdrawNoSpawn} from "./findUtils";
 
 export class UpgradeRole extends MemoryRole {
-    findCanGetEnergy(): EnergyAction<CanGetEnergy> {
+    findCanGetEnergy(): EnergyAction<CanGetSource> {
         return actionOfGetEnergy(this.creep, closestSourceAndCanWithdrawNoSpawn(this.creep.pos));
     }
 

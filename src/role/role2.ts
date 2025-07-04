@@ -1,5 +1,5 @@
 import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../utils";
-import {CanGetEnergy, CanPutEnergy, CanWork, MyPosition} from "../types";
+import {CanGetSource, CanPutSource, CanWork, MyPosition} from "../types";
 import {EnergyAction, MoveAction} from "./actions";
 import {CreepContext} from "./base";
 
@@ -52,8 +52,12 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     abstract findWorkTarget(): EnergyAction<W> ;
 
-    protected findEnergyPutDown(): EnergyAction<CanPutEnergy> {
-        return actionOfPutEnergy(this.creep, closestCanPutDown(this.creep.pos));
+    protected getSourceType(): ResourceConstant {
+        return RESOURCE_ENERGY;
+    }
+
+    protected findEnergyPutDown(): EnergyAction<CanPutSource> {
+        return actionOfPutEnergy(this.creep, closestCanPutDown(this.creep.pos, this.getSourceType()));
     }
 
     private get state(): CreepState {
@@ -216,15 +220,15 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 }
 
-export abstract class MemoryRole extends StatefulRole<CanGetEnergy, CanPutEnergy | CanWork> {
-    constructor(creep: Creep, source?: CanGetEnergy, work?: CanPutEnergy | CanWork) {
+export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource | CanWork> {
+    constructor(creep: Creep, source?: CanGetSource, work?: CanPutSource | CanWork) {
         super(creep);
         if (source) this.setMemorySource(source);
         if (work) this.setMemoryWork(work);
     }
 
 // todo 如果work记忆被修改为其他合法目标会怎样？如何防御？
-    findSource(): EnergyAction<CanGetEnergy> {
+    findSource(): EnergyAction<CanGetSource> {
         const memorySource = this.getMemorySource();
         this.log('回忆source', memorySource);
         if (memorySource) {
@@ -243,7 +247,7 @@ export abstract class MemoryRole extends StatefulRole<CanGetEnergy, CanPutEnergy
         return result;
     }
 
-    findWorkTarget(): EnergyAction<CanWork | CanPutEnergy> {
+    findWorkTarget(): EnergyAction<CanWork | CanPutSource> {
         const memoryWork = this.getMemoryWork();
         this.log('回忆work', memoryWork);
         if (memoryWork) {
@@ -262,9 +266,9 @@ export abstract class MemoryRole extends StatefulRole<CanGetEnergy, CanPutEnergy
         return result;
     }
 
-    abstract findCanWork(): EnergyAction<CanWork | CanPutEnergy> ;
+    abstract findCanWork(): EnergyAction<CanWork | CanPutSource> ;
 
-    abstract findCanGetEnergy(): EnergyAction<CanGetEnergy>;
+    abstract findCanGetEnergy(): EnergyAction<CanGetSource>;
 
     // memory相关逻辑是否可以封装到单独对象中
     protected getMemoryWork(): CanWork | null {
@@ -273,18 +277,18 @@ export abstract class MemoryRole extends StatefulRole<CanGetEnergy, CanPutEnergy
         return Game.getObjectById(lastSourceId as Id<CanWork>);
     }
 
-    protected setMemoryWork(work: CanWork | CanPutEnergy) {
+    protected setMemoryWork(work: CanWork | CanPutSource) {
         this.log('setMemoryWork', work, 'called');
-        this.creep.memory.lastWorkId = work.id as Id<CanWork | CanPutEnergy>;
+        this.creep.memory.lastWorkId = work.id as Id<CanWork | CanPutSource>;
     }
 
-    protected getMemorySource(): CanGetEnergy | null {
+    protected getMemorySource(): CanGetSource | null {
         const lastSourceId = this.creep.memory.lastSourceId;
         if (!lastSourceId) return null;
         return Game.getObjectById(lastSourceId);
     }
 
-    protected setMemorySource(source: CanGetEnergy) {
+    protected setMemorySource(source: CanGetSource) {
         this.log('setMemorySource', source, 'called');
         this.creep.memory.lastSourceId = source.id;
     }

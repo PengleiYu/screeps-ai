@@ -4,7 +4,7 @@ import {EnergyAction} from "./actions";
 import {actionOfGetEnergy, actionOfWork2} from "./actionUtils";
 
 export abstract class EnergyRole extends MemoryRole {
-    protected getSourceType(): RESOURCE_ENERGY {
+    protected getSourceType(): ResourceConstant {
         return RESOURCE_ENERGY;
     }
 

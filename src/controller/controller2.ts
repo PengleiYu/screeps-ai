@@ -4,7 +4,7 @@ import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
 import {getClosestCmpFun, getSpawn, trySpawn} from "../utils";
 import {HarvestRole} from "../role/HarvestRole";
 import {UpgradeRole} from "../role/UpgradeRole";
-import {MineRole} from "../role/MineRole";
+import {MinerRole} from "../role/MineRole";
 import {closestMineral} from "../role/findUtils";
 
 export function loop2() {
@@ -54,9 +54,10 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
             }
             return upgradeRole;
         case ROLE_MINE:
-            const mineRole = new MineRole(creep);
+            const mineRole = new MinerRole(creep);
             if (mineRole.isJustBorn) {
                 const mineral = closestMineral(creep.pos);
+                console.log('find mineral', mineral);
                 if (mineral) {
                     mineRole.initialWithMineral(mineral.pos, mineral.mineralType);
                 }

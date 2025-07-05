@@ -186,6 +186,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
     }
 
     public initialWithPosition(position: RoomPosition) {
+        this.log('initialWithPosition', position);
         const memory = this.creep.memory;
         memory.targetPosition = MyPosition.fromRoomPosition(position).toJson();
         // 清除流程相关记忆

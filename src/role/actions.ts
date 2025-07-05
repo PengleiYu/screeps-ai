@@ -59,6 +59,10 @@ export class WithdrawAction extends EnergyAction<CanWithdraw> {
     actionImpl(): ActionReturnCode {
         return this.creep.withdraw(this.target, RESOURCE_ENERGY);
     }
+
+    isValid(): boolean {
+        return this.target.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
+    }
 }
 
 export class PickupAction extends EnergyAction<CanPickup> {

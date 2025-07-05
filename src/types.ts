@@ -7,11 +7,25 @@ export type StructureWithSpawn =
 export const STRUCTURE_WITH_SPAWN_CONST = [
     STRUCTURE_SPAWN, STRUCTURE_EXTENSION,
 ];
+
+export function isStructureWithSpawn(input: any): input is StructureWithSpawn {
+    return input instanceof StructureSpawn
+        || input instanceof StructureExtension;
+}
+
 export type StructureHaveStoreNoSpawn =
     | StructureContainer | StructureStorage | StructureLink;
 export const STRUCTURE_HAVE_STORE_NO_SPAWN_CONST = [
     STRUCTURE_CONTAINER, STRUCTURE_STORAGE, STRUCTURE_LINK,
 ];
+
+export function isStructureHaveStoreNoSpawn(input: any): input is StructureHaveStoreNoSpawn {
+    return input instanceof StructureContainer
+        || input instanceof StructureStorage
+        || input instanceof StructureLink;
+}
+
+
 export type StructureHaveStore =
     | StructureWithSpawn
     | StructureHaveStoreNoSpawn;
@@ -21,6 +35,9 @@ export const STRUCTURE_HAVE_STORE_CONST = [
     ...STRUCTURE_HAVE_STORE_NO_SPAWN_CONST,
 ];
 
+export function isStructureHaveStore(input: any): input is StructureHaveStore {
+    return isStructureWithSpawn(input) || isStructureHaveStoreNoSpawn(input);
+}
 
 // 可获取能量的类型
 export type CanHarvest = Source | Mineral;
@@ -31,8 +48,17 @@ export type CanGetSource = CanHarvest | CanPickup | CanWithdraw;
 // 可存储能量的类型
 export type CanPutSource = StructureHaveStore
 
+export function isCanPutSource(input: any): input is CanPutSource {
+    return isStructureHaveStore(input);
+}
+
 // 可操作的类型
 export type CanWork = ConstructionSite | StructureController;
+
+function isCanWork(input: any): input is CanWork {
+    return input instanceof ConstructionSite
+        || input instanceof StructureController;
+}
 
 // 大杂烩
 export type ActionReturnCode = CreepActionReturnCode | ScreepsReturnCode

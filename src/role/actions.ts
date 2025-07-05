@@ -1,6 +1,7 @@
 import {Positionable} from "../utils";
 import {ActionReturnCode, CanHarvest, CanPickup, CanPutSource, CanWithdraw} from "../types";
 import {CreepContext} from "./base";
+import {getStoreResourceTypes} from "../typeUtils";
 
 export abstract class EnergyAction<T extends Positionable> extends CreepContext {
     public constructor(creep: Creep, public target: T) {
@@ -55,7 +56,7 @@ export class HarvestAction extends EnergyAction<CanHarvest> {
     }
 }
 
-export class WithdrawAction extends EnergyAction<CanWithdraw> {
+export class WithdrawEnergyAction extends EnergyAction<CanWithdraw> {
     actionImpl(): ActionReturnCode {
         return this.creep.withdraw(this.target, RESOURCE_ENERGY);
     }
@@ -65,9 +66,42 @@ export class WithdrawAction extends EnergyAction<CanWithdraw> {
     }
 }
 
+export class WithdrawAllAction extends EnergyAction<CanWithdraw> {
+    protected actionImpl(): ActionReturnCode {
+        const type = getStoreResourceTypes(this.target.store)[0];
+        return this.creep.withdraw(this.target, type);
+    }
+
+    isValid(): boolean {
+        return this.creep.store.getFreeCapacity() > 0
+            && (this.target.store.getUsedCapacity() ?? 0) > 0;
+    }
+}
+
 export class PickupAction extends EnergyAction<CanPickup> {
     actionImpl(): ActionReturnCode {
         return this.creep.pickup(this.target);
+    }
+}
+
+
+export class TransferAllAction extends EnergyAction<CanPutSource> {
+    protected actionImpl(): ActionReturnCode {
+        for (const type of getStoreResourceTypes(this.creep.store)) {
+            if ((this.target.store.getFreeCapacity(type) ?? 0) > 0) {
+                return this.creep.transfer(this.target, type);
+            }
+        }
+        return ERR_NOT_ENOUGH_RESOURCES;
+    }
+
+    isValid(): boolean {
+        for (const key of getStoreResourceTypes(this.creep.store)) {
+            if ((this.target.store.getFreeCapacity(key) ?? 0) > 0) {
+                return true;
+            }
+        }
+        return super.isValid();
     }
 }
 

@@ -24,7 +24,7 @@ import {
     SpawnStruct,
     trySpawn,
 } from "./utils";
-import {ROLE_HARVESTER, ROLE_SPAWN_ASSISTANT, ROLE_UPGRADER} from "./constants";
+import {ROLE_HARVESTER, ROLE_SPAWN_ASSISTANT, ROLE_STORAGE_TRANSFER, ROLE_UPGRADER} from "./constants";
 
 export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, STARTER, TARGET> {
     protected abstract get roleInstanceMax(): number;
@@ -227,7 +227,7 @@ export class StorageTransferController extends BaseTransferController {
     }
 
     protected get roleName(): string {
-        return 'storageTransfer';
+        return ROLE_STORAGE_TRANSFER;
     }
 
     protected override findWorkStarter(): Structure | Ruin | null {

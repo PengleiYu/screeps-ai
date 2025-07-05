@@ -75,19 +75,9 @@ function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {
             new Map<string, number>());
     // console.log('role数量统计', JSON.stringify(mapToObj(map)));
 
-    // 检查角色孵化必要性
-    const minerConfig = configs.find(it => it.role === ROLE_MINER);
-    if (minerConfig) {
-        const mineral = closestMineral(getSpawn().pos);
-        if (!mineral) {
-            console.log('未找到矿床，移除MinerConfig');
-            configs = configs.filter(it => it.role !== ROLE_MINER);
-        }
-    }
-
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
-        if (expectCnt > 0) {
+        if (expectCnt > 0 && shouldSpawn(config)) {
             const memory: CreepMemory = {
                 role: config.role,
                 lifeState: CreepState.INITIAL,
@@ -97,6 +87,14 @@ function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {
             trySpawn(config.role + Date.now(), config.body, memory);
         }
     }
+}
+
+function shouldSpawn(config: SpawnConfig): boolean {
+    switch (config.role) {
+        case ROLE_MINER:
+            return !!closestMineral(getSpawn().pos);
+    }
+    return true;
 }
 
 interface SpawnConfig {

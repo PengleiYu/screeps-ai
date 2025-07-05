@@ -5,7 +5,6 @@ import {
     LinkStartController,
     OverseaTransportController,
     RepairController,
-    StorageTransferController,
     SweepController,
     TowerTransferController
 } from "./controller";
@@ -27,8 +26,7 @@ export function loop() {
     new RepairController().run();
     new TowerTransferController().run();
     new TowerController().run();
-    new ContainerTransferController().run();
-    new StorageTransferController().run();
+    // new StorageTransferController().run();
     new SweepController().run();
 
     new OverseaTransportController().run();

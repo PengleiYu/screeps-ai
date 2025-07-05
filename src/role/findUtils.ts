@@ -67,3 +67,26 @@ export function closestCanSpawn(center: RoomPosition): CanPutSource | null {
         filter: obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
     });
 }
+
+// 最近的可获取资源的container，优先返回装载能量的，其次返回装载其他的
+export function closestEnergyMineralContainer(pos: RoomPosition): StructureContainer | null {
+    const room = Game.rooms[pos.roomName];
+    const sourcePosArr = room.find(FIND_SOURCES).map(it => it.pos);
+    const mineralPosArr = room.find(FIND_MINERALS).map(it => it.pos);
+    return [...sourcePosArr, ...mineralPosArr]
+        .reduce((arr, cur) => {
+            const containers: StructureContainer[] = cur.findInRange(FIND_STRUCTURES, 3, {
+                filter: it => it.structureType === STRUCTURE_CONTAINER && it.store.getUsedCapacity() > 0
+            });
+            arr.push(...containers);
+            return arr;
+        }, new Array<StructureContainer>())
+        .sort(getClosestCmpFun(pos))
+        [0] ?? null;
+}
+
+export function closestStorage(pos: RoomPosition): StructureStorage | null {
+    return pos.findClosestByPath(FIND_MY_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_STORAGE && it.store.getFreeCapacity() > 0
+    });
+}

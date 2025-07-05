@@ -8,6 +8,6 @@ export class HarvestRole extends EnergyRole {
     }
 
     protected findCanWork(): CanWork | CanPutSource | null {
-        return closestCanPutDown(this.creep.pos, this.getSourceType());
+        return closestCanPutDown(this.creep.pos, RESOURCE_ENERGY);
     }
 }

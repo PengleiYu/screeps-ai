@@ -57,15 +57,6 @@ function mixCreepFun<TBase extends Constructor<CreepWrapper>>(Base: TBase) {
                 }
             }
         }
-
-        protected isEnergyFull(resourceType: ResourceConstant): boolean {
-            return this.creep.store.getFreeCapacity(resourceType) === 0;
-        }
-
-        protected isEnergyEmpty(resourceType: ResourceConstant): boolean {
-            return this.creep.store.getUsedCapacity(resourceType) === 0;
-        }
-
     }
 }
 

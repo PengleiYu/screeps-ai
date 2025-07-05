@@ -1,10 +1,10 @@
-import {ROLE_HARVESTER, ROLE_HARVESTER_FAR, ROLE_MINE, ROLE_SPAWN_ASSISTANT, ROLE_UPGRADER} from "../constants";
+import {ROLE_HARVESTER, ROLE_HARVESTER_FAR, ROLE_MINER, ROLE_SPAWN_ASSISTANT, ROLE_UPGRADER} from "../constants";
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
 import {getClosestCmpFun, getSpawn, trySpawn} from "../utils";
 import {HarvestRole} from "../role/HarvestRole";
 import {UpgradeRole} from "../role/UpgradeRole";
-import {MineRole} from "../role/MineRole";
+import {MinerRole} from "../role/MineRole";
 import {closestMineral} from "../role/findUtils";
 
 export function loop2() {
@@ -53,10 +53,11 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
                 }
             }
             return upgradeRole;
-        case ROLE_MINE:
-            const mineRole = new MineRole(creep);
+        case ROLE_MINER:
+            const mineRole = new MinerRole(creep);
             if (mineRole.isJustBorn) {
                 const mineral = closestMineral(creep.pos);
+                console.log('find mineral', mineral);
                 if (mineral) {
                     mineRole.initialWithMineral(mineral.pos, mineral.mineralType);
                 }
@@ -73,6 +74,16 @@ function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {
                 key ? map.set(key, (map.get(key) || 0) + 1) : map,
             new Map<string, number>());
     // console.log('role数量统计', JSON.stringify(mapToObj(map)));
+
+    // 检查角色孵化必要性
+    const minerConfig = configs.find(it => it.role === ROLE_MINER);
+    if (minerConfig) {
+        const mineral = closestMineral(getSpawn().pos);
+        if (!mineral) {
+            console.log('未找到矿床，移除MinerConfig');
+            configs = configs.filter(it => it.role !== ROLE_MINER);
+        }
+    }
 
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
@@ -117,8 +128,8 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         body: [WORK, MOVE, CARRY],
         maxCnt: 3,
     }, {
-        role: ROLE_MINE,
+        role: ROLE_MINER,
         body: HARVESTER_BODY,
         maxCnt: 1,
     }
-];
+] as const;

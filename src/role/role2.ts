@@ -3,9 +3,6 @@ import {CanGetSource, CanPutSource, CanWork, MyPosition} from "../types";
 import {EnergyAction, MoveAction} from "./actions";
 import {CreepContext} from "./base";
 
-import {actionOfPutEnergy} from "./actionUtils";
-import {closestCanPutDown} from "./findUtils";
-
 export const enum CreepState {
     INITIAL = "initial",
     NONE = 'none',
@@ -49,15 +46,15 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         if (this.logEnable) this.monitor = new StateMonitor(creep.name);
     }
 
-    abstract findSource(): EnergyAction<S> ;
+    protected abstract findSource(): EnergyAction<S> ;
 
-    abstract findWorkTarget(): EnergyAction<W> ;
+    protected abstract findWorkTarget(): EnergyAction<W> ;
 
-    protected abstract getSourceType(): ResourceConstant ;
+    protected abstract isStoreFull(): boolean ;
 
-    protected findEnergyPutDown(): EnergyAction<CanPutSource> {
-        return actionOfPutEnergy(this.creep, closestCanPutDown(this.creep.pos, this.getSourceType()));
-    }
+    protected abstract isStoreEmpty(): boolean ;
+
+    protected abstract findEnergyPutDown(): EnergyAction<CanPutSource> ;
 
     private get state(): CreepState {
         return this.creep.memory.lifeState ?? CreepState.NONE;
@@ -94,7 +91,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doHarvest() {
         this.log('doHarvest');
-        if (this.isEnergyFull(this.getSourceType())) {
+        if (this.isStoreFull()) {
             this.log('能量已满');
             this.moveState(CreepState.WORK);
             return;
@@ -102,7 +99,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         const source = this.findSource();
         if (!source.isValid()) {
             this.log('source不合法');
-            this.moveState(!this.isEnergyEmpty(this.getSourceType()) ? CreepState.WORK : CreepState.NONE);
+            this.moveState(!this.isStoreEmpty() ? CreepState.WORK : CreepState.NONE);
             return;
         }
         source.action();
@@ -110,7 +107,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doWork() {
         this.log('doWork');
-        if (this.isEnergyEmpty(this.getSourceType())) {
+        if (this.isStoreEmpty()) {
             this.log('能量已空');
             this.moveState(CreepState.NONE);
             return;
@@ -127,7 +124,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doPutBackEnergy() {
         this.log('doPutBackEnergy');
-        if (this.isEnergyEmpty(this.getSourceType())) {
+        if (this.isStoreEmpty()) {
             this.log('能量已空')
             this.moveState(CreepState.NONE);
             return;
@@ -173,7 +170,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
             this.doParking();
             return;
         } else {
-            if (this.isEnergyFull(this.getSourceType())) {
+            if (this.isStoreFull()) {
                 this.log('能量已满');
                 this.moveState(CreepState.WORK);
             } else if (this.findSource().isValid()) {

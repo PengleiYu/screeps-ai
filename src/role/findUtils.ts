@@ -4,7 +4,7 @@ import {
     CanWithdraw,
     STRUCTURE_HAVE_STORE_CONST,
     STRUCTURE_HAVE_STORE_NO_SPAWN_CONST,
-    StructureHaveStore, StructureHaveStoreNoSpawn
+    StructureHaveStore
 } from "../types";
 
 type CanWithdrawFilter = (it: CanWithdraw) => boolean;
@@ -73,21 +73,28 @@ export function closestEnergyMineralContainer(pos: RoomPosition): CanWithdraw | 
     const room = Game.rooms[pos.roomName];
     const sourcePosArr = room.find(FIND_SOURCES).map(it => it.pos);
     const mineralPosArr = room.find(FIND_MINERALS).map(it => it.pos);
-    const storagePosArr = room.find(FIND_MY_STRUCTURES, {
-        filter: it => it.structureType === STRUCTURE_STORAGE
-    }).map(it => it.pos);
-    return [...sourcePosArr, ...mineralPosArr, ...storagePosArr]
+    const containers = [...sourcePosArr, ...mineralPosArr]
         .reduce((arr, cur) => {
-            const containers: StructureHaveStoreNoSpawn[] = cur.findInRange(FIND_STRUCTURES, 3, {
+            const containers: StructureContainer[] = cur.findInRange(FIND_STRUCTURES, 3, {
                 filter: it =>
-                    (it.structureType === STRUCTURE_CONTAINER || it.structureType === STRUCTURE_LINK)
-                    && (it.store.getUsedCapacity() ?? it.store.getUsedCapacity(RESOURCE_ENERGY)) > 0
+                    it.structureType === STRUCTURE_CONTAINER
+                    && it.store.getUsedCapacity() > 0
             });
             arr.push(...containers);
             return arr;
-        }, new Array<StructureHaveStoreNoSpawn>())
-        .sort(getClosestCmpFun(pos))
-        [0] ?? null;
+        }, new Array<StructureContainer>());
+    const links = room.find(FIND_MY_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_STORAGE
+    })
+        .map(it => it.pos)
+        .reduce((arr, cur) => {
+            const links: StructureLink[] = cur.findInRange(FIND_MY_STRUCTURES, 3, {
+                filter: it => it.structureType === STRUCTURE_LINK && it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+            });
+            arr.push(...links);
+            return arr;
+        }, new Array<StructureLink>());
+    return [...containers, ...links].sort(getClosestCmpFun(pos)) [0] ?? null;
 }
 
 export function closestStorage(pos: RoomPosition): StructureStorage | null {

@@ -1,5 +1,5 @@
 import {CanGetSource, isCanPickup, isCanWithdraw} from "../types";
-import {closestRuinRemnant} from "./findUtils";
+import {closestRuinRemnantTomb} from "./findUtils";
 import {EnergyAction, PickupAction, WithdrawAllAction} from "./actions";
 import {BaseStorageTransferRole} from "./BaseStorageTransferRole";
 
@@ -8,7 +8,7 @@ import {BaseStorageTransferRole} from "./BaseStorageTransferRole";
  */
 export class Sweep2StorageRole extends BaseStorageTransferRole {
     protected findCanGetSource(): CanGetSource | null {
-        return closestRuinRemnant(this.creep.pos);
+        return closestRuinRemnantTomb(this.creep.pos);
     }
 
     protected canGetSource2Action(canGet: CanGetSource | null): EnergyAction<CanGetSource> {

@@ -4,7 +4,7 @@ import {
     ROLE_MINER,
     ROLE_SPAWN_ASSISTANT,
     ROLE_CONTAINER_2_STORAGE_TRANSFER,
-    ROLE_UPGRADER
+    ROLE_UPGRADER, ROLE_SWEEPER
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
@@ -14,6 +14,7 @@ import {UpgradeRole} from "../role/UpgradeRole";
 import {MinerRole} from "../role/MineRole";
 import {closestMineral} from "../role/findUtils";
 import {Container2StorageRole} from "../role/Container2StorageRole";
+import {Sweep2StorageRole} from "../role/Sweep2StorageRole";
 
 export function loop2() {
     Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
@@ -51,6 +52,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
             return new SpawnAssistantRole(creep);
         case ROLE_CONTAINER_2_STORAGE_TRANSFER:
             return new Container2StorageRole(creep);
+        case ROLE_SWEEPER:
+            return new Sweep2StorageRole(creep);
         case ROLE_HARVESTER:
         case ROLE_HARVESTER_FAR:
             return harvesterRoleFactory(creep);

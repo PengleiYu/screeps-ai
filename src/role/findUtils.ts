@@ -1,5 +1,6 @@
 import {getClosestCmpFun,} from "../utils";
 import {
+    CanGetSource,
     CanPutSource,
     CanWithdraw,
     STRUCTURE_HAVE_STORE_CONST,
@@ -103,13 +104,16 @@ export function closestStorage(pos: RoomPosition): StructureStorage | null {
     });
 }
 
-// 最近的残渣、墓碑
-export function closestRuinRemnant(pos: RoomPosition): Ruin | Resource | null {
+// 最近的残渣、墓碑、废墟
+export function closestRuinRemnantTomb(pos: RoomPosition): CanGetSource | null {
     const remnant = pos.findClosestByRange(FIND_DROPPED_RESOURCES);
     const ruin = pos.findClosestByPath(FIND_RUINS, {
         filter: it => it.store.getUsedCapacity() > 0
     });
-    return [remnant, ruin]
+    const tomb = pos.findClosestByPath(FIND_TOMBSTONES, {
+        filter: it => it.store.getUsedCapacity() > 0
+    });
+    return [remnant, ruin, tomb]
         .filter(it => !!it)
         .sort(getClosestCmpFun(pos))
         [0];

@@ -31,4 +31,8 @@ export abstract class BaseStorageTransferRole extends MemoryRole {
     protected isStoreEmpty(): boolean {
         return this.creep.store.getUsedCapacity() === 0;
     }
+
+    protected interceptLifeCycle(): boolean {
+        return EnergyAction.invalidInstance === this.findSource();
+    }
 }

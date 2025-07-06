@@ -405,13 +405,15 @@ export class OverseaTransportController extends WorkerController<OverseaTranspor
     }
 }
 
+const ROLE_SWEEPER = 'sweeper';
+
 export class SweepController extends WorkerController<Sweeper, RoomPosition, Structure> {
     protected get roleInstanceMax(): number {
         return 1;
     }
 
     protected get roleName(): string {
-        return 'sweeper';
+        return ROLE_SWEEPER;
     }
 
     protected get roleBody(): BodyPartConstant[] {

@@ -18,10 +18,6 @@ export abstract class EnergyRole extends MemoryRole {
         return this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0;
     }
 
-    protected getSourceType(): ResourceConstant {
-        return RESOURCE_ENERGY;
-    }
-
     protected canWork2Action(canWork: CanWork | CanPutSource | null): EnergyAction<CanWork | CanPutSource> {
         return actionOfWork2(this.creep, canWork);
     }

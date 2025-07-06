@@ -1,7 +1,7 @@
 import {MemoryRole} from "./role2";
 import {CanPutSource, CanWork} from "../types";
 import {EnergyAction, TransferAllAction} from "./actions";
-import {closestStorage} from "./findUtils";
+import {closestNotFullStorage} from "./findUtils";
 
 /**
  * 只往storage里搬，任何种类都支持
@@ -14,7 +14,7 @@ export abstract class BaseStorageTransferRole extends MemoryRole {
     }
 
     protected findCanWork(): CanPutSource | null {
-        return closestStorage(this.creep.pos);
+        return closestNotFullStorage(this.creep.pos);
     }
 
     /**

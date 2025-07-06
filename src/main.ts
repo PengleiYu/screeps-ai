@@ -16,9 +16,9 @@ export function loop() {
     // new SpawnAssistantController().run();
     loop2();
     // new HarvestController().run();
-    new ContainerTransferController().run();
+    // new ContainerTransferController().run();
     new BuildController().run();
-    new LinkStartController().run();
+    // new LinkStartController().run();
     // new LinkEndController().run();
     // new UpgradeController().run();
     new RepairController().run();

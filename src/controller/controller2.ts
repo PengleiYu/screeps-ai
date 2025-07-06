@@ -4,7 +4,7 @@ import {
     ROLE_MINER,
     ROLE_SPAWN_ASSISTANT,
     ROLE_CONTAINER_2_STORAGE_TRANSFER,
-    ROLE_UPGRADER, ROLE_SWEEP_2_STORAGE_TRANSFER
+    ROLE_UPGRADER, ROLE_SWEEP_2_STORAGE_TRANSFER, ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
@@ -15,6 +15,7 @@ import {MinerRole} from "../role/MineRole";
 import {closestMineral} from "../role/findUtils";
 import {Container2StorageRole} from "../role/Container2StorageRole";
 import {Sweep2StorageRole} from "../role/Sweep2StorageRole";
+import {Storage2ContainerRole} from "../role/Storage2ContainerRole";
 
 export function loop2() {
     Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
@@ -54,6 +55,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
             return new Container2StorageRole(creep);
         case ROLE_SWEEP_2_STORAGE_TRANSFER:
             return new Sweep2StorageRole(creep);
+        case ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER:
+            return new Storage2ContainerRole(creep);
         case ROLE_HARVESTER:
         case ROLE_HARVESTER_FAR:
             return harvesterRoleFactory(creep);
@@ -155,5 +158,10 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         role: ROLE_SWEEP_2_STORAGE_TRANSFER,
         body: BODY_TRANSFER,
         maxCnt: 1,
+    },
+    {
+        role: ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
+        body: BODY_TRANSFER,
+        maxCnt: 4,
     }
 ] as const;

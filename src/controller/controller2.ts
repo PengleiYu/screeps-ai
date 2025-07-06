@@ -158,5 +158,10 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         role: ROLE_SWEEP_2_STORAGE_TRANSFER,
         body: BODY_TRANSFER,
         maxCnt: 1,
+    },
+    {
+        role: ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
+        body: BODY_TRANSFER,
+        maxCnt: 4,
     }
 ] as const;

@@ -18,7 +18,7 @@ export function loop() {
     // new HarvestController().run();
     // new ContainerTransferController().run();
     new BuildController().run();
-    new LinkStartController().run();
+    // new LinkStartController().run();
     // new LinkEndController().run();
     // new UpgradeController().run();
     new RepairController().run();

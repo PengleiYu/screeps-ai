@@ -21,7 +21,7 @@ export function loop() {
     new ContainerTransferController().run();
     new BuildController().run();
     new LinkStartController().run();
-    new LinkEndController().run();
+    // new LinkEndController().run();
     // new UpgradeController().run();
     new RepairController().run();
     new TowerTransferController().run();

@@ -74,7 +74,7 @@ export class WithdrawAllAction extends EnergyAction<CanWithdraw> {
 
     isValid(): boolean {
         return this.creep.store.getFreeCapacity() > 0
-            && (this.target.store.getUsedCapacity() ?? 0) > 0;
+            && (this.target.store.getUsedCapacity() ?? this.target.store.getUsedCapacity(RESOURCE_ENERGY)) > 0;
     }
 }
 

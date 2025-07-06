@@ -136,7 +136,7 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     }, {
         role: ROLE_UPGRADER,
         body: BODY_WORKER,
-        maxCnt: 3,
+        maxCnt: 4,
     },
     {
         role: ROLE_STORAGE_TRANSFER,

@@ -1,7 +1,6 @@
 import {
     BuildController,
     ContainerTransferController,
-    LinkEndController,
     LinkStartController,
     OverseaTransportController,
     RepairController,
@@ -11,7 +10,6 @@ import {
 import {LinkController, TowerController} from "./army";
 import {EVENT_LOOP_END, globalInfo, loopEventBus} from "./utils";
 import {loop2} from "./controller/controller2";
-import {chatAll} from './chat'
 
 export function loop() {
     globalInfo.canSpawn = true;
@@ -35,8 +33,6 @@ export function loop() {
     if (Game.time % 20 === 0) {
         lowFrequencyOperation();
     }
-
-    chatAll();
 
     loopEventBus.emit(EVENT_LOOP_END);
 }

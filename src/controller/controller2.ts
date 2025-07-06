@@ -4,7 +4,7 @@ import {
     ROLE_MINER,
     ROLE_SPAWN_ASSISTANT,
     ROLE_CONTAINER_2_STORAGE_TRANSFER,
-    ROLE_UPGRADER, ROLE_SWEEPER
+    ROLE_UPGRADER, ROLE_SWEEP_2_STORAGE_TRANSFER
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
@@ -52,7 +52,7 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
             return new SpawnAssistantRole(creep);
         case ROLE_CONTAINER_2_STORAGE_TRANSFER:
             return new Container2StorageRole(creep);
-        case ROLE_SWEEPER:
+        case ROLE_SWEEP_2_STORAGE_TRANSFER:
             return new Sweep2StorageRole(creep);
         case ROLE_HARVESTER:
         case ROLE_HARVESTER_FAR:
@@ -149,6 +149,11 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     {
         role: ROLE_MINER,
         body: BODY_WORKER,
+        maxCnt: 1,
+    },
+    {
+        role: ROLE_SWEEP_2_STORAGE_TRANSFER,
+        body: BODY_TRANSFER,
         maxCnt: 1,
     }
 ] as const;

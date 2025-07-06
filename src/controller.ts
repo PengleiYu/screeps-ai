@@ -24,7 +24,13 @@ import {
     SpawnStruct,
     trySpawn,
 } from "./utils";
-import {ROLE_HARVESTER, ROLE_SPAWN_ASSISTANT, ROLE_CONTAINER_2_STORAGE_TRANSFER, ROLE_UPGRADER} from "./constants";
+import {
+    ROLE_HARVESTER,
+    ROLE_SPAWN_ASSISTANT,
+    ROLE_CONTAINER_2_STORAGE_TRANSFER,
+    ROLE_UPGRADER,
+    ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER
+} from "./constants";
 
 export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, STARTER, TARGET> {
     protected abstract get roleInstanceMax(): number;
@@ -202,7 +208,7 @@ export class ContainerTransferController extends BaseTransferController {
     }
 
     protected get roleName(): string {
-        return "containerTransfer";
+        return ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER;
     }
 
     protected get roleBody(): BodyPartConstant[] {

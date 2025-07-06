@@ -98,9 +98,17 @@ export function closestEnergyMineralStructure(pos: RoomPosition): CanWithdraw | 
     return [...containers, ...links].sort(getClosestCmpFun(pos)) [0] ?? null;
 }
 
-export function closestStorage(pos: RoomPosition): StructureStorage | null {
+// 最近的未满storage，包括任意种类资源
+export function closestNotFullStorage(pos: RoomPosition): StructureStorage | null {
     return pos.findClosestByPath(FIND_MY_STRUCTURES, {
         filter: it => it.structureType === STRUCTURE_STORAGE && it.store.getFreeCapacity() > 0
+    });
+}
+
+// 最近的能量不空的storage
+export function closestEnergyNotEmptyStorage(pos: RoomPosition): StructureStorage | null {
+    return pos.findClosestByPath(FIND_MY_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_STORAGE && it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
     });
 }
 
@@ -117,4 +125,14 @@ export function closestRuinRemnantTomb(pos: RoomPosition): CanGetSource | null {
         .filter(it => !!it)
         .sort(getClosestCmpFun(pos))
         [0];
+}
+
+// 最近的controller附近的能量未满的Container
+export function closestEnergyNotFullContainerNearController(pos: RoomPosition): StructureContainer | null {
+    const controllerPos = Game.rooms[pos.roomName].controller?.pos;
+    if (!controllerPos) return null;
+    const containers: StructureContainer[] = controllerPos.findInRange(FIND_STRUCTURES, 3, {
+        filter: it => it.structureType === STRUCTURE_CONTAINER && it.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+    });
+    return containers.sort(getClosestCmpFun(pos)) [0];
 }

@@ -228,6 +228,9 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
 
 // todo 如果work记忆被修改为其他合法目标会怎样？如何防御？
     findSource(): EnergyAction<CanGetSource> {
+        if (!this.isSourceMemoryEnable()) {
+            return this.canGetSource2Action(this.findCanGetSource());
+        }
         const memorySource = this.getMemorySource();
         this.log('回忆source', memorySource);
         if (memorySource) {
@@ -247,6 +250,9 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
     }
 
     findWorkTarget(): EnergyAction<CanWork | CanPutSource> {
+        if (!this.isWorkMemoryEnable()) {
+            return this.canWork2Action(this.findCanWork());
+        }
         const memoryWork = this.getMemoryWork();
         this.log('回忆work', memoryWork);
         if (memoryWork) {
@@ -294,5 +300,13 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
     protected setMemorySource(source: CanGetSource) {
         this.log('setMemorySource', source, 'called');
         this.creep.memory.lastSourceId = source.id;
+    }
+
+    protected isWorkMemoryEnable(): boolean {
+        return true;
+    }
+
+    protected isSourceMemoryEnable(): boolean {
+        return true;
     }
 }

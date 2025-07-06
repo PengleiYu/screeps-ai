@@ -25,7 +25,7 @@ export function loop() {
     new TowerTransferController().run();
     new TowerController().run();
     // new StorageTransferController().run();
-    new SweepController().run();
+    // new SweepController().run();
 
     new OverseaTransportController().run();
     new LinkController().run();

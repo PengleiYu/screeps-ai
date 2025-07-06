@@ -41,8 +41,23 @@ export function isStructureHaveStore(input: any): input is StructureHaveStore {
 
 // 可获取能量的类型
 export type CanHarvest = Source | Mineral;
+
+export function isCanHarvest(input: any): input is CanHarvest {
+    return input instanceof Source || input instanceof Mineral;
+}
+
 export type CanWithdraw = StructureHaveStore | Tombstone | Ruin;
-export type CanPickup = Resource<RESOURCE_ENERGY>;
+
+export function isCanWithdraw(input: any): input is CanWithdraw {
+    return isStructureHaveStore(input) || input instanceof Tombstone || input instanceof Ruin;
+}
+
+export type CanPickup = Resource;
+
+export function isCanPickup(input: any): input is CanPickup {
+    return input instanceof Resource;
+}
+
 export type CanGetSource = CanHarvest | CanPickup | CanWithdraw;
 
 // 可存储能量的类型

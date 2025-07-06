@@ -1,5 +1,6 @@
 import {getClosestCmpFun,} from "../utils";
 import {
+    CanGetSource,
     CanPutSource,
     CanWithdraw,
     STRUCTURE_HAVE_STORE_CONST,
@@ -69,7 +70,7 @@ export function closestCanSpawn(center: RoomPosition): CanPutSource | null {
 }
 
 // 最近的可获取资源的container，优先返回装载能量的，其次返回装载其他的
-export function closestEnergyMineralContainer(pos: RoomPosition): CanWithdraw | null {
+export function closestEnergyMineralStructure(pos: RoomPosition): CanWithdraw | null {
     const room = Game.rooms[pos.roomName];
     const sourcePosArr = room.find(FIND_SOURCES).map(it => it.pos);
     const mineralPosArr = room.find(FIND_MINERALS).map(it => it.pos);
@@ -101,4 +102,19 @@ export function closestStorage(pos: RoomPosition): StructureStorage | null {
     return pos.findClosestByPath(FIND_MY_STRUCTURES, {
         filter: it => it.structureType === STRUCTURE_STORAGE && it.store.getFreeCapacity() > 0
     });
+}
+
+// 最近的残渣、墓碑、废墟
+export function closestRuinRemnantTomb(pos: RoomPosition): CanGetSource | null {
+    const remnant = pos.findClosestByRange(FIND_DROPPED_RESOURCES);
+    const ruin = pos.findClosestByPath(FIND_RUINS, {
+        filter: it => it.store.getUsedCapacity() > 0
+    });
+    const tomb = pos.findClosestByPath(FIND_TOMBSTONES, {
+        filter: it => it.store.getUsedCapacity() > 0
+    });
+    return [remnant, ruin, tomb]
+        .filter(it => !!it)
+        .sort(getClosestCmpFun(pos))
+        [0];
 }

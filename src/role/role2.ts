@@ -85,7 +85,10 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         this.dispatch();
     }
 
-    interceptLifeCycle(): boolean {
+    protected onBeginWorkFlow(): void {
+    }
+
+    protected interceptLifeCycle(): boolean {
         return this.findWorkTarget() === this.invalidAction;
     }
 
@@ -165,6 +168,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doNone() {
         this.log('doNone');
+        this.onBeginWorkFlow();
         if (this.interceptLifeCycle()) {
             this.log('拦截运行')
             this.doParking();
@@ -245,6 +249,8 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         if (result.isValid()) {
             this.log('记忆source');
             this.setMemorySource(result.target);
+        } else {
+            this.log('新source也无效');
         }
         return result;
     }
@@ -267,6 +273,8 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         if (result.isValid()) {
             this.log('记忆work');
             this.setMemoryWork(result.target);
+        } else {
+            this.log('新work也无效');
         }
         return result;
     }
@@ -279,7 +287,19 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
 
     protected abstract findCanGetSource(): CanGetSource | null;
 
-    // todo memory相关逻辑是否可以封装到单独对象中
+    protected onBeginWorkFlow() {
+        const memory = this.creep.memory;
+        if (memory.lastSourceId) {
+            memory.lastSourceId = undefined;
+            this.log('清除source记忆');
+        }
+        if (memory.lastWorkId) {
+            memory.lastWorkId = undefined;
+            this.log('清除work记忆');
+        }
+    }
+
+// todo memory相关逻辑是否可以封装到单独对象中
     protected getMemoryWork(): CanWork | null {
         const lastSourceId = this.creep.memory.lastWorkId;
         if (!lastSourceId) return null;

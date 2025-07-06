@@ -4,7 +4,7 @@ import {
     CanWithdraw,
     STRUCTURE_HAVE_STORE_CONST,
     STRUCTURE_HAVE_STORE_NO_SPAWN_CONST,
-    StructureHaveStore
+    StructureHaveStore, StructureHaveStoreNoSpawn
 } from "../types";
 
 type CanWithdrawFilter = (it: CanWithdraw) => boolean;
@@ -69,18 +69,23 @@ export function closestCanSpawn(center: RoomPosition): CanPutSource | null {
 }
 
 // 最近的可获取资源的container，优先返回装载能量的，其次返回装载其他的
-export function closestEnergyMineralContainer(pos: RoomPosition): StructureContainer | null {
+export function closestEnergyMineralContainer(pos: RoomPosition): CanWithdraw | null {
     const room = Game.rooms[pos.roomName];
     const sourcePosArr = room.find(FIND_SOURCES).map(it => it.pos);
     const mineralPosArr = room.find(FIND_MINERALS).map(it => it.pos);
-    return [...sourcePosArr, ...mineralPosArr]
+    const storagePosArr = room.find(FIND_MY_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_STORAGE
+    }).map(it => it.pos);
+    return [...sourcePosArr, ...mineralPosArr, ...storagePosArr]
         .reduce((arr, cur) => {
-            const containers: StructureContainer[] = cur.findInRange(FIND_STRUCTURES, 3, {
-                filter: it => it.structureType === STRUCTURE_CONTAINER && it.store.getUsedCapacity() > 0
+            const containers: StructureHaveStoreNoSpawn[] = cur.findInRange(FIND_STRUCTURES, 3, {
+                filter: it =>
+                    (it.structureType === STRUCTURE_CONTAINER || it.structureType === STRUCTURE_LINK)
+                    && (it.store.getUsedCapacity() ?? it.store.getUsedCapacity(RESOURCE_ENERGY)) > 0
             });
             arr.push(...containers);
             return arr;
-        }, new Array<StructureContainer>())
+        }, new Array<StructureHaveStoreNoSpawn>())
         .sort(getClosestCmpFun(pos))
         [0] ?? null;
 }

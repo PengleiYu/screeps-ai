@@ -81,7 +81,7 @@ export function closestEnergyMineralContainer(pos: RoomPosition): CanWithdraw | 
             const containers: StructureHaveStoreNoSpawn[] = cur.findInRange(FIND_STRUCTURES, 3, {
                 filter: it =>
                     (it.structureType === STRUCTURE_CONTAINER || it.structureType === STRUCTURE_LINK)
-                    && (it.store.getUsedCapacity() ?? it.store.getUsedCapacity(RESOURCE_ENERGY)) > 150
+                    && (it.store.getUsedCapacity() ?? it.store.getUsedCapacity(RESOURCE_ENERGY)) > 0
             });
             arr.push(...containers);
             return arr;

@@ -10,4 +10,8 @@ export class UpgradeRole extends EnergyRole {
     protected findCanGetSource(): CanGetSource | null {
         return closestSourceAndCanWithdrawNoSpawn(this.creep.pos);
     }
+
+    protected isSourceMemoryEnable(): boolean {
+        return false;
+    }
 }

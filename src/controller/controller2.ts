@@ -113,7 +113,7 @@ interface SpawnConfig {
     maxCnt: number;
 }
 
-const HARVESTER_BODY = [
+const BODY_WORKER = [
     WORK, WORK, WORK, WORK, WORK,
     MOVE, MOVE, MOVE, MOVE, MOVE,
     CARRY,
@@ -127,15 +127,15 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         maxCnt: 2,
     }, {
         role: ROLE_HARVESTER,
-        body: HARVESTER_BODY,
+        body: BODY_WORKER,
         maxCnt: 1,
     }, {
         role: ROLE_HARVESTER_FAR,
-        body: HARVESTER_BODY,
+        body: BODY_WORKER,
         maxCnt: 1,
     }, {
         role: ROLE_UPGRADER,
-        body: [WORK, MOVE, CARRY],
+        body: BODY_WORKER,
         maxCnt: 3,
     },
     {
@@ -145,7 +145,7 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     },
     {
         role: ROLE_MINER,
-        body: HARVESTER_BODY,
+        body: BODY_WORKER,
         maxCnt: 1,
     }
 ] as const;

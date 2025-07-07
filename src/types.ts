@@ -14,15 +14,16 @@ export function isStructureWithSpawn(input: any): input is StructureWithSpawn {
 }
 
 export type StructureHaveStoreNoSpawn =
-    | StructureContainer | StructureStorage | StructureLink;
+    | StructureContainer | StructureStorage | StructureLink | StructureTower;
 export const STRUCTURE_HAVE_STORE_NO_SPAWN_CONST = [
-    STRUCTURE_CONTAINER, STRUCTURE_STORAGE, STRUCTURE_LINK,
+    STRUCTURE_CONTAINER, STRUCTURE_STORAGE, STRUCTURE_LINK, STRUCTURE_TOWER,
 ];
 
 export function isStructureHaveStoreNoSpawn(input: any): input is StructureHaveStoreNoSpawn {
     return input instanceof StructureContainer
         || input instanceof StructureStorage
-        || input instanceof StructureLink;
+        || input instanceof StructureLink
+        || input instanceof StructureTower;
 }
 
 

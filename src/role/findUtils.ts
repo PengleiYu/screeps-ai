@@ -136,3 +136,10 @@ export function closestEnergyNotFullContainerNearController(pos: RoomPosition): 
     });
     return containers.sort(getClosestCmpFun(pos)) [0];
 }
+
+// 最近的tower
+export function closestNotFullTower(pos: RoomPosition): StructureTower | null {
+    return pos.findClosestByPath(FIND_MY_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_TOWER && it.store.getFreeCapacity(RESOURCE_ENERGY) > 50
+    })
+}

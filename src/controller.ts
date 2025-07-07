@@ -29,7 +29,7 @@ import {
     ROLE_SPAWN_ASSISTANT,
     ROLE_CONTAINER_2_STORAGE_TRANSFER,
     ROLE_UPGRADER,
-    ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER
+    ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER, ROLE_STORAGE_2_TOWER_TRANSFER
 } from "./constants";
 
 export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, STARTER, TARGET> {
@@ -282,7 +282,7 @@ export class TowerTransferController extends BaseTransferController {
     }
 
     protected get roleName(): string {
-        return 'towerTransfer';
+        return ROLE_STORAGE_2_TOWER_TRANSFER;
     }
 
     protected findWorkTarget(): Structure | null {

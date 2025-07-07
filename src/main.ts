@@ -1,12 +1,4 @@
-import {
-    BuildController,
-    ContainerTransferController,
-    LinkStartController,
-    OverseaTransportController,
-    RepairController,
-    SweepController,
-    TowerTransferController
-} from "./controller";
+import {BuildController, OverseaTransportController, RepairController} from "./controller";
 import {LinkController, TowerController} from "./army";
 import {EVENT_LOOP_END, globalInfo, loopEventBus} from "./utils";
 import {loop2} from "./controller/controller2";

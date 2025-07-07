@@ -22,7 +22,7 @@ export function loop() {
     // new LinkEndController().run();
     // new UpgradeController().run();
     new RepairController().run();
-    new TowerTransferController().run();
+    // new TowerTransferController().run();
     new TowerController().run();
     // new StorageTransferController().run();
     // new SweepController().run();

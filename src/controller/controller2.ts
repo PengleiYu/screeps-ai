@@ -4,7 +4,10 @@ import {
     ROLE_MINER,
     ROLE_SPAWN_ASSISTANT,
     ROLE_CONTAINER_2_STORAGE_TRANSFER,
-    ROLE_UPGRADER, ROLE_SWEEP_2_STORAGE_TRANSFER, ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER
+    ROLE_UPGRADER,
+    ROLE_SWEEP_2_STORAGE_TRANSFER,
+    ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
+    ROLE_STORAGE_2_TOWER_TRANSFER
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
@@ -16,6 +19,7 @@ import {closestMineral} from "../role/findUtils";
 import {Container2StorageRole} from "../role/Container2StorageRole";
 import {Sweep2StorageRole} from "../role/Sweep2StorageRole";
 import {Storage2ContainerRole} from "../role/Storage2ContainerRole";
+import {Storage2TowerRole} from "../role/Storage2TowerRole";
 
 export function loop2() {
     Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
@@ -57,6 +61,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
             return new Sweep2StorageRole(creep);
         case ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER:
             return new Storage2ContainerRole(creep);
+        case ROLE_STORAGE_2_TOWER_TRANSFER:
+            return new Storage2TowerRole(creep);
         case ROLE_HARVESTER:
         case ROLE_HARVESTER_FAR:
             return harvesterRoleFactory(creep);

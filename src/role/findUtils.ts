@@ -143,3 +143,7 @@ export function closestNotFullTower(pos: RoomPosition): StructureTower | null {
         filter: it => it.structureType === STRUCTURE_TOWER && it.store.getFreeCapacity(RESOURCE_ENERGY) > 50
     })
 }
+
+export function closestConstructionSite(pos: RoomPosition) {
+    return pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES)
+}

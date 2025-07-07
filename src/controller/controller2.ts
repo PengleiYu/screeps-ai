@@ -15,7 +15,7 @@ import {getClosestCmpFun, getSpawn, trySpawn} from "../utils";
 import {HarvestRole} from "../role/HarvestRole";
 import {UpgradeRole} from "../role/UpgradeRole";
 import {MinerRole} from "../role/MineRole";
-import {closestMineral, closestNotFullTower} from "../role/findUtils";
+import {closestConstructionSite, closestMineral, closestNotFullTower} from "../role/findUtils";
 import {Container2StorageRole} from "../role/Container2StorageRole";
 import {Sweep2StorageRole} from "../role/Sweep2StorageRole";
 import {Storage2ContainerRole} from "../role/Storage2ContainerRole";
@@ -120,6 +120,8 @@ function shouldSpawn(config: SpawnConfig): boolean {
             return !!closestMineral(getSpawn().pos);
         case ROLE_STORAGE_2_TOWER_TRANSFER:
             return !!closestNotFullTower(getSpawn().pos);
+        case ROLE_BUILDER:
+            return !!closestConstructionSite(getSpawn().pos);
     }
     return true;
 }

@@ -29,7 +29,7 @@ import {
     ROLE_SPAWN_ASSISTANT,
     ROLE_CONTAINER_2_STORAGE_TRANSFER,
     ROLE_UPGRADER,
-    ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER, ROLE_STORAGE_2_TOWER_TRANSFER
+    ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER, ROLE_STORAGE_2_TOWER_TRANSFER, ROLE_BUILDER
 } from "./constants";
 
 export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, STARTER, TARGET> {
@@ -142,13 +142,14 @@ export class HarvestController extends WorkerController<Harvester, Source, Struc
     }
 }
 
+
 export class BuildController extends WorkerController<Builder, Ruin | StructureStorage | StructureContainer | Source, ConstructionSite> {
     protected get roleInstanceMax(): number {
         return 3;
     }
 
     protected get roleName(): string {
-        return 'builder';
+        return ROLE_BUILDER;
     }
 
     protected get roleBody(): BodyPartConstant[] {

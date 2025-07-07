@@ -7,7 +7,7 @@ import {
     ROLE_UPGRADER,
     ROLE_SWEEP_2_STORAGE_TRANSFER,
     ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
-    ROLE_STORAGE_2_TOWER_TRANSFER
+    ROLE_STORAGE_2_TOWER_TRANSFER, ROLE_BUILDER
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/role2";
 import {SpawnAssistantRole} from "../role/SpawnAssistantRole";
@@ -20,6 +20,7 @@ import {Container2StorageRole} from "../role/Container2StorageRole";
 import {Sweep2StorageRole} from "../role/Sweep2StorageRole";
 import {Storage2ContainerRole} from "../role/Storage2ContainerRole";
 import {Storage2TowerRole} from "../role/Storage2TowerRole";
+import {BuilderRole} from "../role/BuilderRole";
 
 export function loop2() {
     Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
@@ -55,6 +56,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
     switch (role) {
         case ROLE_SPAWN_ASSISTANT:
             return new SpawnAssistantRole(creep);
+        case ROLE_BUILDER:
+            return new BuilderRole(creep);
         case ROLE_CONTAINER_2_STORAGE_TRANSFER:
             return new Container2StorageRole(creep);
         case ROLE_SWEEP_2_STORAGE_TRANSFER:
@@ -139,23 +142,31 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         role: ROLE_SPAWN_ASSISTANT,
         body: [MOVE, MOVE, CARRY, CARRY, WORK],
         maxCnt: 2,
-    }, {
-        role: ROLE_HARVESTER,
-        body: BODY_WORKER,
-        maxCnt: 1,
-    }, {
-        role: ROLE_HARVESTER_FAR,
-        body: BODY_WORKER,
-        maxCnt: 1,
-    }, {
+    },
+    {
         role: ROLE_UPGRADER,
         body: BODY_WORKER,
         maxCnt: 4,
     },
     {
+        role: ROLE_HARVESTER,
+        body: BODY_WORKER,
+        maxCnt: 1,
+    },
+    {
+        role: ROLE_BUILDER,
+        body: [WORK, CARRY, CARRY, MOVE],
+        maxCnt: 3,
+    },
+    {
         role: ROLE_CONTAINER_2_STORAGE_TRANSFER,
         body: BODY_TRANSFER,
         maxCnt: 2,
+    },
+    {
+        role: ROLE_HARVESTER_FAR,
+        body: BODY_WORKER,
+        maxCnt: 1,
     },
     {
         role: ROLE_MINER,
@@ -168,13 +179,13 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         maxCnt: 1,
     },
     {
-        role: ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
-        body: BODY_TRANSFER,
-        maxCnt: 4,
-    },
-    {
         role: ROLE_STORAGE_2_TOWER_TRANSFER,
         body: BODY_TRANSFER,
         maxCnt: 1,
+    },
+    {
+        role: ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
+        body: BODY_TRANSFER,
+        maxCnt: 4,
     }
 ] as const;

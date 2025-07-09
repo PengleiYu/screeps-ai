@@ -148,7 +148,7 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     {
         role: ROLE_UPGRADER,
         body: BODY_WORKER,
-        maxCnt: 4,
+        maxCnt: 2,
     },
     {
         role: ROLE_HARVESTER,
@@ -188,6 +188,6 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     {
         role: ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
         body: BODY_TRANSFER,
-        maxCnt: 4,
+        maxCnt: 1,
     }
 ] as const;

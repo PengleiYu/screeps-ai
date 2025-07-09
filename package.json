@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsup src/main.ts --out-dir C:\\Users\\yupen\\AppData\\Local\\Screeps\\scripts\\screeps.com\\main",
+    "build": "grunt",
+    "dev": "grunt watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,6 +12,10 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "grunt": "^1.6.1",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-exec": "^3.0.0",
+    "grunt-screeps": "^1.5.0",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   },

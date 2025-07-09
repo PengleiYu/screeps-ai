@@ -1,5 +1,10 @@
 module.exports = function (grunt) {
-    var screepsConfig = require('./.screeps.json')
+    let config = require('./.screeps.json')
+    let screepsConfig = {
+        token: grunt.option('token') || config.token,
+        branch: grunt.option('branch') || config.branch,
+        ptr: grunt.option('ptr') || config.ptr
+    }
 
     // 配置各个任务数据
     grunt.initConfig({

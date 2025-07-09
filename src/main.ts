@@ -41,3 +41,5 @@ function lowFrequencyOperation() {
         console.log('=========================', '生产pixel', result, '=========================');
     }
 }
+
+console.log('新代码推送成功', Game.time);

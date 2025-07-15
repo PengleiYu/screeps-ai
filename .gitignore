@@ -130,3 +130,4 @@ dist
 
 .idea
 .screeps.json
+.DS_Store

@@ -1,5 +1,5 @@
 module.exports = function (grunt) {
-    let config = require('./.screeps.json')
+    let config = require('../.screeps.json')
     let screepsConfig = {
         token: grunt.option('token') || config.token,
         branch: grunt.option('branch') || config.branch,

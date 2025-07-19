@@ -9,18 +9,18 @@ import {
     ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
     ROLE_STORAGE_2_TOWER_TRANSFER, ROLE_BUILDER
 } from "../constants";
-import {CreepState, StatefulRole} from "../role/baseRoles";
-import {EnergySupplierRole} from "../role/EnergySupplierRole";
+import {CreepState, StatefulRole} from "../role/base/baseRoles";
+import {SpawnSupplierRole} from "../role/logistics/SpawnSupplierRole";
 import {getClosestCmpFun, getSpawn, trySpawn} from "../utils";
-import {HarvestRole} from "../role/HarvestRole";
-import {UpgradeRole} from "../role/UpgradeRole";
-import {MinerRole} from "../role/MinerRole";
-import {closestConstructionSite, closestMineral, closestNotFullTower} from "../role/findUtils";
-import {ContainerToStorageRole} from "../role/ContainerToStorageRole";
-import {SweepToStorageRole} from "../role/SweepToStorageRole";
-import {StorageToContainerRole} from "../role/StorageToContainerRole";
-import {StorageToTowerRole} from "../role/StorageToTowerRole";
-import {BuilderRole} from "../role/BuilderRole";
+import {HarvestRole} from "../role/core/HarvestRole";
+import {UpgradeRole} from "../role/core/UpgradeRole";
+import {MinerRole} from "../role/core/MinerRole";
+import {closestConstructionSite, closestMineral, closestNotFullTower} from "../role/utils/findUtils";
+import {ContainerToStorageRole} from "../role/logistics/ContainerToStorageRole";
+import {SweepToStorageRole} from "../role/logistics/SweepToStorageRole";
+import {StorageToContainerRole} from "../role/logistics/StorageToContainerRole";
+import {StorageToTowerRole} from "../role/logistics/StorageToTowerRole";
+import {BuilderRole} from "../role/core/BuilderRole";
 
 export function loop2() {
     Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
@@ -55,7 +55,7 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
     const role = creep.memory.role;
     switch (role) {
         case ROLE_SPAWN_ASSISTANT:
-            return new EnergySupplierRole(creep);
+            return new SpawnSupplierRole(creep);
         case ROLE_BUILDER:
             return new BuilderRole(creep);
         case ROLE_CONTAINER_2_STORAGE_TRANSFER:

@@ -1,8 +1,8 @@
-import {MemoryRole} from "./baseRoles";
-import {CanGetSource, CanPutSource, CanWork} from "../types";
-import {EnergyAction} from "./actionTypes";
-import {actionOfGetSource, actionOfPutEnergy, actionOfWork2} from "./actionUtils";
-import {closestCanPutDown} from "./findUtils";
+import {MemoryRole} from "../base/baseRoles";
+import {CanGetSource, CanPutSource, CanWork} from "../../types";
+import {EnergyAction} from "../base/actionTypes";
+import {actionOfGetSource, actionOfPutEnergy, actionOfWork2} from "../base/actionUtils";
+import {closestCanPutDown} from "../utils/findUtils";
 
 export abstract class EnergyRole extends MemoryRole {
 

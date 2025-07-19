@@ -1,6 +1,6 @@
-import {CanGetSource, isCanPickup, isCanWithdraw} from "../types";
-import {closestRuinRemnantTomb} from "./findUtils";
-import {EnergyAction, PickupAction, WithdrawAllAction} from "./actionTypes";
+import {CanGetSource, isCanPickup, isCanWithdraw} from "../../types";
+import {closestRuinRemnantTomb} from "../utils/findUtils";
+import {EnergyAction, PickupAction, WithdrawAllAction} from "../base/actionTypes";
 import {BaseStorageTransferRole} from "./BaseStorageTransferRole";
 
 /**

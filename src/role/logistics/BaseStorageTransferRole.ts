@@ -1,7 +1,7 @@
-import {MemoryRole} from "./baseRoles";
-import {CanPutSource, CanWork} from "../types";
-import {EnergyAction, TransferAllAction} from "./actionTypes";
-import {closestNotFullStorage} from "./findUtils";
+import {MemoryRole} from "../base/baseRoles";
+import {CanPutSource, CanWork} from "../../types";
+import {EnergyAction, TransferAllAction} from "../base/actionTypes";
+import {closestNotFullStorage} from "../utils/findUtils";
 
 /**
  * 只往storage里搬，任何种类都支持

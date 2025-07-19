@@ -1,6 +1,6 @@
-import {CanGetSource, CanWithdraw} from "../types";
-import {EnergyAction, WithdrawAllAction} from "./actionTypes";
-import {closestEnergyMineralStructure} from "./findUtils";
+import {CanGetSource, CanWithdraw} from "../../types";
+import {EnergyAction, WithdrawAllAction} from "../base/actionTypes";
+import {closestEnergyMineralStructure} from "../utils/findUtils";
 import {BaseStorageTransferRole} from "./BaseStorageTransferRole";
 
 export class ContainerToStorageRole extends BaseStorageTransferRole {

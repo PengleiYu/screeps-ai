@@ -1,4 +1,4 @@
-import {ActionReturnCode} from "../types";
+import {ActionReturnCode} from "../../types";
 
 type Constructor<T = {}> = new (...args: any[]) => T;
 

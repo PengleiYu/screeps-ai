@@ -1,4 +1,5 @@
 import {getClosestCmpFun, getSpawn} from "./utils";
+import {closestHurtStructure} from "./role/utils/findUtils";
 
 export class TowerController {
     run() {
@@ -23,9 +24,7 @@ export class TowerController {
             return;
         }
 
-        const needHealStructure = getSpawn().pos.findClosestByRange(FIND_STRUCTURES, {
-            filter: it => (it.structureType !== STRUCTURE_WALL && it.hits < it.hitsMax),
-        });
+        const needHealStructure = closestHurtStructure(getSpawn().pos)
         if (needHealStructure) {
             for (const tower of towerArr) {
                 tower.repair(needHealStructure);

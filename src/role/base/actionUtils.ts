@@ -7,7 +7,7 @@ import {
     UpgradeAction,
     WithdrawEnergyAction
 } from "./actionTypes";
-import {CanGetSource, CanPutSource, CanWork} from "../../types";
+import {CanGetSource, CanPutSource, CanWork, isCanPutSource} from "../../types";
 
 export function actionOfGetSource(creep: Creep, source: CanGetSource | null): EnergyAction<CanGetSource> {
     if (source instanceof Source || source instanceof Mineral) return new HarvestAction(creep, source);
@@ -36,5 +36,6 @@ export function actionOfWork2(creep: Creep, work: CanWork | CanPutSource | null)
     if (!work) return EnergyAction.invalidInstance;
     if (work instanceof StructureController) return new UpgradeAction(creep, work);
     if (work instanceof ConstructionSite) return new BuildAction(creep, work);
-    return new TransferEnergyAction(creep, work);
+    if (isCanPutSource(work)) return new TransferEnergyAction(creep, work);
+    return EnergyAction.invalidInstance;
 }

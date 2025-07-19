@@ -6,8 +6,8 @@ import {
     TransferEnergyAction, TransferMineralAction,
     UpgradeAction,
     WithdrawEnergyAction
-} from "./actions";
-import {CanGetSource, CanPutSource, CanWork} from "../types";
+} from "./actionTypes";
+import {CanGetSource, CanPutSource, CanWork} from "../../types";
 
 export function actionOfGetSource(creep: Creep, source: CanGetSource | null): EnergyAction<CanGetSource> {
     if (source instanceof Source || source instanceof Mineral) return new HarvestAction(creep, source);

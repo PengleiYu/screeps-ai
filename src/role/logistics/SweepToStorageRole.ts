@@ -1,12 +1,12 @@
-import {CanGetSource, isCanPickup, isCanWithdraw} from "../types";
-import {closestRuinRemnantTomb} from "./findUtils";
-import {EnergyAction, PickupAction, WithdrawAllAction} from "./actions";
+import {CanGetSource, isCanPickup, isCanWithdraw} from "../../types";
+import {closestRuinRemnantTomb} from "../utils/findUtils";
+import {EnergyAction, PickupAction, WithdrawAllAction} from "../base/actionTypes";
 import {BaseStorageTransferRole} from "./BaseStorageTransferRole";
 
 /**
  * 专门捡残骸、残渣
  */
-export class Sweep2StorageRole extends BaseStorageTransferRole {
+export class SweepToStorageRole extends BaseStorageTransferRole {
     protected findCanGetSource(): CanGetSource | null {
         return closestRuinRemnantTomb(this.creep.pos);
     }

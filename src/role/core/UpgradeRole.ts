@@ -1,5 +1,5 @@
-import {CanGetSource, CanPutSource, CanWork} from "../types";
-import {closestSourceAndCanWithdrawNoSpawn} from "./findUtils";
+import {CanGetSource, CanPutSource, CanWork} from "../../types";
+import {closestSourceAndCanWithdrawNoSpawn} from "../utils/findUtils";
 import {EnergyRole} from "./EnergyRole";
 
 export class UpgradeRole extends EnergyRole {

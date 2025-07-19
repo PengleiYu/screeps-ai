@@ -1,7 +1,7 @@
-import {CanGetSource, CanPutSource, CanWork} from "../types";
-import {closestCanPutDown, closestEnergy} from "./findUtils";
+import {CanGetSource, CanPutSource, CanWork} from "../../types";
+import {closestCanPutDown, closestEnergy} from "../utils/findUtils";
 import {EnergyRole} from "./EnergyRole";
-import {EnergyAction} from "./actions";
+import {EnergyAction} from "../base/actionTypes";
 
 export class HarvestRole extends EnergyRole {
     protected findCanGetSource(): CanGetSource | null {

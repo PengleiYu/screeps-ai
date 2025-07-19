@@ -1,4 +1,4 @@
-import {getClosestCmpFun,} from "../utils";
+import {getClosestCmpFun,} from "../../utils";
 import {
     CanGetSource,
     CanPutSource,
@@ -6,7 +6,7 @@ import {
     STRUCTURE_HAVE_STORE_CONST,
     STRUCTURE_HAVE_STORE_NO_SPAWN_CONST,
     StructureHaveStore
-} from "../types";
+} from "../../types";
 
 type CanWithdrawFilter = (it: CanWithdraw) => boolean;
 

@@ -1,9 +1,9 @@
-import {CanGetSource, CanPutSource, CanWork} from "../types";
-import {closestCanPutDown, closestEnergy, closestMineral} from "./findUtils";
-import {TypeUtils} from "../utils/TypeUtils";
-import {EnergyAction} from "./actions";
-import {actionOfGetSource, actionOfPutEnergy, actionOfPutMineral, actionOfWork2} from "./actionUtils";
-import {MemoryRole} from "./role2";
+import {CanGetSource, CanPutSource, CanWork} from "../../types";
+import {closestCanPutDown, closestEnergy, closestMineral} from "../utils/findUtils";
+import {TypeUtils} from "../../utils/TypeUtils";
+import {EnergyAction} from "../base/actionTypes";
+import {actionOfGetSource, actionOfPutEnergy, actionOfPutMineral, actionOfWork2} from "../base/actionUtils";
+import {MemoryRole} from "../base/baseRoles";
 
 /**
  * {@link MinerRole#getSourceType}没有可用类型时会退化成父类

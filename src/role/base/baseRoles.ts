@@ -1,7 +1,7 @@
-import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../utils";
-import {CanGetSource, CanPutSource, CanWork, MyPosition} from "../types";
-import {EnergyAction, MoveAction} from "./actions";
-import {CreepContext} from "./base";
+import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../../utils";
+import {CanGetSource, CanPutSource, CanWork, MyPosition} from "../../types";
+import {EnergyAction, MoveAction} from "./actionTypes";
+import {CreepContext} from "./creepWrapper";
 
 export const enum CreepState {
     INITIAL = "initial",

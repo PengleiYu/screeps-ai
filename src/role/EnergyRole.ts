@@ -1,6 +1,6 @@
-import {MemoryRole} from "./role2";
+import {MemoryRole} from "./baseRoles";
 import {CanGetSource, CanPutSource, CanWork} from "../types";
-import {EnergyAction} from "./actions";
+import {EnergyAction} from "./actionTypes";
 import {actionOfGetSource, actionOfPutEnergy, actionOfWork2} from "./actionUtils";
 import {closestCanPutDown} from "./findUtils";
 

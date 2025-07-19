@@ -97,9 +97,9 @@ npm run dev
 - **MineRole**: 专业挖矿作业
 
 ### 物流系统
-- **Container2StorageRole**: 容器到存储的运输
-- **Storage2TowerRole**: 为防御塔补充能量
-- **Sweep2StorageRole**: 清理地面资源
+- **ContainerToStorageRole**: 容器到存储的运输
+- **StorageToTowerRole**: 为防御塔补充能量
+- **SweepToStorageRole**: 清理地面资源
 
 ### 防御系统
 - **TowerController**: 自动防御塔控制

@@ -1,4 +1,4 @@
-import {CreepState} from "./role/role2";
+import {CreepState} from "./role/baseRoles";
 import {CanGetSource, CanPutSource, CanWork} from "./types";
 
 declare global {

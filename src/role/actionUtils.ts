@@ -6,7 +6,7 @@ import {
     TransferEnergyAction, TransferMineralAction,
     UpgradeAction,
     WithdrawEnergyAction
-} from "./actions";
+} from "./actionTypes";
 import {CanGetSource, CanPutSource, CanWork} from "../types";
 
 export function actionOfGetSource(creep: Creep, source: CanGetSource | null): EnergyAction<CanGetSource> {

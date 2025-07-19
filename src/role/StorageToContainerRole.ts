@@ -2,7 +2,7 @@ import {CanGetSource, CanPutSource, CanWork} from "../types";
 import {EnergyRole} from "./EnergyRole";
 import {closestEnergyNotEmptyStorage, closestEnergyNotFullContainerNearController} from "./findUtils";
 
-export class Storage2ContainerRole extends EnergyRole {
+export class StorageToContainerRole extends EnergyRole {
     protected findCanWork(): CanWork | CanPutSource | null {
         return closestEnergyNotFullContainerNearController(this.creep.pos);
     }

@@ -1,6 +1,6 @@
 import {Positionable} from "../utils";
 import {ActionReturnCode, CanHarvest, CanPickup, CanPutSource, CanWithdraw} from "../types";
-import {CreepContext} from "./base";
+import {CreepContext} from "./creepWrapper";
 import {getStoreResourceTypes} from "../typeUtils";
 
 export abstract class EnergyAction<T extends Positionable> extends CreepContext {

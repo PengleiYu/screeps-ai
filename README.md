@@ -22,13 +22,55 @@ src/
 ├── main.ts              # 主循环入口
 ├── controller/          # 控制器模块
 │   └── controller2.ts   # 主要控制逻辑
-├── role/                # 角色定义
-│   ├── HarvestRole.ts   # 采集角色
-│   ├── BuilderRole.ts   # 建造角色
-│   ├── UpgradeRole.ts   # 升级角色
-│   └── ...              # 其他角色
+├── role/                # 角色系统 (分层设计)
+│   ├── base/            # 基础框架
+│   │   ├── creepWrapper.ts    # Creep 包装器
+│   │   ├── baseRoles.ts       # 基础角色类
+│   │   ├── actionTypes.ts     # 行为类型定义
+│   │   └── actionUtils.ts     # 行为工具函数
+│   ├── core/            # 核心生产角色
+│   │   ├── EnergyRole.ts      # 能量角色基类
+│   │   ├── HarvestRole.ts     # 采集角色
+│   │   ├── MinerRole.ts       # 矿工角色
+│   │   ├── BuilderRole.ts     # 建造角色
+│   │   └── UpgradeRole.ts     # 升级角色
+│   ├── logistics/       # 物流转运角色
+│   │   ├── BaseStorageTransferRole.ts  # 存储转运基类
+│   │   ├── SpawnSupplierRole.ts        # 孵化供应角色
+│   │   ├── ContainerToStorageRole.ts   # 容器到存储
+│   │   ├── StorageToContainerRole.ts   # 存储到容器
+│   │   ├── StorageToTowerRole.ts       # 存储到防御塔
+│   │   └── SweepToStorageRole.ts       # 清扫转运
+│   ├── maintenance/     # 维护管理角色
+│   │   ├── RepairerRole.ts           # 专业修理角色
+│   │   ├── CleanerRole.ts            # 清理角色
+│   │   ├── RoadMaintenanceRole.ts    # 道路维护
+│   │   └── WallMaintainerRole.ts     # 城墙维护
+│   ├── military/        # 军事战斗角色
+│   │   ├── AttackerRole.ts    # 攻击角色
+│   │   ├── DefenderRole.ts    # 防御角色
+│   │   ├── ScoutRole.ts       # 侦察角色
+│   │   ├── GuardRole.ts       # 守卫角色
+│   │   └── HealerRole.ts      # 治疗角色
+│   ├── expansion/       # 扩张开发角色
+│   │   ├── ClaimerRole.ts         # 占领角色
+│   │   ├── ReserverRole.ts        # 预订角色
+│   │   ├── RemoteHarvesterRole.ts # 远程采集
+│   │   └── ColonizerRole.ts       # 殖民角色
+│   ├── specialist/      # 专业特化角色
+│   │   ├── PowerBankAttackerRole.ts  # PowerBank攻击
+│   │   ├── PowerHaulerRole.ts        # Power运输
+│   │   ├── DepositMinerRole.ts       # Deposit挖掘
+│   │   ├── AlchemistRole.ts          # 实验室操作
+│   │   └── TerminalOperatorRole.ts   # 终端贸易
+│   ├── emergency/       # 应急角色
+│   │   ├── EmergencyRepairerRole.ts  # 紧急维修
+│   │   ├── EvacuatorRole.ts          # 撤离角色
+│   │   └── DisasterResponseRole.ts   # 灾难响应
+│   └── utils/           # 角色工具函数
+│       └── findUtils.ts       # 查找工具
 ├── army.ts              # 军队和防御系统
-├── utils.ts             # 工具函数
+├── utils.ts             # 通用工具函数
 ├── types.ts             # 类型定义
 └── constants.ts         # 常量配置
 ```

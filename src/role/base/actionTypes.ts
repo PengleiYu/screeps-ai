@@ -155,3 +155,13 @@ export class MoveAction extends EnergyAction<Positionable> {
         return !this.creep.pos.isNearTo(this.target);
     }
 }
+
+export class RepairAction extends EnergyAction<Structure> {
+    protected actionImpl(): ActionReturnCode {
+        return this.creep.repair(this.target);
+    }
+
+    isValid(): boolean {
+        return this.target.hits < this.target.hitsMax;
+    }
+}

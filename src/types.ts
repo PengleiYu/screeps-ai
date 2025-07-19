@@ -69,11 +69,12 @@ export function isCanPutSource(input: any): input is CanPutSource {
 }
 
 // 可操作的类型
-export type CanWork = ConstructionSite | StructureController;
+export type CanWork = ConstructionSite | StructureController | Structure;
 
 function isCanWork(input: any): input is CanWork {
     return input instanceof ConstructionSite
-        || input instanceof StructureController;
+        || input instanceof StructureController
+        || input instanceof Structure;
 }
 
 // 大杂烩

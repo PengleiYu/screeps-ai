@@ -45,13 +45,16 @@ export abstract class WorkerController<ROLE extends BaseRole<STARTER, TARGET>, S
         }
     }
 }
+
+const ROLE_REPAIRER = 'repairer';
+
 export class RepairController extends WorkerController<Repairer, Ruin | StructureStorage | StructureContainer, Structure> {
     protected get roleInstanceMax(): number {
         return 1;
     }
 
     protected get roleName(): string {
-        return 'repairer';
+        return ROLE_REPAIRER;
     }
 
     protected get roleBody(): BodyPartConstant[] {

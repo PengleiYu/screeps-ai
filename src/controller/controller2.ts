@@ -7,7 +7,7 @@ import {
     ROLE_UPGRADER,
     ROLE_SWEEP_2_STORAGE_TRANSFER,
     ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
-    ROLE_STORAGE_2_TOWER_TRANSFER, ROLE_BUILDER
+    ROLE_STORAGE_2_TOWER_TRANSFER, ROLE_BUILDER, ROLE_REPAIRER
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/base/baseRoles";
 import {SpawnSupplierRole} from "../role/logistics/SpawnSupplierRole";
@@ -15,12 +15,18 @@ import {getClosestCmpFun, getSpawn, trySpawn} from "../utils";
 import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
-import {closestConstructionSite, closestMineral, closestNotFullTower} from "../role/utils/findUtils";
+import {
+    closestConstructionSite, closestHaveEnergyTower,
+    closestHurtStructure,
+    closestMineral,
+    closestNotFullTower
+} from "../role/utils/findUtils";
 import {ContainerToStorageRole} from "../role/logistics/ContainerToStorageRole";
 import {SweepToStorageRole} from "../role/logistics/SweepToStorageRole";
 import {StorageToContainerRole} from "../role/logistics/StorageToContainerRole";
 import {StorageToTowerRole} from "../role/logistics/StorageToTowerRole";
 import {BuilderRole} from "../role/core/BuilderRole";
+import {RepairerRole} from "../role/maintenance/RepairerRole";
 
 export function loop2() {
     Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
@@ -56,6 +62,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
     switch (role) {
         case ROLE_SPAWN_ASSISTANT:
             return new SpawnSupplierRole(creep);
+        case ROLE_REPAIRER:
+            return new RepairerRole(creep);
         case ROLE_BUILDER:
             return new BuilderRole(creep);
         case ROLE_CONTAINER_2_STORAGE_TRANSFER:
@@ -115,13 +123,16 @@ function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {
 }
 
 function shouldSpawn(config: SpawnConfig): boolean {
+    let pos = getSpawn().pos;
     switch (config.role) {
         case ROLE_MINER:
-            return !!closestMineral(getSpawn().pos);
+            return !!closestMineral(pos);
         case ROLE_STORAGE_2_TOWER_TRANSFER:
-            return !!closestNotFullTower(getSpawn().pos);
+            return !!closestNotFullTower(pos);
         case ROLE_BUILDER:
-            return !!closestConstructionSite(getSpawn().pos);
+            return !!closestConstructionSite(pos);
+        case ROLE_REPAIRER:
+            return !closestHaveEnergyTower(pos) && !!closestHurtStructure(pos);
     }
     return true;
 }
@@ -132,27 +143,29 @@ interface SpawnConfig {
     maxCnt: number;
 }
 
-const BODY_WORKER = [
+const BODY_MID_WORKER = [
     WORK, WORK, WORK, WORK, WORK,
     MOVE, MOVE, MOVE, MOVE, MOVE,
     CARRY,
 ];
+const BODY_SMALL_WORKER = [MOVE, MOVE, WORK, CARRY, CARRY];
+
 const BODY_TRANSFER = [MOVE, MOVE, MOVE, CARRY, CARRY, CARRY,];
 
 const SPAWN_CONFIGS: SpawnConfig[] = [
     {
         role: ROLE_SPAWN_ASSISTANT,
-        body: [MOVE, MOVE, CARRY, CARRY, WORK],
+        body: BODY_SMALL_WORKER,
         maxCnt: 2,
     },
     {
         role: ROLE_UPGRADER,
-        body: BODY_WORKER,
+        body: BODY_MID_WORKER,
         maxCnt: 1,
     },
     {
         role: ROLE_HARVESTER,
-        body: BODY_WORKER,
+        body: BODY_MID_WORKER,
         maxCnt: 1,
     },
     {
@@ -167,12 +180,12 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     },
     {
         role: ROLE_HARVESTER_FAR,
-        body: BODY_WORKER,
+        body: BODY_MID_WORKER,
         maxCnt: 1,
     },
     {
         role: ROLE_MINER,
-        body: BODY_WORKER,
+        body: BODY_MID_WORKER,
         maxCnt: 3,
     },
     {
@@ -188,6 +201,11 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     {
         role: ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
         body: BODY_TRANSFER,
+        maxCnt: 1,
+    },
+    {
+        role: ROLE_REPAIRER,
+        body: BODY_SMALL_WORKER,
         maxCnt: 1,
     }
 ] as const;

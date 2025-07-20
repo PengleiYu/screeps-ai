@@ -26,8 +26,12 @@ function bodyCost(body: BodyPartConstant[]): number {
         .reduce((previousValue, currentValue) => previousValue + currentValue)
 }
 
-export function getSpawn() {
-    return Game.spawns['Spawn1'];
+export function getMainSpawn(): StructureSpawn {
+    return Game.spawns['Spawn1'] || Object.values(Game.spawns)[0];
+}
+
+export function getAvailableSpawn(): StructureSpawn | undefined {
+    return Object.values(Game.spawns).find(it => !it.spawning)
 }
 
 function getSpawnResultStr(result: ScreepsReturnCode): string {
@@ -55,14 +59,14 @@ export function trySpawn(name: string, body: BodyPartConstant[], memory: CreepMe
     if (!globalInfo.canSpawn) {
         return false;
     }
-    globalInfo.canSpawn = false;
 
-    const spawn = getSpawn();
-    if (spawn.spawning) {
+    const spawn = getAvailableSpawn();
+    if (!spawn) {
+        globalInfo.canSpawn = false;
         return false;
     }
     const result = spawn.spawnCreep(body, name, {memory: memory});
-    console.log(`正在孵化${memory.role}:${name}, result=${getSpawnResultStr(result)}`);
+    console.log(`${spawn.name}正在孵化${memory.role}:${name}, result=${getSpawnResultStr(result)}`);
     if (result === ERR_NOT_ENOUGH_ENERGY) {
         console.log(`孵化需要能量${(bodyCost(body))}, 可用${(spawn.room.energyAvailable)}, 上限${(spawn.room.energyCapacityAvailable)}`);
     }
@@ -78,8 +82,8 @@ export function getClosestCmpFun<T extends RoomPosition | Positionable | null, E
     };
 }
 
-export function getEnergyStorageOfSpawn(checkNotEmpty: boolean = true, center: Positionable = getSpawn()): StructureStorage | null {
-    return getSpawn().room.find(FIND_MY_STRUCTURES, {
+export function getEnergyStorageOfSpawn(checkNotEmpty: boolean = true, center: Positionable = getMainSpawn()): StructureStorage | null {
+    return getMainSpawn().room.find(FIND_MY_STRUCTURES, {
         filter: it => it.structureType === STRUCTURE_STORAGE
     })
         .filter(it => (checkNotEmpty
@@ -91,8 +95,8 @@ export function getEnergyStorageOfSpawn(checkNotEmpty: boolean = true, center: P
         [0];
 }
 
-export function getEnergyContainerOfSpawn(checkNotEmpty: boolean = true, center: Positionable = getSpawn()): StructureContainer | null {
-    return getSpawn().room.find(FIND_STRUCTURES, {
+export function getEnergyContainerOfSpawn(checkNotEmpty: boolean = true, center: Positionable = getMainSpawn()): StructureContainer | null {
+    return getMainSpawn().room.find(FIND_STRUCTURES, {
         filter: it => it.structureType === STRUCTURE_CONTAINER
     })
         .filter(it => (checkNotEmpty
@@ -104,16 +108,16 @@ export function getEnergyContainerOfSpawn(checkNotEmpty: boolean = true, center:
         [0];
 }
 
-export function getEnergyDropOfSpawn(center: Positionable = getSpawn()): Ruin | null {
-    return (getSpawn().room.find(FIND_RUINS, {
+export function getEnergyDropOfSpawn(center: Positionable = getMainSpawn()): Ruin | null {
+    return (getMainSpawn().room.find(FIND_RUINS, {
         filter: it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
     }).sort(getClosestCmpFun(center)))
         [0];
 }
 
 export function getEnergySourceOfSpawn(): Source | null {
-    return getSpawn().room.find(FIND_SOURCES)
-        .sort(getClosestCmpFun(getSpawn()))
+    return getMainSpawn().room.find(FIND_SOURCES)
+        .sort(getClosestCmpFun(getMainSpawn()))
         [0];
 }
 
@@ -180,7 +184,7 @@ export function getClosetTombstone(obj: RoomPosition): Tombstone | null {
 }
 
 export function findFlag() {
-    const pos = getSpawn().pos;
+    const pos = getMainSpawn().pos;
     return pos.findClosestByRange(FIND_FLAGS, {
         filter: it => it.name === 'Parking'
     })?.pos ?? pos;

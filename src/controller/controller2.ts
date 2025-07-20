@@ -11,7 +11,7 @@ import {
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/base/baseRoles";
 import {SpawnSupplierRole} from "../role/logistics/SpawnSupplierRole";
-import {getClosestCmpFun, getSpawn, trySpawn} from "../utils";
+import {getClosestCmpFun, getMainSpawn, trySpawn} from "../utils";
 import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
@@ -40,7 +40,7 @@ function harvesterRoleFactory(creep: Creep): StatefulRole<any, any> | null {
     if (!harHarvester.isJustBorn) return harHarvester;
 
     // 刚出生时设置移动目标
-    const sources = getSpawn().room.find(FIND_SOURCES).sort(getClosestCmpFun(getSpawn()));
+    const sources = getMainSpawn().room.find(FIND_SOURCES).sort(getClosestCmpFun(getMainSpawn()));
     let source: Source;
     // todo 应该想办法把两个role合并
     switch (role) {
@@ -123,7 +123,7 @@ function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {
 }
 
 function shouldSpawn(config: SpawnConfig): boolean {
-    let pos = getSpawn().pos;
+    let pos = getMainSpawn().pos;
     switch (config.role) {
         case ROLE_MINER:
             return !!closestMineral(pos);

@@ -1,10 +1,10 @@
-import {getClosestCmpFun, getSpawn} from "./utils";
+import {getClosestCmpFun, getMainSpawn} from "./utils";
 import {closestHurtStructure} from "./role/utils/findUtils";
 
 export class TowerController {
     run() {
-        const hostileCreep = getSpawn().room.find(FIND_HOSTILE_CREEPS)[0];
-        const towerArr = getSpawn().room.find(FIND_MY_STRUCTURES, {
+        const hostileCreep = getMainSpawn().room.find(FIND_HOSTILE_CREEPS)[0];
+        const towerArr = getMainSpawn().room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_TOWER
         });
         if (hostileCreep) {
@@ -14,7 +14,7 @@ export class TowerController {
             return
         }
 
-        const needHealCreep = getSpawn().pos.findClosestByRange(FIND_MY_CREEPS, {
+        const needHealCreep = getMainSpawn().pos.findClosestByRange(FIND_MY_CREEPS, {
             filter: it => it.hits < it.hitsMax
         });
         if (needHealCreep) {
@@ -24,7 +24,7 @@ export class TowerController {
             return;
         }
 
-        const needHealStructure = closestHurtStructure(getSpawn().pos)
+        const needHealStructure = closestHurtStructure(getMainSpawn().pos)
         if (needHealStructure) {
             for (const tower of towerArr) {
                 tower.repair(needHealStructure);
@@ -35,12 +35,12 @@ export class TowerController {
 
 export class LinkController {
     run() {
-        const controller = getSpawn().room.controller;
+        const controller = getMainSpawn().room.controller;
         if (!controller) return;
 
-        const linkArr = getSpawn().room.find(FIND_MY_STRUCTURES, {
+        const linkArr = getMainSpawn().room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_LINK
-        }).sort(getClosestCmpFun(getSpawn()));
+        }).sort(getClosestCmpFun(getMainSpawn()));
         if (linkArr.length < 2) {
             return;
         }

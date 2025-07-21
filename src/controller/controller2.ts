@@ -16,7 +16,7 @@ import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
 import {
-    closestConstructionSite, closestHaveEnergyTower,
+    closestConstructionSite, closestEnergyMineralStructure, closestHaveEnergyTower,
     closestHurtStructure,
     closestMineral,
     closestNotFullTower
@@ -124,6 +124,7 @@ function spawnIfNeed(creeps: Creep[], configs: SpawnConfig[]) {
 
 function shouldSpawn(config: SpawnConfig): boolean {
     let pos = getMainSpawn().pos;
+    let room = getMainSpawn().room;
     switch (config.role) {
         case ROLE_MINER:
             return !!closestMineral(pos);
@@ -133,6 +134,8 @@ function shouldSpawn(config: SpawnConfig): boolean {
             return !!closestConstructionSite(pos);
         case ROLE_REPAIRER:
             return !closestHaveEnergyTower(pos) && !!closestHurtStructure(pos);
+        case ROLE_CONTAINER_2_STORAGE_TRANSFER:
+            return !!room.controller && !!closestEnergyMineralStructure(pos)
     }
     return true;
 }
@@ -176,7 +179,7 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     {
         role: ROLE_CONTAINER_2_STORAGE_TRANSFER,
         body: BODY_TRANSFER,
-        maxCnt: 2,
+        maxCnt: 1,
     },
     {
         role: ROLE_HARVESTER_FAR,

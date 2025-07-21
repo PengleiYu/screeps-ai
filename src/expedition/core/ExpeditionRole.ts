@@ -1,7 +1,13 @@
 // 远征角色基类 - 不继承现有单房间架构
 
-import { ExpeditionState, ExpeditionMemory, MissionPhase } from './ExpeditionStates';
-import { ExpeditionPathManager } from './ExpeditionPathManager';
+import {ExpeditionMemory, ExpeditionState, MissionPhase} from './ExpeditionStates';
+import {ExpeditionPathManager} from './ExpeditionPathManager';
+import {
+    findBestExitPosition, getDirectionName,
+    getExitDirectionInEdge,
+    getOppositeDirection,
+    getRoomDirection
+} from "../../utils/PositionUtils";
 
 export abstract class ExpeditionRole {
     protected creep: Creep;
@@ -10,7 +16,7 @@ export abstract class ExpeditionRole {
     constructor(creep: Creep) {
         this.creep = creep;
         this.memory = creep.memory as ExpeditionMemory;
-        
+
         // 初始化远征记忆
         if (!this.memory.expeditionState) {
             this.memory.expeditionState = ExpeditionState.TRAVELING;
@@ -42,13 +48,13 @@ export abstract class ExpeditionRole {
     private handleTraveling(): void {
         const targetRoom = this.memory.targetRoomName;
         const currentRoom = this.creep.room.name;
-        
+
         // 震荡检测
-        if (this.detectRoomOscillation(currentRoom)) {
-            this.handleRoomOscillation();
-            return;
-        }
-        
+        // if (this.detectRoomOscillation(currentRoom)) {
+        //     this.handleRoomOscillation();
+        //     return;
+        // }
+
         if (currentRoom === targetRoom) {
             // 到达目标房间，开始工作
             this.log(`到达目标房间 ${targetRoom}，开始工作`);
@@ -64,48 +70,48 @@ export abstract class ExpeditionRole {
     // 检测房间震荡
     private detectRoomOscillation(currentRoom: string): boolean {
         const memory = this.memory;
-        
+
         // 如果房间发生了变化
         if (memory.lastRoomName && memory.lastRoomName !== currentRoom) {
             memory.roomSwitchCount = (memory.roomSwitchCount || 0) + 1;
             memory.lastSwitchTick = Game.time;
-            
+
             // 如果在短时间内频繁切换房间，判定为震荡
             if (memory.roomSwitchCount > 6 && Game.time - (memory.lastSwitchTick || 0) < 20) {
                 return true;
             }
         }
-        
+
         memory.lastRoomName = currentRoom;
-        
+
         // 重置计数器（如果时间间隔较长）
         if (Game.time - (memory.lastSwitchTick || 0) > 50) {
             memory.roomSwitchCount = 0;
         }
-        
+
         return false;
     }
 
     // 处理房间震荡
     private handleRoomOscillation(): void {
         this.log(`🚨 检测到房间震荡，暂停移动5tick并重置路径`);
-        
+
         // 清除creep的移动缓存
         delete (this.creep.memory as any)._move;
-        
+
         // 重置震荡检测
         this.memory.roomSwitchCount = 0;
         this.memory.lastSwitchTick = Game.time;
-        
+
         // 暂停几tick，让情况稳定
         if ((Game.time % 10) < 5) {
             return; // 暂停移动
         }
-        
+
         // 尝试用直接路径（忽略waypoints）
         const targetRoom = this.memory.targetRoomName;
         const finalTargetPos = new RoomPosition(25, 25, targetRoom);
-        
+
         this.log(`🔄 使用直接路径重新尝试移动到 ${targetRoom}`);
         this.creep.moveTo(finalTargetPos, {
             reusePath: 1, // 强制重新计算路径
@@ -131,11 +137,11 @@ export abstract class ExpeditionRole {
     private moveToTargetRoom(): void {
         const targetRoom = this.memory.targetRoomName;
         const currentRoom = this.creep.room.name;
-        
+
         // 获取任务的waypoints信息
         const waypoints = this.getWaypointsFromMissionData();
         const nextRoom = ExpeditionPathManager.getNextRoomInPath(currentRoom, targetRoom, waypoints);
-        
+
         if (!nextRoom) {
             this.log(`⚠️ 无法找到前往 ${targetRoom} 的下一个房间`);
             this.log(`当前位置: ${currentRoom}, 目标: ${targetRoom}, waypoints: ${waypoints?.join(' -> ') || '无'}`);
@@ -150,49 +156,61 @@ export abstract class ExpeditionRole {
 
         this.log(`🧭 移动路径: ${currentRoom} -> ${nextRoom} -> ... -> ${targetRoom}`);
 
-        // 优化移动逻辑：优先考虑waypoints
-        let targetPos: RoomPosition;
-        
-        if (waypoints && waypoints.length > 0) {
-            // 如果有waypoints，先移动到最近的waypoint
-            const unvisitedWaypoints = waypoints.filter(wp => 
-                !this.hasPassedThroughRoom(wp, currentRoom, waypoints)
-            );
-            
-            if (unvisitedWaypoints.length > 0) {
-                // 移动到下一个waypoint
-                targetPos = new RoomPosition(25, 25, unvisitedWaypoints[0]);
-                this.log(`🎯 移动到waypoint: ${unvisitedWaypoints[0]}`);
-            } else {
-                // 所有waypoints都已通过，移动到最终目标
-                targetPos = new RoomPosition(25, 25, targetRoom);
-                this.log(`🏁 所有waypoints已通过，前往最终目标: ${targetRoom}`);
-            }
-        } else {
-            // 没有waypoints，直接移动到目标
-            targetPos = new RoomPosition(25, 25, targetRoom);
-        }
-
-        const moveResult = this.creep.moveTo(targetPos, {
-            visualizePathStyle: { stroke: '#ff0000', lineStyle: 'dashed', opacity: 0.8 },
-            reusePath: 10, // 增加路径重用时间，减少重新计算
-            serializeMemory: false // 不序列化到内存
-        });
-        
+        // 直接移动到路径计算好的下一个房间
+        const moveResult = this.moveToRoom(this.creep, nextRoom)
         if (moveResult === ERR_NO_PATH) {
-            this.log(`❌ 无法找到到达 ${targetRoom} 的路径，尝试分段移动`);
-            this.fallbackMoveToNextRoom(nextRoom);
+            this.log("NO PATH!")
+            // this.log(`❌ 无法找到到达 ${nextRoom} 的路径，尝试分段移动`);
+            // this.fallbackMoveToNextRoom(nextRoom);
         } else if (moveResult !== OK && moveResult !== ERR_TIRED) {
             this.log(`⚠️ 移动失败: ${moveResult}, 位置: (${this.creep.pos.x},${this.creep.pos.y})`);
         }
     }
 
+    moveToRoom(creep: Creep, roomName: string) {
+        let exitDirection = getExitDirectionInEdge(this.creep.pos);
+        if (exitDirection) { // 说明在边缘
+            let roomDirection = getRoomDirection(this.creep.room.name, roomName);
+            if (!roomDirection) {// 非相邻房间
+                this.log(`❌ 房间不相邻: ${this.creep.room.name} -> ${roomName}，无法直接移动`);
+                return ERR_NO_PATH;
+            }
+            
+            const currentPos = `(${this.creep.pos.x},${this.creep.pos.y})`;
+            if (roomDirection === exitDirection) { // 目标方位和移动方向相同，离开房间
+                this.log(`🚶 边缘位置${currentPos} 向${getDirectionName(exitDirection)}离开 ${this.creep.room.name} -> ${roomName}`);
+                return creep.move(exitDirection);
+            } else {// 目标方位和移动方向不同，反向进入房间
+                let oppositeDirection = getOppositeDirection(exitDirection);
+                this.log(`🔄 边缘位置${currentPos} 向${getDirectionName(oppositeDirection)}调整回房间内部 (目标方向: ${getDirectionName(roomDirection)})`);
+                return creep.move(oppositeDirection);
+            }
+        }
+
+        // 去往目标房间的最近离开位置
+        let exitPosition = findBestExitPosition(creep, roomName);
+        if (!exitPosition) {
+            this.log(`❌ 无法找到 ${this.creep.room.name} 前往 ${roomName} 的出口位置`);
+            return ERR_NO_PATH;
+        }
+
+        const currentPos = `${this.creep.room.name}(${this.creep.pos.x},${this.creep.pos.y})`;
+        const targetPos = `${exitPosition.roomName}(${exitPosition.x},${exitPosition.y})`;
+        this.log(`🎯 室内移动: ${currentPos} -> ${targetPos} [目标房间: ${roomName}]`);
+        
+        return this.creep.moveTo(exitPosition, {
+            visualizePathStyle: {stroke: '#ff0000', lineStyle: 'dashed', opacity: 0.8},
+            noPathFinding: false,
+            // reusePath: 10, // 增加路径重用时间，减少重新计算
+            // serializeMemory: false // 不序列化到内存
+        });
+    }
 
     // 备用方案：分段移动到下一个房间
     private fallbackMoveToNextRoom(nextRoom: string): void {
         const currentRoom = this.creep.room.name;
         const exitDirection = this.creep.room.findExitTo(nextRoom);
-        
+
         if (exitDirection === ERR_NO_PATH || exitDirection === ERR_INVALID_ARGS) {
             this.log(`❌ 无法找到从 ${currentRoom} 前往 ${nextRoom} 的出口`);
             return;
@@ -206,7 +224,7 @@ export abstract class ExpeditionRole {
         }
 
         // 选择一个安全的出口位置（避免边角）
-        const safeExits = exits.filter(pos => 
+        const safeExits = exits.filter(pos =>
             pos.x > 1 && pos.x < 48 && pos.y > 1 && pos.y < 48
         );
         const targetExit = safeExits.length > 0 ? safeExits[0] : exits[0];
@@ -226,17 +244,17 @@ export abstract class ExpeditionRole {
     private hasPassedThroughRoom(waypointRoom: string, currentRoom: string, waypoints: string[]): boolean {
         const waypointIndex = waypoints.indexOf(waypointRoom);
         const currentIndex = waypoints.indexOf(currentRoom);
-        
+
         // 如果当前房间就是waypoint，认为正在通过
         if (currentRoom === waypointRoom) {
-            return false; // 还没完全通过
+            return true; // 还没完全通过
         }
-        
+
         // 如果当前房间在waypoint之后，说明已经通过了
         if (currentIndex > waypointIndex) {
             return true;
         }
-        
+
         // 简单的距离判断：如果已经远离waypoint，可能已经通过
         // 这里使用简单的房间名比较，可以改进为实际距离计算
         return false;
@@ -294,6 +312,6 @@ export abstract class ExpeditionRole {
             expeditionStartTick: Game.time
         };
 
-        return spawn.spawnCreep(body, name, { memory });
+        return spawn.spawnCreep(body, name, {memory});
     }
 }

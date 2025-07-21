@@ -1,5 +1,6 @@
 import {getClosestCmpFun, getMainSpawn} from "./utils";
 import {closestHurtStructure} from "./role/utils/findUtils";
+import {LinkManager} from "./link/LinkManager";
 
 export class TowerController {
     run() {
@@ -35,29 +36,11 @@ export class TowerController {
 
 export class LinkController {
     run() {
-        const controller = getMainSpawn().room.controller;
-        if (!controller) return;
-
-        const linkArr = getMainSpawn().room.find(FIND_MY_STRUCTURES, {
-            filter: it => it.structureType === STRUCTURE_LINK
-        }).sort(getClosestCmpFun(getMainSpawn()));
-        if (linkArr.length < 2) {
-            return;
+        for (const roomName in Game.rooms) {
+            const room = Game.rooms[roomName];
+            if (room.controller && room.controller.my) {
+                LinkManager.manageLinkNetwork(roomName);
+            }
         }
-
-        const startLink = linkArr[linkArr.length - 1];
-        const endLink = linkArr[0];
-
-        if (startLink.store.getFreeCapacity(RESOURCE_ENERGY) > 50
-            && endLink.store.getFreeCapacity(RESOURCE_ENERGY) !== 0) {
-            return;
-        }
-
-        if (startLink.cooldown) {
-            console.log(startLink, '冷却剩余', startLink.cooldown);
-            return;
-        }
-        const result = startLink.transferEnergy(endLink);
-        console.log('Link传输', startLink, '->', endLink, ' ', result);
     }
 }

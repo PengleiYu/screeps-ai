@@ -1,5 +1,6 @@
 import {CreepState} from "./role/base/baseRoles";
 import {CanGetSource, CanPutSource, CanWork} from "./types";
+import {LinkManager} from "./link/LinkManager";
 
 declare global {
     interface CreepMemory {
@@ -23,4 +24,8 @@ declare global {
         // debug
         logging?: boolean;
     }
+
+    const global: typeof globalThis & {
+        LinkManager: typeof import("./link/LinkManager").LinkManager;
+    };
 }

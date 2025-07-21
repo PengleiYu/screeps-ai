@@ -1,6 +1,10 @@
 import {LinkController, TowerController} from "./army";
 import {EVENT_LOOP_END, globalInfo, loopEventBus} from "./utils";
 import {loop2} from "./controller/controller2";
+import {LinkManager} from "./link/LinkManager";
+
+
+global.LinkManager = LinkManager;
 
 export function loop() {
     globalInfo.canSpawn = true;

@@ -1,6 +1,9 @@
 import {CreepState} from "./role/base/baseRoles";
 import {CanGetSource, CanPutSource, CanWork} from "./types";
 import {LinkManager} from "./link/LinkManager";
+import {ExpeditionController} from "./expedition/ExpeditionController";
+import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
+import {ExpeditionState, MissionPhase} from "./expedition/core/ExpeditionStates";
 
 declare global {
     interface CreepMemory {
@@ -23,9 +26,17 @@ declare global {
 
         // debug
         logging?: boolean;
+
+        // 远征系统
+        expeditionState?: ExpeditionState;
+        targetRoomName?: string;
+        missionPhase?: MissionPhase;
+        expeditionStartTick?: number;
     }
 
     const global: typeof globalThis & {
         LinkManager: typeof import("./link/LinkManager").LinkManager;
+        ExpeditionController: typeof import("./expedition/ExpeditionController").ExpeditionController;
+        ExpeditionPathManager: typeof import("./expedition/core/ExpeditionPathManager").ExpeditionPathManager;
     };
 }

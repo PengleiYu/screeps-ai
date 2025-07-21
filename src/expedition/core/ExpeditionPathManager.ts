@@ -10,13 +10,23 @@ export interface ExpeditionPath {
 }
 
 export class ExpeditionPathManager {
-    private static pathCache = new Map<string, ExpeditionPath>();
     private static readonly CACHE_TTL = 1000; // 缓存1000 tick
+
+    private static get pathCache(): { [cacheKey: string]: ExpeditionPath } {
+        if (!Memory.expeditionPathCache) {
+            Memory.expeditionPathCache = {};
+        }
+        return Memory.expeditionPathCache;
+    }
+
+    private static set pathCache(cache: { [cacheKey: string]: ExpeditionPath }) {
+        Memory.expeditionPathCache = cache;
+    }
 
     static findPathToRoom(fromRoom: string, toRoom: string, waypoints?: string[]): ExpeditionPath | null {
         const waypointKey = waypoints ? waypoints.join('-') : '';
         const cacheKey = `${fromRoom}->${toRoom}${waypointKey ? `[${waypointKey}]` : ''}`;
-        const cached = this.pathCache.get(cacheKey);
+        const cached = this.pathCache[cacheKey];
         
         // 检查缓存有效性
         if (cached && Game.time - cached.cachedTick < this.CACHE_TTL) {
@@ -74,7 +84,9 @@ export class ExpeditionPathManager {
             waypoints
         };
 
-        this.pathCache.set(cacheKey, path);
+        const cache = this.pathCache;
+        cache[cacheKey] = path;
+        this.pathCache = cache;
         return path;
     }
 
@@ -254,8 +266,27 @@ export class ExpeditionPathManager {
     }
 
     static clearCache(): void {
-        this.pathCache.clear();
+        this.pathCache = {};
         console.log('ExpeditionPathManager: 路径缓存已清理');
+    }
+
+    // 清理过期缓存
+    static cleanExpiredCache(): void {
+        const cache = this.pathCache;
+        let cleanedCount = 0;
+        
+        for (const cacheKey in cache) {
+            const path = cache[cacheKey];
+            if (Game.time - path.cachedTick >= this.CACHE_TTL) {
+                delete cache[cacheKey];
+                cleanedCount++;
+            }
+        }
+        
+        if (cleanedCount > 0) {
+            this.pathCache = cache;
+            console.log(`ExpeditionPathManager: 清理了 ${cleanedCount} 个过期缓存条目`);
+        }
     }
 
     static printPathInfo(fromRoom: string, toRoom: string, waypoints?: string[]): void {

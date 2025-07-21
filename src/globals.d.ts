@@ -2,7 +2,7 @@ import {CreepState} from "./role/base/baseRoles";
 import {CanGetSource, CanPutSource, CanWork} from "./types";
 import {LinkManager} from "./link/LinkManager";
 import {ExpeditionController} from "./expedition/ExpeditionController";
-import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
+import {ExpeditionPathManager, ExpeditionPath} from "./expedition/core/ExpeditionPathManager";
 import {ExpeditionState, MissionPhase, ExpeditionMissionData} from "./expedition/core/ExpeditionStates";
 
 declare global {
@@ -41,6 +41,7 @@ declare global {
 
     interface Memory {
         expeditions?: { [targetRoom: string]: ExpeditionMissionData };
+        expeditionPathCache?: { [cacheKey: string]: ExpeditionPath };
     }
 
     const global: typeof globalThis & {

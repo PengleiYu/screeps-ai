@@ -3,7 +3,7 @@ import {CanGetSource, CanPutSource, CanWork} from "./types";
 import {LinkManager} from "./link/LinkManager";
 import {ExpeditionController} from "./expedition/ExpeditionController";
 import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
-import {ExpeditionState, MissionPhase} from "./expedition/core/ExpeditionStates";
+import {ExpeditionState, MissionPhase, ExpeditionMissionData} from "./expedition/core/ExpeditionStates";
 
 declare global {
     interface CreepMemory {
@@ -32,6 +32,15 @@ declare global {
         targetRoomName?: string;
         missionPhase?: MissionPhase;
         expeditionStartTick?: number;
+        
+        // 震荡检测
+        lastRoomName?: string;
+        roomSwitchCount?: number;
+        lastSwitchTick?: number;
+    }
+
+    interface Memory {
+        expeditions?: { [targetRoom: string]: ExpeditionMissionData };
     }
 
     const global: typeof globalThis & {

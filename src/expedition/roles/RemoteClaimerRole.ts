@@ -82,7 +82,11 @@ export class RemoteClaimerRole extends ExpeditionRole {
     // 创建远程占领者的静态方法
     static spawn(spawn: StructureSpawn, targetRoom: string): ScreepsReturnCode {
         const name = `remoteClaimer_${Game.time}`;
-        const body = [CLAIM, MOVE]; // 最简单的占领者配置
+        const body = RemoteClaimerRole.getOptimalBody(spawn);
+        
+        if (body.length === 0) {
+            return ERR_NOT_ENOUGH_ENERGY;
+        }
         
         return ExpeditionRole.spawnExpeditionCreep(
             spawn,
@@ -94,14 +98,25 @@ export class RemoteClaimerRole extends ExpeditionRole {
         );
     }
 
-    // 检查是否适合使用更强的身体配置
+    // 获取最佳身体配置 - 优先移动能力
     static getOptimalBody(spawn: StructureSpawn): BodyPartConstant[] {
         const room = spawn.room;
         const availableEnergy = room.energyAvailable;
         
-        // 基本配置：1 CLAIM + 1 MOVE = 650 能量
-        if (availableEnergy >= 650) {
-            return [CLAIM, MOVE];
+        const bodies = [
+            // 高速配置：1 CLAIM + 5 MOVE = 850 能量 (平路1格/tick，沼泽2格/tick)
+            { energy: 850, parts: [CLAIM, MOVE, MOVE, MOVE, MOVE, MOVE] },
+            // 中速配置：1 CLAIM + 3 MOVE = 750 能量 (平路0.6格/tick，沼泽1.2格/tick) 
+            { energy: 750, parts: [CLAIM, MOVE, MOVE, MOVE] },
+            // 基本配置：1 CLAIM + 1 MOVE = 650 能量 (平路0.2格/tick，沼泽0.4格/tick)
+            { energy: 650, parts: [CLAIM, MOVE] }
+        ];
+
+        for (const bodyConfig of bodies) {
+            if (availableEnergy >= bodyConfig.energy) {
+                console.log(`远程占领者使用配置: ${bodyConfig.parts.join(',')} (${bodyConfig.energy} 能量)`);
+                return bodyConfig.parts;
+            }
         }
         
         // 能量不足，无法创建占领者

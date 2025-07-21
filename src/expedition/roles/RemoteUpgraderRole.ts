@@ -158,24 +158,53 @@ export class RemoteUpgraderRole extends ExpeditionRole {
         );
     }
 
-    // 获取最佳身体配置
+    // 获取最佳身体配置 - 平衡移动和工作能力
     static getOptimalBody(spawn: StructureSpawn): BodyPartConstant[] {
         const room = spawn.room;
         const availableEnergy = room.energyAvailable;
         
         const bodies = [
-            // 高级配置：4 WORK + 2 CARRY + 6 MOVE = 900 能量
-            { energy: 900, parts: [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE] },
-            // 中级配置：3 WORK + 2 CARRY + 5 MOVE = 750 能量
-            { energy: 750, parts: [WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE] },
-            // 基本配置：2 WORK + 1 CARRY + 3 MOVE = 500 能量
-            { energy: 500, parts: [WORK, WORK, CARRY, MOVE, MOVE, MOVE] },
-            // 最低配置：1 WORK + 1 CARRY + 2 MOVE = 300 能量
-            { energy: 300, parts: [WORK, CARRY, MOVE, MOVE] }
+            // 超高速配置：3 WORK + 3 CARRY + 9 MOVE = 1050 能量 (1格/tick移动)
+            { 
+                energy: 1050, 
+                parts: [WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+                speed: '1.0格/tick',
+                travelTime: '17房间约850tick'
+            },
+            // 高速配置：2 WORK + 2 CARRY + 6 MOVE = 700 能量 (1格/tick移动)
+            { 
+                energy: 700, 
+                parts: [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+                speed: '1.0格/tick', 
+                travelTime: '17房间约850tick'
+            },
+            // 中速配置：2 WORK + 2 CARRY + 4 MOVE = 600 能量 (0.67格/tick移动)
+            { 
+                energy: 600, 
+                parts: [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE],
+                speed: '0.67格/tick',
+                travelTime: '17房间约1200tick'
+            },
+            // 基本配置：1 WORK + 1 CARRY + 3 MOVE = 350 能量 (0.6格/tick移动)
+            { 
+                energy: 350, 
+                parts: [WORK, CARRY, MOVE, MOVE, MOVE],
+                speed: '0.6格/tick',
+                travelTime: '17房间约1400tick'
+            },
+            // 最低配置：1 WORK + 1 CARRY + 2 MOVE = 300 能量 (0.5格/tick移动)
+            { 
+                energy: 300, 
+                parts: [WORK, CARRY, MOVE, MOVE],
+                speed: '0.5格/tick',
+                travelTime: '17房间约1700tick'
+            }
         ];
 
         for (const bodyConfig of bodies) {
             if (availableEnergy >= bodyConfig.energy) {
+                console.log(`远程升级者使用配置: ${bodyConfig.parts.join(',')} (${bodyConfig.energy} 能量)`);
+                console.log(`  移动速度: ${bodyConfig.speed}, 预计到达时间: ${bodyConfig.travelTime}`);
                 return bodyConfig.parts;
             }
         }

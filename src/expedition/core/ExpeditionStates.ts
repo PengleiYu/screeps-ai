@@ -17,6 +17,11 @@ export interface ExpeditionMemory extends CreepMemory {
     targetRoomName: string;
     missionPhase: MissionPhase;
     expeditionStartTick: number;
+    
+    // 震荡检测
+    lastRoomName?: string;
+    roomSwitchCount?: number;
+    lastSwitchTick?: number;
 }
 
 export interface ExpeditionMissionData {

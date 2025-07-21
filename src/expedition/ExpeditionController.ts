@@ -7,7 +7,16 @@ import { RemoteBuilderRole, ROLE_REMOTE_BUILDER } from './roles/RemoteBuilderRol
 import { ExpeditionPathManager } from './core/ExpeditionPathManager';
 
 export class ExpeditionController {
-    private static missionData: { [targetRoom: string]: ExpeditionMissionData } = {};
+    private static get missionData(): { [targetRoom: string]: ExpeditionMissionData } {
+        if (!Memory.expeditions) {
+            Memory.expeditions = {};
+        }
+        return Memory.expeditions;
+    }
+
+    private static set missionData(data: { [targetRoom: string]: ExpeditionMissionData }) {
+        Memory.expeditions = data;
+    }
     
     static run(): void {
         // 检查所有远征任务
@@ -55,7 +64,8 @@ export class ExpeditionController {
         ExpeditionPathManager.printPathInfo(homeRoom, targetRoom, waypoints);
 
         // 初始化任务数据
-        this.missionData[targetRoom] = {
+        const missions = this.missionData;
+        missions[targetRoom] = {
             targetRoomName: targetRoom,
             homeRoomName: homeRoom,
             waypoints: waypoints,
@@ -67,6 +77,7 @@ export class ExpeditionController {
                 [MissionPhase.BUILDING]: []
             }
         };
+        this.missionData = missions;
 
         // 立即派遣第一个占领者
         const availableSpawn = this.getAvailableSpawnInRoom(homeRoom);
@@ -85,7 +96,9 @@ export class ExpeditionController {
         // 检查任务是否完成
         if (this.isExpeditionComplete(targetRoom)) {
             console.log(`🎉 远征任务 ${targetRoom} 完成！房间已建成Spawn`);
-            delete this.missionData[targetRoom];
+            const missions = this.missionData;
+            delete missions[targetRoom];
+            this.missionData = missions;
             return;
         }
 
@@ -108,10 +121,13 @@ export class ExpeditionController {
 
     // 检查阶段推进
     private static checkPhaseProgression(targetRoom: string): void {
-        const mission = this.missionData[targetRoom];
+        const missions = this.missionData;
+        const mission = missions[targetRoom];
         const room = Game.rooms[targetRoom];
         
         if (!room) return;
+
+        let needsUpdate = false;
 
         switch (mission.currentPhase) {
             case MissionPhase.CLAIMING:
@@ -120,6 +136,7 @@ export class ExpeditionController {
                     console.log(`✅ 阶段1完成: ${targetRoom} 已被占领`);
                     mission.currentPhase = MissionPhase.UPGRADING;
                     mission.phaseStartTick = Game.time;
+                    needsUpdate = true;
                 }
                 break;
 
@@ -129,12 +146,17 @@ export class ExpeditionController {
                     console.log(`✅ 阶段2完成: ${targetRoom} 已升级到RCL2`);
                     mission.currentPhase = MissionPhase.BUILDING;
                     mission.phaseStartTick = Game.time;
+                    needsUpdate = true;
                 }
                 break;
 
             case MissionPhase.BUILDING:
                 // 在manageMission中已检查Spawn建设完成
                 break;
+        }
+
+        if (needsUpdate) {
+            this.missionData = missions;
         }
     }
 
@@ -164,7 +186,8 @@ export class ExpeditionController {
 
     // 派遣占领者
     private static spawnClaimerIfNeeded(targetRoom: string, spawn: StructureSpawn): void {
-        const mission = this.missionData[targetRoom];
+        const missions = this.missionData;
+        const mission = missions[targetRoom];
         const activeClaimers = mission.activeCreeps[MissionPhase.CLAIMING];
 
         // 只需要一个占领者
@@ -173,6 +196,7 @@ export class ExpeditionController {
             if (result === OK) {
                 const name = `remoteClaimer_${Game.time}`;
                 activeClaimers.push(name);
+                this.missionData = missions;
                 console.log(`🏃 派遣占领者 ${name} 前往 ${targetRoom}`);
             }
         }
@@ -180,7 +204,8 @@ export class ExpeditionController {
 
     // 派遣升级者
     private static spawnUpgraderIfNeeded(targetRoom: string, spawn: StructureSpawn): void {
-        const mission = this.missionData[targetRoom];
+        const missions = this.missionData;
+        const mission = missions[targetRoom];
         const activeUpgraders = mission.activeCreeps[MissionPhase.UPGRADING];
 
         // 保持1-2个升级者
@@ -189,6 +214,7 @@ export class ExpeditionController {
             if (result === OK) {
                 const name = `remoteUpgrader_${Game.time}`;
                 activeUpgraders.push(name);
+                this.missionData = missions;
                 console.log(`⚡ 派遣升级者 ${name} 前往 ${targetRoom}`);
             }
         }
@@ -196,7 +222,8 @@ export class ExpeditionController {
 
     // 派遣建造者
     private static spawnBuilderIfNeeded(targetRoom: string, spawn: StructureSpawn): void {
-        const mission = this.missionData[targetRoom];
+        const missions = this.missionData;
+        const mission = missions[targetRoom];
         const activeBuilders = mission.activeCreeps[MissionPhase.BUILDING];
 
         // 保持1-2个建造者
@@ -205,6 +232,7 @@ export class ExpeditionController {
             if (result === OK) {
                 const name = `remoteBuilder_${Game.time}`;
                 activeBuilders.push(name);
+                this.missionData = missions;
                 console.log(`🏗️ 派遣建造者 ${name} 前往 ${targetRoom}`);
             }
         }
@@ -234,14 +262,25 @@ export class ExpeditionController {
 
     // 清理死亡creep记录
     private static cleanupDeadCreeps(): void {
-        for (const targetRoom in this.missionData) {
-            const mission = this.missionData[targetRoom];
+        const missions = this.missionData;
+        let needsUpdate = false;
+        
+        for (const targetRoom in missions) {
+            const mission = missions[targetRoom];
             
             for (const phase in mission.activeCreeps) {
+                const originalLength = mission.activeCreeps[phase].length;
                 mission.activeCreeps[phase] = mission.activeCreeps[phase].filter(
                     name => Game.creeps[name] !== undefined
                 );
+                if (mission.activeCreeps[phase].length !== originalLength) {
+                    needsUpdate = true;
+                }
             }
+        }
+        
+        if (needsUpdate) {
+            this.missionData = missions;
         }
     }
 

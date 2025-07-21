@@ -170,4 +170,57 @@ export class LinkManager {
     static clearCache(): void {
         this.cache.clear();
     }
+
+    static printLinksInfo(roomName: string): void {
+        const registry = this.getLinkRegistry(roomName);
+        console.log(`========== 房间 ${roomName} Link信息 ==========`);
+        
+        if (registry.sourceLinks.length > 0) {
+            console.log(`📍 源Link (${registry.sourceLinks.length}个):`);
+            registry.sourceLinks.forEach((link, index) => {
+                const energy = link.store[RESOURCE_ENERGY];
+                const capacity = link.store.getCapacity(RESOURCE_ENERGY);
+                const cooldown = link.cooldown > 0 ? ` (冷却:${link.cooldown})` : '';
+                console.log(`  ${index + 1}. 位置(${link.pos.x},${link.pos.y}) 能量:${energy}/${capacity}${cooldown}`);
+            });
+        }
+
+        if (registry.controllerLink) {
+            const link = registry.controllerLink;
+            const energy = link.store[RESOURCE_ENERGY];
+            const capacity = link.store.getCapacity(RESOURCE_ENERGY);
+            console.log(`🎯 控制器Link: 位置(${link.pos.x},${link.pos.y}) 能量:${energy}/${capacity}`);
+        }
+
+        if (registry.storageLink) {
+            const link = registry.storageLink;
+            const energy = link.store[RESOURCE_ENERGY];
+            const capacity = link.store.getCapacity(RESOURCE_ENERGY);
+            console.log(`📦 存储Link: 位置(${link.pos.x},${link.pos.y}) 能量:${energy}/${capacity}`);
+        }
+
+        if (registry.centralLinks.length > 0) {
+            console.log(`🏢 中央Link (${registry.centralLinks.length}个):`);
+            registry.centralLinks.forEach((link, index) => {
+                const energy = link.store[RESOURCE_ENERGY];
+                const capacity = link.store.getCapacity(RESOURCE_ENERGY);
+                console.log(`  ${index + 1}. 位置(${link.pos.x},${link.pos.y}) 能量:${energy}/${capacity}`);
+            });
+        }
+
+        if (registry.sourceLinks.length === 0 && !registry.controllerLink && 
+            !registry.storageLink && registry.centralLinks.length === 0) {
+            console.log('❌ 房间内没有找到任何Link建筑');
+        }
+        console.log('==========================================');
+    }
+
+    static printAllRoomsLinks(): void {
+        for (const roomName in Game.rooms) {
+            const room = Game.rooms[roomName];
+            if (room.controller && room.controller.my) {
+                this.printLinksInfo(roomName);
+            }
+        }
+    }
 }

@@ -16,7 +16,10 @@ import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
 import {
-    closestConstructionSite, closestEnergyMineralStructure, closestHaveEnergyTower,
+    closestConstructionSite,
+    closestEnergyMineralStructure, closestEnergyNotEmptyStorage,
+    closestEnergyNotFullContainerNearController,
+    closestHaveEnergyTower,
     closestHurtStructure,
     closestMineral,
     closestNotFullTower
@@ -136,6 +139,8 @@ function shouldSpawn(config: SpawnConfig): boolean {
             return !closestHaveEnergyTower(pos) && !!closestHurtStructure(pos);
         case ROLE_CONTAINER_2_STORAGE_TRANSFER:
             return !!room.controller && !!closestEnergyMineralStructure(pos)
+        case ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER:
+            return !!closestEnergyNotFullContainerNearController(pos) && !!closestEnergyNotEmptyStorage(pos);
     }
     return true;
 }

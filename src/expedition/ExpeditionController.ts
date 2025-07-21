@@ -26,6 +26,11 @@ export class ExpeditionController {
         
         // 运行所有远征creep
         this.runExpeditionCreeps();
+        
+        // 定期清理过期路径缓存 (每100tick一次)
+        if (Game.time % 100 === 0) {
+            ExpeditionPathManager.cleanExpiredCache();
+        }
     }
 
     // 启动新的远征任务

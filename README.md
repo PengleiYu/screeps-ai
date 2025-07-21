@@ -8,11 +8,13 @@
 
 ## 项目特性
 
-- 🤖 **智能角色系统** - 包含采集者、建造者、升级者、挖矿者等多种角色
+- 🤖 **智能角色系统** - 包含采集者、建造者、升级者、挖矿者、维修者等多种角色
 - 🏗️ **模块化架构** - 控制器、角色、工具函数分离，易于维护
 - 🔄 **事件驱动** - 使用事件总线进行组件间通信
 - 🛡️ **防御系统** - 塔防控制和军队管理
-- ⚡ **高效物流** - 智能的资源传输和存储管理
+- ⚡ **高效物流** - 智能的资源传输和存储管理，包含Link网络自动化
+- 🔗 **Link网络管理** - 自动化Link能量传输，支持优先级分配
+- 🛠️ **智能孵化** - 基于需求的条件化creep孵化，避免资源浪费
 - 📊 **TypeScript 支持** - 完整的类型定义，开发体验更佳
 
 ## 项目结构
@@ -20,6 +22,8 @@
 ```
 src/
 ├── main.ts              # 主循环入口
+├── link/                # Link 网络管理
+│   └── LinkManager.ts   # 智能Link传输系统
 ├── controller/          # 控制器模块
 │   └── controller2.ts   # 主要控制逻辑
 ├── role/                # 角色系统 (分层设计)
@@ -130,22 +134,49 @@ npm run build -- --branch=default
 npm run dev
 ```
 
+### 游戏内调试
+
+系统提供了丰富的调试工具，可在游戏控制台中使用：
+
+```javascript
+// Link网络调试
+global.LinkManager.printLinksInfo('W1N1')        // 查看指定房间Link信息
+global.LinkManager.printAllRoomsLinks()          // 查看所有房间Link信息
+global.LinkManager.manageLinkNetwork('W1N1')     // 手动运行Link管理
+global.LinkManager.clearCache()                  // 清空Link缓存
+```
+
 ## 核心功能
 
 ### 角色管理
 - **HarvestRole**: 自动采集能量和矿物
 - **BuilderRole**: 建造和维修建筑
 - **UpgradeRole**: 升级房间控制器
-- **MineRole**: 专业挖矿作业
+- **MinerRole**: 专业挖矿作业
+- **RepairerRole**: 专业建筑维修角色
 
 ### 物流系统
 - **ContainerToStorageRole**: 容器到存储的运输
+- **StorageToContainerRole**: 存储到控制器容器运输
 - **StorageToTowerRole**: 为防御塔补充能量
 - **SweepToStorageRole**: 清理地面资源
 
+### Link网络系统
+- **LinkManager**: 智能Link网络管理
+- **自动分类**: 源Link、控制器Link、存储Link智能识别
+- **优先级传输**: 控制器优先，存储其次的能量分配
+- **多房间支持**: 自动管理所有己方房间的Link网络
+- **性能优化**: 10tick缓存机制，提升CPU效率
+
 ### 防御系统
 - **TowerController**: 自动防御塔控制
-- **RepairController**: 建筑维修管理
+- **智能维修**: 塔防和creep维修的协调管理
+
+### 智能孵化系统
+- **条件化孵化**: 基于实际需求判断是否孵化creep
+- **资源优化**: 避免无意义的creep孵化，节约能量
+- **动态调整**: 根据房间状态自动调整角色数量
+- **多Spawn支持**: 智能选择可用的Spawn进行孵化
 
 ### 事件系统
 - 基于事件总线的模块间通信
@@ -157,6 +188,8 @@ npm run dev
 2. **修改控制逻辑**: 编辑 `src/controller/controller2.ts`
 3. **调整常量**: 修改 `src/constants.ts` 中的配置
 4. **添加工具函数**: 在 `src/utils.ts` 中添加通用功能
+5. **Link网络调试**: 使用全局调试工具监控和管理Link传输
+6. **孵化条件优化**: 在 `shouldSpawn()` 函数中添加角色特定的孵化条件
 
 ## 构建工具
 
@@ -164,7 +197,7 @@ npm run dev
 
 ## 项目管理
 
-📋 **GitHub Projects**: [Screeps AI Development](https://github.com/users/PengleiYu/projects/2) - 查看开发进度和任务规划
+📋 **GitHub Projects**: [ScreepsProject](https://github.com/users/PengleiYu/projects/2) - 查看开发进度和任务规划
 
 ## 贡献
 

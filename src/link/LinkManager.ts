@@ -5,19 +5,6 @@ export interface LinkRegistry {
     centralLinks: StructureLink[];
 }
 
-export enum LinkType {
-    SOURCE = 'source',
-    CONTROLLER = 'controller', 
-    STORAGE = 'storage',
-    CENTRAL = 'central'
-}
-
-export interface LinkInfo {
-    link: StructureLink;
-    type: LinkType;
-    sourceId?: string;
-}
-
 export class LinkManager {
     private static readonly CACHE_TTL = 10;
     private static cache: Map<string, { registry: LinkRegistry; timestamp: number }> = new Map();
@@ -30,11 +17,11 @@ export class LinkManager {
 
         const room = Game.rooms[roomName];
         if (!room) {
-            return { sourceLinks: [], centralLinks: [] };
+            return {sourceLinks: [], centralLinks: []};
         }
 
         const registry = this.categorizeLinks(room);
-        this.cache.set(roomName, { registry, timestamp: Game.time });
+        this.cache.set(roomName, {registry, timestamp: Game.time});
         return registry;
     }
 
@@ -59,10 +46,10 @@ export class LinkManager {
         const storage = room.storage;
 
         for (const link of links) {
-            const nearSource = sources.find(source => 
+            const nearSource = sources.find(source =>
                 link.pos.getRangeTo(source) <= 2
             );
-            
+
             if (nearSource) {
                 registry.sourceLinks.push(link);
                 continue;
@@ -102,7 +89,7 @@ export class LinkManager {
 
     static manageLinkNetwork(roomName: string): void {
         const registry = this.getLinkRegistry(roomName);
-        
+
         for (const sourceLink of registry.sourceLinks) {
             if (registry.controllerLink) {
                 const result = this.transferEnergy(sourceLink, registry.controllerLink);
@@ -132,41 +119,6 @@ export class LinkManager {
         }
     }
 
-    static getLinksInfo(roomName: string): LinkInfo[] {
-        const registry = this.getLinkRegistry(roomName);
-        const linkInfos: LinkInfo[] = [];
-
-        registry.sourceLinks.forEach(link => {
-            linkInfos.push({
-                link,
-                type: LinkType.SOURCE
-            });
-        });
-
-        if (registry.controllerLink) {
-            linkInfos.push({
-                link: registry.controllerLink,
-                type: LinkType.CONTROLLER
-            });
-        }
-
-        if (registry.storageLink) {
-            linkInfos.push({
-                link: registry.storageLink,
-                type: LinkType.STORAGE
-            });
-        }
-
-        registry.centralLinks.forEach(link => {
-            linkInfos.push({
-                link,
-                type: LinkType.CENTRAL
-            });
-        });
-
-        return linkInfos;
-    }
-
     static clearCache(): void {
         this.cache.clear();
     }
@@ -174,7 +126,7 @@ export class LinkManager {
     static printLinksInfo(roomName: string): void {
         const registry = this.getLinkRegistry(roomName);
         console.log(`========== 房间 ${roomName} Link信息 ==========`);
-        
+
         if (registry.sourceLinks.length > 0) {
             console.log(`📍 源Link (${registry.sourceLinks.length}个):`);
             registry.sourceLinks.forEach((link, index) => {
@@ -208,7 +160,7 @@ export class LinkManager {
             });
         }
 
-        if (registry.sourceLinks.length === 0 && !registry.controllerLink && 
+        if (registry.sourceLinks.length === 0 && !registry.controllerLink &&
             !registry.storageLink && registry.centralLinks.length === 0) {
             console.log('❌ 房间内没有找到任何Link建筑');
         }

@@ -299,6 +299,19 @@ export class ExpeditionPathManager {
         console.log('ExpeditionPathManager: 路径缓存已清理');
     }
 
+    // 清理指定任务的路径缓存
+    static clearPathCache(fromRoom: string, toRoom: string, waypoints?: string[]): void {
+        const waypointKey = waypoints ? waypoints.join('-') : '';
+        const cacheKey = `${fromRoom}->${toRoom}${waypointKey ? `[${waypointKey}]` : ''}`;
+        
+        const cache = this.pathCache;
+        if (cache[cacheKey]) {
+            delete cache[cacheKey];
+            this.pathCache = cache;
+            console.log(`清理路径缓存: ${cacheKey}`);
+        }
+    }
+
     // 清理过期缓存
     static cleanExpiredCache(): void {
         const cache = this.pathCache;

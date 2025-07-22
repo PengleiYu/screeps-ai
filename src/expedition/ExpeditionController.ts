@@ -560,4 +560,119 @@ export class ExpeditionController {
     static getMissionData(): { [targetRoom: string]: ExpeditionMissionData } {
         return this.missionData;
     }
+
+    // 停止指定房间的远征任务
+    static stopExpedition(targetRoom: string, killCreeps: boolean = true): boolean {
+        const missions = this.missionData;
+        const mission = missions[targetRoom];
+        
+        if (!mission) {
+            console.log(`❌ 远征任务 ${targetRoom} 不存在`);
+            return false;
+        }
+
+        console.log(`🛑 停止远征任务: ${mission.homeRoomName} -> ${targetRoom}`);
+
+        // 杀死所有相关的远征creep
+        if (killCreeps) {
+            this.killExpeditionCreeps(targetRoom, mission);
+        } else {
+            console.log(`⚠️ 远征creep将继续存活，但不会有新的任务指派`);
+        }
+
+        // 删除任务数据
+        delete missions[targetRoom];
+        this.missionData = missions;
+
+        // 清理相关路径缓存
+        ExpeditionPathManager.clearPathCache(mission.homeRoomName, targetRoom, mission.waypoints);
+
+        console.log(`✅ 远征任务 ${targetRoom} 已停止`);
+        return true;
+    }
+
+    // 停止所有远征任务
+    static stopAllExpeditions(killCreeps: boolean = true): number {
+        const missions = this.missionData;
+        const missionCount = Object.keys(missions).length;
+
+        if (missionCount === 0) {
+            console.log(`ℹ️ 当前没有活跃的远征任务`);
+            return 0;
+        }
+
+        console.log(`🛑 停止所有远征任务 (共${missionCount}个)`);
+
+        const targetRooms = Object.keys(missions);
+        for (const targetRoom of targetRooms) {
+            const mission = missions[targetRoom];
+            
+            if (killCreeps) {
+                this.killExpeditionCreeps(targetRoom, mission);
+            }
+
+            // 清理路径缓存
+            ExpeditionPathManager.clearPathCache(mission.homeRoomName, targetRoom, mission.waypoints);
+        }
+
+        // 清空所有任务数据
+        this.missionData = {};
+
+        console.log(`✅ 已停止所有远征任务 (${missionCount}个)`);
+        if (!killCreeps) {
+            console.log(`⚠️ 现有远征creep将继续存活，但不会有新的任务指派`);
+        }
+
+        return missionCount;
+    }
+
+    // 杀死指定任务的所有远征creep
+    private static killExpeditionCreeps(targetRoom: string, mission: ExpeditionMissionData): void {
+        let killedCount = 0;
+        
+        // 杀死所有阶段的creep
+        for (const phase in mission.activeCreeps) {
+            const creepNames = mission.activeCreeps[phase];
+            for (const creepName of creepNames) {
+                const creep = Game.creeps[creepName];
+                if (creep) {
+                    const result = creep.suicide();
+                    if (result === OK) {
+                        killedCount++;
+                        console.log(`💀 杀死远征creep: ${creepName} (${phase})`);
+                    } else {
+                        console.log(`⚠️ 无法杀死creep ${creepName}: ${result}`);
+                    }
+                }
+            }
+        }
+
+        if (killedCount > 0) {
+            console.log(`💀 共杀死 ${killedCount} 个远征creep`);
+        } else {
+            console.log(`ℹ️ 没有需要杀死的远征creep`);
+        }
+    }
+
+    // 列出所有活跃的远征任务（简化版本）
+    static listExpeditions(): void {
+        const missions = this.missionData;
+        const missionCount = Object.keys(missions).length;
+
+        console.log(`=== 活跃远征任务列表 (${missionCount}个) ===`);
+
+        if (missionCount === 0) {
+            console.log(`当前没有活跃的远征任务`);
+            return;
+        }
+
+        for (const targetRoom in missions) {
+            const mission = missions[targetRoom];
+            const totalCreeps = Object.values(mission.activeCreeps).reduce((sum, creeps) => sum + creeps.length, 0);
+            const waypointStr = mission.waypoints && mission.waypoints.length > 0 ? ` (经由 ${mission.waypoints.join('->')})` : '';
+            
+            console.log(`📍 ${mission.homeRoomName} -> ${targetRoom}${waypointStr}`);
+            console.log(`   阶段: ${mission.currentPhase} | Creep数量: ${totalCreeps} | 开始时间: ${mission.phaseStartTick}`);
+        }
+    }
 }

@@ -36,6 +36,7 @@ import {RepairerRole} from "../role/maintenance/RepairerRole";
 import {getRoomCenter} from "../utils/PositionUtils";
 import {TowerController} from "../army";
 import {LinkManager} from "../link/LinkManager";
+import {BodyConfigManager} from "../body/BodyConfigManager";
 
 export function runRoom(room: Room) {
     new TowerController(room).run();
@@ -127,13 +128,21 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
         if (expectCnt > 0 && shouldSpawn(room, config)) {
+            // 动态生成body配置
+            const dynamicBody = BodyConfigManager.getOptimalBody(config.role, config.body, room);
+            if (dynamicBody.length === 0) {
+                console.log(`⚠️ 房间 ${room.name} 无法为角色 ${config.role} 生成body，跳过孵化`);
+                continue;
+            }
+
             const memory: CreepMemory = {
                 role: config.role,
                 lifeState: CreepState.INITIAL,
                 logging: false,
                 isJustBorn: true,
             };
-            trySpawn(room, config.role + Date.now(), config.body, memory);
+            trySpawn(room, config.role + Date.now(), dynamicBody, memory);
+            break;
         }
     }
 }

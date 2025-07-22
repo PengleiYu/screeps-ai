@@ -51,7 +51,7 @@ export function trySpawn(room: Room, name: string, body: BodyPartConstant[], mem
     const result = spawn.spawnCreep(body, name, {memory: memory});
     console.log(`${spawn.name}正在孵化${memory.role}:${name}, result=${getSpawnResultStr(result)}`);
     if (result === ERR_NOT_ENOUGH_ENERGY) {
-        console.log(`孵化需要能量${(bodyCost(body))}, 可用${(spawn.room.energyAvailable)}, 上限${(spawn.room.energyCapacityAvailable)}`);
+        console.log(`孵化失败，需要能量${(bodyCost(body))}, 可用${(spawn.room.energyAvailable)}, 上限${(spawn.room.energyCapacityAvailable)}`);
     }
     return result == OK;
 }

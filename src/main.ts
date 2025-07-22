@@ -3,11 +3,13 @@ import {runCreep, runRoom} from "./controller/controller";
 import {LinkManager} from "./link/LinkManager";
 import {ExpeditionController} from "./expedition/ExpeditionController";
 import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
+import {BodyConfigManager} from "./body/BodyConfigManager";
 
 
 global.LinkManager = LinkManager;
 global.ExpeditionController = ExpeditionController;
 global.ExpeditionPathManager = ExpeditionPathManager;
+global.BodyConfigManager = BodyConfigManager;
 
 export function loop() {
     globalInfo.canSpawn = true;

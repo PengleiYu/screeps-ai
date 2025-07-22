@@ -34,12 +34,17 @@ import {StorageToTowerRole} from "../role/logistics/StorageToTowerRole";
 import {BuilderRole} from "../role/core/BuilderRole";
 import {RepairerRole} from "../role/maintenance/RepairerRole";
 import {getRoomCenter} from "../utils/PositionUtils";
+import {TowerController} from "../army";
+import {LinkManager} from "../link/LinkManager";
 
-export function loop2() {
-    Object.values(Game.creeps).map(roleFactory).forEach(it => it?.dispatch())
+export function runRoom(room: Room) {
+    new TowerController(room).run();
+    spawnIfNeed(room, SPAWN_CONFIGS);
+    LinkManager.manageLinkNetwork(room.name);
+}
 
-    Object.values(Game.rooms)
-        .forEach(room => spawnIfNeed(room, SPAWN_CONFIGS));
+export function runCreep(creep: Creep) {
+    roleFactory(creep)?.dispatch();
 }
 
 function harvesterRoleFactory(creep: Creep): StatefulRole<any, any> | null {

@@ -25,7 +25,7 @@ src/
 ├── link/                # Link 网络管理
 │   └── LinkManager.ts   # 智能Link传输系统
 ├── controller/          # 控制器模块
-│   └── controller2.ts   # 主要控制逻辑
+│   └── controller.ts   # 主要控制逻辑
 ├── role/                # 角色系统 (分层设计)
 │   ├── base/            # 基础框架
 │   │   ├── creepWrapper.ts    # Creep 包装器
@@ -185,7 +185,7 @@ global.LinkManager.clearCache()                  // 清空Link缓存
 ## 开发指南
 
 1. **添加新角色**: 在 `src/role/` 目录下创建新的角色类
-2. **修改控制逻辑**: 编辑 `src/controller/controller2.ts`
+2. **修改控制逻辑**: 编辑 `src/controller/controller.ts`
 3. **调整常量**: 修改 `src/constants.ts` 中的配置
 4. **添加工具函数**: 在 `src/utils.ts` 中添加通用功能
 5. **Link网络调试**: 使用全局调试工具监控和管理Link传输

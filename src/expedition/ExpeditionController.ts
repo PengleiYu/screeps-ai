@@ -272,14 +272,32 @@ export class ExpeditionController {
         const mission = missions[targetRoom];
         const activeBuilders = mission.activeCreeps[MissionPhase.BUILDING];
 
-        // 保持1-2个建造者
-        if (activeBuilders.length < 1) {
+        // 动态计算最优建造者数量
+        const targetRoomObj = Game.rooms[targetRoom];
+        
+        // 获取远征距离用于修正计算
+        const expeditionDistance = ExpeditionPathManager.findPathToRoom(mission.homeRoomName, targetRoom, mission.waypoints)?.totalDistance || 1;
+        
+        const optimalBody = RemoteBuilderRole.getOptimalBody(spawn);
+        const optimalCount = RemoteBuilderRole.calculateOptimalBuilderCount(targetRoomObj, optimalBody, expeditionDistance);
+        
+        console.log(`${targetRoom} 建造者状态: 当前${activeBuilders.length}个, 最优${optimalCount}个`);
+
+        // 如果不需要建造者，直接返回
+        if (optimalCount === 0) {
+            if (activeBuilders.length > 0) {
+                console.log(`${targetRoom} 无建造需求，现有${activeBuilders.length}个建造者将自然死亡`);
+            }
+            return;
+        }
+
+        if (activeBuilders.length < optimalCount) {
             const result = RemoteBuilderRole.spawn(spawn, targetRoom);
             if (result === OK) {
                 const name = `remoteBuilder_${Game.time}`;
                 activeBuilders.push(name);
                 this.missionData = missions;
-                console.log(`🏗️ 派遣建造者 ${name} 前往 ${targetRoom}`);
+                console.log(`🏗️ 派遣建造者 ${name} 前往 ${targetRoom} (${activeBuilders.length}/${optimalCount})`);
             }
         }
     }

@@ -11,8 +11,10 @@ function bodyCost(body: BodyPartConstant[]): number {
         .reduce((previousValue, currentValue) => previousValue + currentValue)
 }
 
-export function getAvailableSpawn(): StructureSpawn | undefined {
-    return Object.values(Game.spawns).find(it => !it.spawning)
+export function getAvailableSpawn(room: Room): StructureSpawn | undefined {
+    return room.find(FIND_MY_SPAWNS, {
+        filter: it => !it.spawning
+    })[0];
 }
 
 function getSpawnResultStr(result: ScreepsReturnCode): string {
@@ -36,12 +38,12 @@ function getSpawnResultStr(result: ScreepsReturnCode): string {
     }
 }
 
-export function trySpawn(name: string, body: BodyPartConstant[], memory: CreepMemory): boolean {
+export function trySpawn(room: Room, name: string, body: BodyPartConstant[], memory: CreepMemory): boolean {
     if (!globalInfo.canSpawn) {
         return false;
     }
 
-    const spawn = getAvailableSpawn();
+    const spawn = getAvailableSpawn(room);
     if (!spawn) {
         globalInfo.canSpawn = false;
         return false;

@@ -1,5 +1,4 @@
 import {closestHurtStructure} from "./role/utils/findUtils";
-import {LinkManager} from "./link/LinkManager";
 import {getRoomCenter} from "./utils/PositionUtils";
 
 export class TowerController {
@@ -34,17 +33,6 @@ export class TowerController {
         if (needHealStructure) {
             for (const tower of towerArr) {
                 tower.repair(needHealStructure);
-            }
-        }
-    }
-}
-
-export class LinkController {
-    run() {
-        for (const roomName in Game.rooms) {
-            const room = Game.rooms[roomName];
-            if (room.controller && room.controller.my) {
-                LinkManager.manageLinkNetwork(roomName);
             }
         }
     }

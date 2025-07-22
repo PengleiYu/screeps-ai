@@ -133,7 +133,7 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
                 logging: false,
                 isJustBorn: true,
             };
-            trySpawn(config.role + Date.now(), config.body, memory);
+            trySpawn(room, config.role + Date.now(), config.body, memory);
         }
     }
 }

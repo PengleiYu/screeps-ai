@@ -28,30 +28,20 @@ export class RemoteBuilderRole extends ExpeditionRole {
         // }
 
         // 执行批量工作循环：满载采集 -> 满载建造
+        const STATE_BUILD = "build";
+        const STATE_HARVEST = "harvest";
         if (this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
             // store满载，去建造直到耗尽
+            this.creep.memory.workState = STATE_BUILD;
             this.doBuild();
         } else if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
             // store空载，去采集直到满载
+            this.creep.memory.workState = STATE_HARVEST;
             this.collectEnergy();
-        } else {
-            // store部分满载，根据当前距离决定继续哪个工作
-            const prioritySite = this.findPriorityConstructionSite();
-            const distanceToSite = prioritySite ? this.creep.pos.getRangeTo(prioritySite) : 999;
-
-            const nearestSource = this.creep.pos.findClosestByRange(FIND_SOURCES, {
-                filter: source => source.energy > 0
-            });
-            const distanceToSource = nearestSource ? this.creep.pos.getRangeTo(nearestSource) : 999;
-
-            if (distanceToSite <= distanceToSource) {
-                // 距离优先工地更近，继续建造
-                this.doBuild();
-            } else {
-                // 距离能量源更近，继续采集
-                this.collectEnergy();
-            }
         }
+        if (this.creep.memory.workState === STATE_HARVEST) this.collectEnergy();
+        else if (this.creep.memory.workState === STATE_BUILD) this.doBuild();
+        else this.creep.memory.workState = STATE_HARVEST;// 状态不对，初始化状态
     }
 
     // 根据优先级找到最重要的建筑工地
@@ -200,7 +190,7 @@ export class RemoteBuilderRole extends ExpeditionRole {
 
         // 寻找最佳Spawn位置：能量矿附近且能到达控制器
         const bestPosition = this.findOptimalSpawnPosition(room, sources, room.controller);
-        
+
         if (bestPosition) {
             const result = room.createConstructionSite(bestPosition, STRUCTURE_SPAWN);
             if (result === OK) {
@@ -220,28 +210,28 @@ export class RemoteBuilderRole extends ExpeditionRole {
         // 遍历所有能量矿周围的位置
         for (const source of sources) {
             const sourcePos = source.pos;
-            
+
             // 检查能量矿周围合理范围（5-10格）的位置
             for (let distance = 5; distance <= 10; distance++) {
                 for (let dx = -distance; dx <= distance; dx++) {
                     for (let dy = -distance; dy <= distance; dy++) {
                         // 跳过距离不符合的位置
                         if (Math.abs(dx) + Math.abs(dy) !== distance) continue;
-                        
+
                         const x = sourcePos.x + dx;
                         const y = sourcePos.y + dy;
-                        
+
                         // 检查坐标是否在房间范围内
                         if (x < 1 || x > 48 || y < 1 || y > 48) continue;
-                        
+
                         const pos = new RoomPosition(x, y, room.name);
-                        
+
                         // 检查位置是否可用
                         if (!this.isValidSpawnPosition(room, pos)) continue;
-                        
+
                         // 计算位置评分
                         const score = this.calculateSpawnPositionScore(pos, sources, controller);
-                        candidates.push({ pos, score });
+                        candidates.push({pos, score});
                     }
                 }
             }
@@ -253,7 +243,7 @@ export class RemoteBuilderRole extends ExpeditionRole {
 
         // 按评分排序，选择最佳位置
         candidates.sort((a, b) => b.score - a.score);
-        
+
         console.log(`找到${candidates.length}个候选Spawn位置，最佳位置评分: ${candidates[0].score.toFixed(2)}`);
         return candidates[0].pos;
     }
@@ -263,16 +253,16 @@ export class RemoteBuilderRole extends ExpeditionRole {
         // 检查地形是否可建造
         const terrain = room.getTerrain().get(pos.x, pos.y);
         if (terrain & TERRAIN_MASK_WALL) return false;
-        
+
         // 检查是否有其他建筑或建设点
         const structures = pos.lookFor(LOOK_STRUCTURES);
         const sites = pos.lookFor(LOOK_CONSTRUCTION_SITES);
         if (structures.length > 0 || sites.length > 0) return false;
-        
+
         // 基本边缘安全检查 - 至少距离边缘2格
         const edgeDistance = Math.min(pos.x, pos.y, 49 - pos.x, 49 - pos.y);
         if (edgeDistance < 2) return false;
-        
+
         // 基本地形质量检查 - 周围1格内不能全是沼泽或墙壁
         let plainCount = 0;
         let wallCount = 0;
@@ -290,13 +280,13 @@ export class RemoteBuilderRole extends ExpeditionRole {
                 }
             }
         }
-        
+
         // 周围至少要有3个平地位置（包括自己）
         if (plainCount < 3) return false;
-        
+
         // 完全避免紧邻墙壁 - 周围1格内不能有任何墙壁
         if (wallCount > 0) return false;
-        
+
         return true;
     }
 
@@ -307,16 +297,16 @@ export class RemoteBuilderRole extends ExpeditionRole {
         // 1. 到最近能量矿的实际路径距离（权重70%）- 距离适中分数最高
         let minSourcePathDistance = Infinity;
         let minSourceLinearDistance = Infinity;
-        
+
         for (const source of sources) {
             // 计算实际路径距离
             const pathResult = PathFinder.search(pos, {pos: source.pos, range: 1}, {
                 roomCallback: (roomName) => {
                     const room = Game.rooms[roomName];
                     if (!room) return false;
-                    
+
                     const costs = new PathFinder.CostMatrix();
-                    
+
                     // 将墙壁设为不可通行
                     const terrain = room.getTerrain();
                     for (let x = 0; x < 50; x++) {
@@ -326,42 +316,42 @@ export class RemoteBuilderRole extends ExpeditionRole {
                             }
                         }
                     }
-                    
+
                     // 将现有建筑设为不可通行（除了道路）
                     room.find(FIND_STRUCTURES).forEach(structure => {
-                        if (structure.structureType !== STRUCTURE_ROAD && 
+                        if (structure.structureType !== STRUCTURE_ROAD &&
                             structure.structureType !== STRUCTURE_CONTAINER &&
                             structure.structureType !== STRUCTURE_RAMPART) {
                             costs.set(structure.pos.x, structure.pos.y, 255);
                         }
                     });
-                    
+
                     return costs;
                 },
                 maxRooms: 1 // 限制在当前房间内
             });
-            
+
             if (!pathResult.incomplete) {
                 const pathDistance = pathResult.path.length;
                 minSourcePathDistance = Math.min(minSourcePathDistance, pathDistance);
             }
-            
+
             // 备用：直线距离（如果路径查找失败）
             const linearDistance = pos.getRangeTo(source);
             minSourceLinearDistance = Math.min(minSourceLinearDistance, linearDistance);
         }
-        
+
         // 优先使用路径距离，如果不可达则使用直线距离并严重扣分
         let actualDistance = minSourcePathDistance;
         let pathPenalty = 1; // 无惩罚
-        
+
         if (minSourcePathDistance === Infinity) {
             // 路径不可达，使用直线距离并严重扣分
             actualDistance = minSourceLinearDistance;
             pathPenalty = 0.3; // 严重扣分
             console.log(`位置(${pos.x},${pos.y})到能量矿路径不可达，直线距离${minSourceLinearDistance}`);
         }
-        
+
         // 5-10格路径距离最优，11-15格次优
         let sourceScore = 0;
         if (actualDistance >= 5 && actualDistance <= 10) {
@@ -373,7 +363,7 @@ export class RemoteBuilderRole extends ExpeditionRole {
         } else {
             sourceScore = Math.max(0, 20 - actualDistance); // 太远扣分
         }
-        
+
         sourceScore *= pathPenalty; // 应用路径惩罚
         score += sourceScore * 0.7;
 
@@ -395,18 +385,18 @@ export class RemoteBuilderRole extends ExpeditionRole {
                 return costs;
             }
         });
-        
-        const controllerDistance = controllerPathResult.incomplete ? 
+
+        const controllerDistance = controllerPathResult.incomplete ?
             pos.getRangeTo(controller) * 1.5 : // 路径不可达时惩罚
             controllerPathResult.path.length;
-            
+
         const controllerScore = Math.max(0, 20 - controllerDistance);
         score += controllerScore * 0.2;
 
         // 3. 到多个能量矿的平均路径距离（权重10%）
         let totalPathDistance = 0;
         let reachableSourceCount = 0;
-        
+
         for (const source of sources) {
             const pathResult = PathFinder.search(pos, {pos: source.pos, range: 1}, {maxRooms: 1});
             if (!pathResult.incomplete) {
@@ -414,7 +404,7 @@ export class RemoteBuilderRole extends ExpeditionRole {
                 reachableSourceCount++;
             }
         }
-        
+
         if (reachableSourceCount > 0) {
             const avgPathDistance = totalPathDistance / reachableSourceCount;
             const avgScore = Math.max(0, 18 - avgPathDistance);
@@ -462,13 +452,13 @@ export class RemoteBuilderRole extends ExpeditionRole {
             for (let dy = -2; dy <= 2; dy++) {
                 const x = pos.x + dx;
                 const y = pos.y + dy;
-                
+
                 // 确保在房间范围内
                 if (x < 0 || x > 49 || y < 0 || y > 49) continue;
-                
+
                 const terrainType = terrain.get(x, y);
                 totalPositions++;
-                
+
                 // 根据地形类型给分
                 if (terrainType === 0) {
                     score += 3; // 平地最好
@@ -482,7 +472,7 @@ export class RemoteBuilderRole extends ExpeditionRole {
 
         // 计算平均地形质量（可能为负到3分）
         const avgTerrainQuality = totalPositions > 0 ? score / totalPositions : 0;
-        
+
         // 转换为0-10分制，确保不为负
         const normalizedScore = Math.max(0, (avgTerrainQuality + 1) / 4); // 将-1到3的范围映射到0-1
         return normalizedScore * 10;
@@ -606,7 +596,7 @@ export class RemoteBuilderRole extends ExpeditionRole {
         if (workBasedBuilders > totalHarvestCapacity) {
             console.log(`${room.name} 建造者受采集能力限制: 工作量需要${workBasedBuilders}个 -> 采集限制${totalHarvestCapacity}个`);
         }
-        
+
         console.log(`${room.name} 建造者计算: 理论${theoreticalBuilders}个 -> 实际${practicalCount}个 (工作量${totalBuildWork}, 工地${constructionSites.length}个)`);
 
         return practicalCount;
@@ -649,37 +639,37 @@ export class RemoteBuilderRole extends ExpeditionRole {
     // 获取能量矿周围的可访问位置（复用升级者的逻辑）
     private static getAccessiblePositionsAroundSource(room: Room, source: Source): RoomPosition[] {
         const positions: RoomPosition[] = [];
-        
+
         for (let dx = -1; dx <= 1; dx++) {
             for (let dy = -1; dy <= 1; dy++) {
                 if (dx === 0 && dy === 0) continue; // 跳过能量矿自身位置
-                
+
                 const x = source.pos.x + dx;
                 const y = source.pos.y + dy;
-                
+
                 // 检查位置是否在房间范围内
                 if (x < 1 || x > 48 || y < 1 || y > 48) continue;
-                
+
                 const pos = new RoomPosition(x, y, room.name);
-                
+
                 // 检查地形是否可通行
                 const terrain = room.getTerrain().get(x, y);
                 if (terrain === TERRAIN_MASK_WALL) continue;
-                
+
                 // 检查是否有阻挡的建筑物（不包括道路、容器等可通行建筑）
                 const structures = pos.lookFor(LOOK_STRUCTURES);
-                const hasBlockingStructure = structures.some(structure => 
+                const hasBlockingStructure = structures.some(structure =>
                     structure.structureType !== STRUCTURE_ROAD &&
                     structure.structureType !== STRUCTURE_CONTAINER &&
                     structure.structureType !== STRUCTURE_RAMPART
                 );
-                
+
                 if (!hasBlockingStructure) {
                     positions.push(pos);
                 }
             }
         }
-        
+
         return positions;
     }
 

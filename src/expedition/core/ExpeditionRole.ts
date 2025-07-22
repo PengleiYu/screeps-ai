@@ -1,10 +1,11 @@
 // 远征角色基类 - 不继承现有单房间架构
 
-import {ExpeditionMemory, ExpeditionState, MissionPhase, ExpeditionMissionData} from './ExpeditionStates';
+import {ExpeditionMemory, ExpeditionMissionData, ExpeditionState, MissionPhase} from './ExpeditionStates';
 import {ExpeditionPathManager} from './ExpeditionPathManager';
 import {ExpeditionController} from '../ExpeditionController';
 import {
-    findBestExitPosition, getDirectionName,
+    findBestExitPosition,
+    getDirectionName,
     getExitDirectionInEdge,
     getOppositeDirection,
     getRoomDirection
@@ -51,7 +52,7 @@ export abstract class ExpeditionRole {
         const missionData = this.getMissionData();
 
         if (!missionData) {
-            this.log(`❌ 无法获取任务数据`);
+            this.log(`❌ 远行阶段无法获取任务数据`);
             return;
         }
 
@@ -73,7 +74,7 @@ export abstract class ExpeditionRole {
         }
 
         // 继续前往目标房间
-        this.moveToTargetRoom();
+        this.moveToTargetRoom(missionData);
     }
 
 
@@ -95,16 +96,8 @@ export abstract class ExpeditionRole {
     }
 
     // 移动到目标房间
-    private moveToTargetRoom(): void {
+    private moveToTargetRoom(missionData: ExpeditionMissionData): void {
         const currentRoom = this.creep.room.name;
-
-        // 获取任务的完整信息
-        const missionData = this.getMissionData();
-
-        if (!missionData) {
-            this.log(`❌ 无法获取任务数据`);
-            return;
-        }
 
         const {targetRoomName: targetRoom, waypoints, homeRoomName: homeRoom} = missionData;
 

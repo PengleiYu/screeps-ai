@@ -1,4 +1,4 @@
-import {getClosestCmpFun, getMainSpawn,} from "../../utils";
+import {getClosestCmpFun,} from "../../utils";
 import {
     CanGetSource,
     CanPutSource,
@@ -149,13 +149,13 @@ export function closestConstructionSite(pos: RoomPosition) {
 }
 
 export function closestHurtStructure(pos: RoomPosition): Structure | null {
-    return getMainSpawn().pos.findClosestByRange(FIND_STRUCTURES, {
+    return pos.findClosestByRange(FIND_STRUCTURES, {
         filter: it => (it.structureType !== STRUCTURE_WALL && it.hits < it.hitsMax),
     })
 }
 
 export function closestHaveEnergyTower(pos: RoomPosition): StructureTower | null {
-    return getMainSpawn().pos.findClosestByRange(FIND_MY_STRUCTURES, {
+    return pos.findClosestByRange(FIND_MY_STRUCTURES, {
         filter: it =>
             // todo 暂定tower有能量即可，后续再改
             it.structureType === STRUCTURE_TOWER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 0

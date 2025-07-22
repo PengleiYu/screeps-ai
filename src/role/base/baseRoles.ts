@@ -1,4 +1,4 @@
-import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../../utils";
+import {EVENT_LOOP_END, findFlagPos, loopEventBus, Positionable} from "../../utils";
 import {CanGetSource, CanPutSource, CanWork, MyPosition} from "../../types";
 import {EnergyAction, MoveAction} from "./actionTypes";
 import {CreepContext} from "./creepWrapper";
@@ -143,13 +143,16 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doParking() {
         this.log('doParking')
-        const parking = new MoveAction(this.creep, findFlag());
-        if (!parking.isValid()) {
-            this.log('parking无法运行');
-            this.moveState(CreepState.NONE);
-            return;
+        let flag = findFlagPos(this.creep.room);
+        if (flag) {
+            const parking = new MoveAction(this.creep, flag);
+            if (parking.isValid()) {
+                parking.action();
+                return;
+            }
         }
-        parking.action();
+        this.log('parking无法运行');
+        this.moveState(CreepState.NONE);
     }
 
     private doApproachTarget() {

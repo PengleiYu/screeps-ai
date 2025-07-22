@@ -1,10 +1,10 @@
 // 远征控制器 - 协调三阶段远征任务的核心调度器
 
-import { MissionPhase, ExpeditionMissionData } from './core/ExpeditionStates';
-import { RemoteClaimerRole, ROLE_REMOTE_CLAIMER } from './roles/RemoteClaimerRole';
-import { RemoteUpgraderRole, ROLE_REMOTE_UPGRADER } from './roles/RemoteUpgraderRole';
-import { RemoteBuilderRole, ROLE_REMOTE_BUILDER } from './roles/RemoteBuilderRole';
-import { ExpeditionPathManager } from './core/ExpeditionPathManager';
+import {MissionPhase, ExpeditionMissionData} from './core/ExpeditionStates';
+import {RemoteClaimerRole, ROLE_REMOTE_CLAIMER} from './roles/RemoteClaimerRole';
+import {RemoteUpgraderRole, ROLE_REMOTE_UPGRADER} from './roles/RemoteUpgraderRole';
+import {RemoteBuilderRole, ROLE_REMOTE_BUILDER} from './roles/RemoteBuilderRole';
+import {ExpeditionPathManager} from './core/ExpeditionPathManager';
 
 export class ExpeditionController {
     private static get missionData(): { [targetRoom: string]: ExpeditionMissionData } {
@@ -17,16 +17,16 @@ export class ExpeditionController {
     private static set missionData(data: { [targetRoom: string]: ExpeditionMissionData }) {
         Memory.expeditions = data;
     }
-    
+
     static run(): void {
         // 检查所有远征任务
         for (const targetRoom in this.missionData) {
             this.manageMission(targetRoom);
         }
-        
+
         // 运行所有远征creep
         this.runExpeditionCreeps();
-        
+
         // 定期清理过期路径缓存 (每100tick一次)
         if (Game.time % 100 === 0) {
             ExpeditionPathManager.cleanExpiredCache();
@@ -73,7 +73,7 @@ export class ExpeditionController {
 
         // 使用专门的Claimer任务验证
         const claimerValidation = ExpeditionPathManager.validateClaimerMission(finalPath.totalDistance);
-        
+
         if (!claimerValidation.canComplete) {
             console.log(`❌ 距离过远！Claimer无法完成占领任务:`);
             console.log(`   路径距离: ${finalPath.totalDistance} 房间`);
@@ -114,7 +114,7 @@ export class ExpeditionController {
         if (availableSpawn) {
             this.spawnClaimerIfNeeded(targetRoom, availableSpawn);
         }
-        
+
         return true;
     }
 
@@ -154,7 +154,7 @@ export class ExpeditionController {
         const missions = this.missionData;
         const mission = missions[targetRoom];
         const room = Game.rooms[targetRoom];
-        
+
         if (!room) return;
 
         let needsUpdate = false;
@@ -193,7 +193,7 @@ export class ExpeditionController {
     // 维持creep人口
     private static maintainCreepPopulation(targetRoom: string): void {
         const mission = this.missionData[targetRoom];
-        
+
         // 优先使用起始房间的Spawn，其次使用任意可用Spawn
         let availableSpawn = this.getAvailableSpawnInRoom(mission.homeRoomName);
         if (!availableSpawn) {
@@ -238,14 +238,30 @@ export class ExpeditionController {
         const mission = missions[targetRoom];
         const activeUpgraders = mission.activeCreeps[MissionPhase.UPGRADING];
 
-        // 保持1-2个升级者
-        if (activeUpgraders.length < 1) {
+        // 检查是否已达到RCL2，如果是则停止生产新升级者
+        const targetRoomObj = Game.rooms[targetRoom];
+        let level = targetRoomObj?.controller?.level ?? 0;
+        if (level >= 2) {
+            console.log(`${targetRoom} 已达到RCL2，停止生产新升级者 (现有${activeUpgraders.length}个将自然死亡)`);
+            return;
+        }
+
+        // 动态计算最优升级者数量
+        // 获取远征距离用于修正计算
+        const expeditionDistance = ExpeditionPathManager.findPathToRoom(mission.homeRoomName, targetRoom, mission.waypoints)?.totalDistance || 1;
+
+        const optimalBody = RemoteUpgraderRole.getOptimalBody(spawn);
+        const optimalCount = RemoteUpgraderRole.calculateOptimalUpgraderCount(targetRoomObj, optimalBody, expeditionDistance);
+
+        console.log(`${targetRoom} 升级者状态: 当前${activeUpgraders.length}个, 最优${optimalCount}个`);
+
+        if (activeUpgraders.length < optimalCount) {
             const result = RemoteUpgraderRole.spawn(spawn, targetRoom);
             if (result === OK) {
                 const name = `remoteUpgrader_${Game.time}`;
                 activeUpgraders.push(name);
                 this.missionData = missions;
-                console.log(`⚡ 派遣升级者 ${name} 前往 ${targetRoom}`);
+                console.log(`⚡ 派遣升级者 ${name} 前往 ${targetRoom} (${activeUpgraders.length}/${optimalCount})`);
             }
         }
     }
@@ -272,7 +288,7 @@ export class ExpeditionController {
     private static runExpeditionCreeps(): void {
         for (const creepName in Game.creeps) {
             const creep = Game.creeps[creepName];
-            
+
             switch (creep.memory.role) {
                 case ROLE_REMOTE_CLAIMER:
                     new RemoteClaimerRole(creep).run();
@@ -294,10 +310,10 @@ export class ExpeditionController {
     private static cleanupDeadCreeps(): void {
         const missions = this.missionData;
         let needsUpdate = false;
-        
+
         for (const targetRoom in missions) {
             const mission = missions[targetRoom];
-            
+
             for (const phase in mission.activeCreeps) {
                 const originalLength = mission.activeCreeps[phase].length;
                 mission.activeCreeps[phase] = mission.activeCreeps[phase].filter(
@@ -308,7 +324,7 @@ export class ExpeditionController {
                 }
             }
         }
-        
+
         if (needsUpdate) {
             this.missionData = missions;
         }
@@ -323,7 +339,7 @@ export class ExpeditionController {
     private static getAvailableSpawnInRoom(roomName: string): StructureSpawn | null {
         const room = Game.rooms[roomName];
         if (!room) return null;
-        
+
         const spawns = room.find(FIND_MY_SPAWNS);
         return spawns.find(spawn => !spawn.spawning) || null;
     }
@@ -331,7 +347,7 @@ export class ExpeditionController {
     // 调试方法
     static printMissionStatus(): void {
         console.log('=== 远征任务状态 ===');
-        
+
         for (const targetRoom in this.missionData) {
             const mission = this.missionData[targetRoom];
             console.log(`🏠 起始房间: ${mission.homeRoomName}`);
@@ -341,7 +357,7 @@ export class ExpeditionController {
             }
             console.log(`📍 当前阶段: ${mission.currentPhase}`);
             console.log(`⏱️ 阶段开始: ${mission.phaseStartTick} (${Game.time - mission.phaseStartTick} tick前)`);
-            
+
             for (const phase in mission.activeCreeps) {
                 const creeps = mission.activeCreeps[phase];
                 if (creeps.length > 0) {
@@ -350,7 +366,7 @@ export class ExpeditionController {
             }
             console.log('---');
         }
-        
+
         if (Object.keys(this.missionData).length === 0) {
             console.log('当前没有活跃的远征任务');
         }

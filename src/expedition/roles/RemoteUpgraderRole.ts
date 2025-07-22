@@ -20,17 +20,28 @@ export class RemoteUpgraderRole extends ExpeditionRole {
             return;
         }
 
-        // 检查是否已达到RCL2
-        if (controller.level >= 2) {
-            this.log('控制器已达到RCL2，升级阶段完成');
-            return;
-        }
-
-        // 执行工作循环：收集能量 -> 升级控制器
-        if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+        // 执行批量工作循环：满载采集 -> 满载升级
+        if (this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+            // store满载，去升级直到耗尽
+            this.upgradeController(controller);
+        } else if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+            // store空载，去采集直到满载
             this.collectEnergy();
         } else {
-            this.upgradeController(controller);
+            // store部分满载，根据当前距离决定继续哪个工作
+            const distanceToController = this.creep.pos.getRangeTo(controller);
+            const nearestSource = this.creep.pos.findClosestByRange(FIND_SOURCES, {
+                filter: source => source.energy > 0
+            });
+            const distanceToSource = nearestSource ? this.creep.pos.getRangeTo(nearestSource) : 999;
+            
+            if (distanceToController <= distanceToSource) {
+                // 距离控制器更近，继续升级
+                this.upgradeController(controller);
+            } else {
+                // 距离能量源更近，继续采集
+                this.collectEnergy();
+            }
         }
     }
 
@@ -156,6 +167,120 @@ export class RemoteUpgraderRole extends ExpeditionRole {
             MissionPhase.UPGRADING,
             ROLE_REMOTE_UPGRADER
         );
+    }
+
+    // 计算目标房间最优升级者数量（考虑实际运营复杂度）
+    static calculateOptimalUpgraderCount(room: Room | null, upgraderBodyParts: BodyPartConstant[], expeditionDistance?: number): number {
+        if (!room) {
+            console.log(`⚠️ 警告: 房间不存在，无法计算最优升级者数量，返回默认值1`);
+            return 1; // 房间不可见时返回默认值
+        }
+
+        if (!room.controller?.my) {
+            console.log(`⚠️ 警告: 房间 ${room.name} 控制器不属于己方，升级者计算不应在此时调用`);
+            return 1; // 房间不属于己方时返回默认值
+        }
+
+        const sources = room.find(FIND_SOURCES);
+        if (sources.length === 0) {
+            return 1; // 没有能量矿时返回默认值
+        }
+
+        // 计算升级者的工作能力
+        const workParts = upgraderBodyParts.filter(part => part === WORK).length;
+        const harvestPowerPerCreep = workParts * 2; // 每个WORK部件每tick采集2能量
+
+        let theoreticalOptimalUpgraders = 0;
+
+        for (const source of sources) {
+            // 分析能量矿周围的可用位置
+            const accessiblePositions = this.getAccessiblePositionsAroundSource(room, source);
+            const maxCreepsAtSource = accessiblePositions.length;
+
+            // 计算能量矿的产出速度（能量/tick）
+            const sourceRegenRate = source.energyCapacity / 300; // 300tick恢复周期
+
+            // 计算需要多少升级者才能完全采集这个矿的能量
+            const upgradersNeededForThisSource = Math.min(
+                Math.ceil(sourceRegenRate / harvestPowerPerCreep), // 基于采集能力
+                maxCreepsAtSource // 受位置限制
+            );
+
+            theoreticalOptimalUpgraders += upgradersNeededForThisSource;
+
+            console.log(`能量矿 ${source.pos}: 可用位置${maxCreepsAtSource}, 产出${sourceRegenRate.toFixed(1)}/tick, 理论需要${upgradersNeededForThisSource}个升级者`);
+        }
+
+        // 应用实际运营修正因子
+        const practicalCount = this.applyPracticalModifiers(theoreticalOptimalUpgraders, expeditionDistance || 1);
+
+        console.log(`${room.name} 升级者计算: 理论${theoreticalOptimalUpgraders}个 -> 实际${practicalCount}个`);
+
+        // 至少要有1个升级者
+        return Math.max(1, practicalCount);
+    }
+
+    // 应用实际运营修正因子
+    private static applyPracticalModifiers(theoreticalCount: number, expeditionDistance: number): number {
+        // 1. 工作效率因子 (0.6-0.8)
+        // 升级者需要在采集和升级之间切换，不是100%时间在采集
+        const workEfficiencyFactor = 0.7; // 假设70%时间用于采集，30%用于升级和移动
+
+        // 2. 远征距离因子 (基于距离的额外需求)
+        // 距离越远，在途时间越长，需要更多升级者保证连续性
+        const distanceFactor = Math.min(1 + (expeditionDistance - 1) * 0.1, 2.0); // 每房间增加10%，最多100%
+
+        // 3. 生命周期重叠因子 (1.2-1.5)
+        // 考虑升级者死亡和新升级者到达之间的空档期
+        const lifecycleOverlapFactor = 1.3; // 30%的重叠缓冲
+
+        // 4. 实际运营缓冲因子 (1.1-1.3)
+        // 考虑路径阻塞、能量竞争、creep卡位等实际问题
+        const operationalBufferFactor = 1.2; // 20%的运营缓冲
+
+        // 应用所有修正因子
+        const adjustedCount = theoreticalCount / workEfficiencyFactor * distanceFactor * lifecycleOverlapFactor * operationalBufferFactor;
+
+        console.log(`修正因子应用: 工作效率${(1/workEfficiencyFactor).toFixed(2)}x, 距离${distanceFactor.toFixed(2)}x, 生命周期${lifecycleOverlapFactor.toFixed(2)}x, 运营缓冲${operationalBufferFactor.toFixed(2)}x`);
+
+        return Math.ceil(adjustedCount);
+    }
+
+    // 获取能量矿周围的可访问位置
+    private static getAccessiblePositionsAroundSource(room: Room, source: Source): RoomPosition[] {
+        const positions: RoomPosition[] = [];
+        
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                if (dx === 0 && dy === 0) continue; // 跳过能量矿自身位置
+                
+                const x = source.pos.x + dx;
+                const y = source.pos.y + dy;
+                
+                // 检查位置是否在房间范围内
+                if (x < 1 || x > 48 || y < 1 || y > 48) continue;
+                
+                const pos = new RoomPosition(x, y, room.name);
+                
+                // 检查地形是否可通行
+                const terrain = room.getTerrain().get(x, y);
+                if (terrain === TERRAIN_MASK_WALL) continue;
+                
+                // 检查是否有阻挡的建筑物（不包括道路、容器等可通行建筑）
+                const structures = pos.lookFor(LOOK_STRUCTURES);
+                const hasBlockingStructure = structures.some(structure => 
+                    structure.structureType !== STRUCTURE_ROAD &&
+                    structure.structureType !== STRUCTURE_CONTAINER &&
+                    structure.structureType !== STRUCTURE_RAMPART
+                );
+                
+                if (!hasBlockingStructure) {
+                    positions.push(pos);
+                }
+            }
+        }
+        
+        return positions;
     }
 
     // 获取最佳身体配置 - 平衡移动和工作能力

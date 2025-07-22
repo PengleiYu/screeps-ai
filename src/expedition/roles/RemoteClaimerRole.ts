@@ -101,7 +101,7 @@ export class RemoteClaimerRole extends ExpeditionRole {
     // 获取最佳身体配置 - 优先移动能力
     static getOptimalBody(spawn: StructureSpawn): BodyPartConstant[] {
         const room = spawn.room;
-        const availableEnergy = room.energyAvailable;
+        const availableEnergy = room.energyCapacityAvailable;
         
         const bodies = [
             // 高速配置：1 CLAIM + 5 MOVE = 850 能量 (平路1格/tick，沼泽2格/tick)

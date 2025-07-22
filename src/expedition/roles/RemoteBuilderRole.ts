@@ -8,7 +8,7 @@ export const ROLE_REMOTE_BUILDER = 'remoteBuilder';
 export class RemoteBuilderRole extends ExpeditionRole {
 
     protected doWork(): void {
-        const room = this.getTargetRoom();
+        const room = this.creep.room;
         if (!room) {
             this.log('无法访问目标房间，等待房间可见');
             return;
@@ -21,11 +21,11 @@ export class RemoteBuilderRole extends ExpeditionRole {
         }
 
         // 检查是否已有Spawn
-        const existingSpawn = room.find(FIND_MY_SPAWNS)[0];
-        if (existingSpawn) {
-            this.log('Spawn已建成，建造阶段完成');
-            return;
-        }
+        // const existingSpawn = room.find(FIND_MY_SPAWNS)[0];
+        // if (existingSpawn) {
+        //     this.log('Spawn已建成，建造阶段完成');
+        //     return;
+        // }
 
         // 执行批量工作循环：满载采集 -> 满载建造
         if (this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
@@ -36,8 +36,8 @@ export class RemoteBuilderRole extends ExpeditionRole {
             this.collectEnergy();
         } else {
             // store部分满载，根据当前距离决定继续哪个工作
-            const nearestSite = this.creep.pos.findClosestByRange(FIND_MY_CONSTRUCTION_SITES);
-            const distanceToSite = nearestSite ? this.creep.pos.getRangeTo(nearestSite) : 999;
+            const prioritySite = this.findPriorityConstructionSite();
+            const distanceToSite = prioritySite ? this.creep.pos.getRangeTo(prioritySite) : 999;
 
             const nearestSource = this.creep.pos.findClosestByRange(FIND_SOURCES, {
                 filter: source => source.energy > 0
@@ -45,13 +45,35 @@ export class RemoteBuilderRole extends ExpeditionRole {
             const distanceToSource = nearestSource ? this.creep.pos.getRangeTo(nearestSource) : 999;
 
             if (distanceToSite <= distanceToSource) {
-                // 距离工地更近，继续建造
+                // 距离优先工地更近，继续建造
                 this.doBuild();
             } else {
                 // 距离能量源更近，继续采集
                 this.collectEnergy();
             }
         }
+    }
+
+    // 根据优先级找到最重要的建筑工地
+    private findPriorityConstructionSite(): ConstructionSite | null {
+        const room = this.getTargetRoom();
+        if (!room) return null;
+
+        // 1. 优先建造Spawn
+        const spawnSite = this.creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES, {
+            filter: site => site.structureType === STRUCTURE_SPAWN
+        });
+        if (spawnSite) return spawnSite;
+
+        // 2. 建造其他优先建筑（Extension等）
+        const prioritySite = this.creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES, {
+            filter: site => ([STRUCTURE_EXTENSION, STRUCTURE_CONTAINER] as StructureConstant[]).includes(site.structureType)
+        });
+        if (prioritySite) return prioritySite;
+
+        // 3. 建造任意建筑
+        const anySite = this.creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
+        return anySite;
     }
 
     private collectEnergy(): void {
@@ -524,6 +546,29 @@ export class RemoteBuilderRole extends ExpeditionRole {
         // 计算建造者的工作能力
         const workParts = builderBodyParts.filter(part => part === WORK).length;
         const buildPowerPerCreep = workParts * 5; // 每个WORK部件每tick建造5点进度
+        const harvestPowerPerCreep = workParts * 2; // 每个WORK部件每tick采集2能量
+
+        // 分析能量矿的采集能力限制
+        const sources = room.find(FIND_SOURCES);
+        let totalHarvestCapacity = 0; // 总的采集能力上限
+
+        for (const source of sources) {
+            // 分析能量矿周围的可用位置（复用升级者的逻辑）
+            const accessiblePositions = this.getAccessiblePositionsAroundSource(room, source);
+            const maxCreepsAtSource = accessiblePositions.length;
+
+            // 计算能量矿的产出速度（能量/tick）
+            const sourceRegenRate = source.energyCapacity / 300; // 300tick恢复周期
+
+            // 计算这个矿能支持多少建造者同时采集
+            const maxBuildersAtSource = Math.min(
+                Math.ceil(sourceRegenRate / harvestPowerPerCreep), // 基于采集能力
+                maxCreepsAtSource // 受位置限制
+            );
+
+            totalHarvestCapacity += maxBuildersAtSource;
+            console.log(`能量矿 ${source.pos}: 可用位置${maxCreepsAtSource}, 产出${sourceRegenRate.toFixed(1)}/tick, 最多支持${maxBuildersAtSource}个建造者采集`);
+        }
 
         // 计算总建造工作量
         let totalBuildWork = 0;
@@ -545,15 +590,23 @@ export class RemoteBuilderRole extends ExpeditionRole {
         }
 
         console.log(`${room.name} 建筑工地分析: Spawn${spawnSiteCount}个, 优先建筑${prioritySiteCount}个, 其他${otherSiteCount}个, 总工作量${totalBuildWork}`);
+        console.log(`${room.name} 采集能力限制: 最多支持${totalHarvestCapacity}个建造者同时采集`);
 
         // 基于工作量计算理论建造者数量
         // 假设希望在500tick内完成所有建造工作
         const targetCompletionTicks = 500;
-        const theoreticalBuilders = Math.ceil(totalBuildWork / (buildPowerPerCreep * targetCompletionTicks));
+        const workBasedBuilders = Math.ceil(totalBuildWork / (buildPowerPerCreep * targetCompletionTicks));
+
+        // 理论建造者数量不能超过采集能力限制
+        const theoreticalBuilders = Math.min(workBasedBuilders, totalHarvestCapacity);
 
         // 应用实际运营修正因子
         const practicalCount = this.applyBuilderPracticalModifiers(theoreticalBuilders, expeditionDistance || 1, constructionSites.length);
 
+        if (workBasedBuilders > totalHarvestCapacity) {
+            console.log(`${room.name} 建造者受采集能力限制: 工作量需要${workBasedBuilders}个 -> 采集限制${totalHarvestCapacity}个`);
+        }
+        
         console.log(`${room.name} 建造者计算: 理论${theoreticalBuilders}个 -> 实际${practicalCount}个 (工作量${totalBuildWork}, 工地${constructionSites.length}个)`);
 
         return practicalCount;
@@ -568,7 +621,8 @@ export class RemoteBuilderRole extends ExpeditionRole {
         const workEfficiencyFactor = 0.6; // 假设60%时间用于建造，40%用于采集和移动
 
         // 2. 远征距离因子 (基于距离的额外需求)
-        const distanceFactor = Math.min(1 + (expeditionDistance - 1) * 0.08, 1.8); // 每房间增加8%，最多80%
+        // Builder寿命1500tick比Claimer的600tick长很多，距离影响较小
+        const distanceFactor = Math.min(1 + (expeditionDistance - 1) * 0.03, 1.3); // 每房间增加3%，最多30%
 
         // 3. 生命周期重叠因子 
         const lifecycleOverlapFactor = 1.2; // 20%的重叠缓冲（建造者死亡影响小于升级者）
@@ -592,10 +646,47 @@ export class RemoteBuilderRole extends ExpeditionRole {
         return adjustedCount;
     }
 
+    // 获取能量矿周围的可访问位置（复用升级者的逻辑）
+    private static getAccessiblePositionsAroundSource(room: Room, source: Source): RoomPosition[] {
+        const positions: RoomPosition[] = [];
+        
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                if (dx === 0 && dy === 0) continue; // 跳过能量矿自身位置
+                
+                const x = source.pos.x + dx;
+                const y = source.pos.y + dy;
+                
+                // 检查位置是否在房间范围内
+                if (x < 1 || x > 48 || y < 1 || y > 48) continue;
+                
+                const pos = new RoomPosition(x, y, room.name);
+                
+                // 检查地形是否可通行
+                const terrain = room.getTerrain().get(x, y);
+                if (terrain === TERRAIN_MASK_WALL) continue;
+                
+                // 检查是否有阻挡的建筑物（不包括道路、容器等可通行建筑）
+                const structures = pos.lookFor(LOOK_STRUCTURES);
+                const hasBlockingStructure = structures.some(structure => 
+                    structure.structureType !== STRUCTURE_ROAD &&
+                    structure.structureType !== STRUCTURE_CONTAINER &&
+                    structure.structureType !== STRUCTURE_RAMPART
+                );
+                
+                if (!hasBlockingStructure) {
+                    positions.push(pos);
+                }
+            }
+        }
+        
+        return positions;
+    }
+
     // 获取最佳身体配置 - 平衡移动和建造能力
     static getOptimalBody(spawn: StructureSpawn): BodyPartConstant[] {
         const room = spawn.room;
-        const availableEnergy = room.energyAvailable;
+        const availableEnergy = room.energyCapacityAvailable;
 
         const bodies = [
             // 超高速配置：3 WORK + 4 CARRY + 10 MOVE = 1100 能量 (1格/tick移动)

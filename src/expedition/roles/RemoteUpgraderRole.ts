@@ -286,7 +286,7 @@ export class RemoteUpgraderRole extends ExpeditionRole {
     // 获取最佳身体配置 - 平衡移动和工作能力
     static getOptimalBody(spawn: StructureSpawn): BodyPartConstant[] {
         const room = spawn.room;
-        const availableEnergy = room.energyAvailable;
+        const availableEnergy = room.energyCapacityAvailable;
         
         const bodies = [
             // 超高速配置：3 WORK + 3 CARRY + 9 MOVE = 1050 能量 (1格/tick移动)

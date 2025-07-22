@@ -246,14 +246,23 @@ export class ExpeditionController {
             return;
         }
 
-        // 动态计算最优升级者数量
-        // 获取远征距离用于修正计算
+        // 动态计算最优升级者数量（考虑与建造者的采集位竞争）
         const expeditionDistance = ExpeditionPathManager.findPathToRoom(mission.homeRoomName, targetRoom, mission.waypoints)?.totalDistance || 1;
-
         const optimalBody = RemoteUpgraderRole.getOptimalBody(spawn);
-        const optimalCount = RemoteUpgraderRole.calculateOptimalUpgraderCount(targetRoomObj, optimalBody, expeditionDistance);
+        
+        // 计算共享采集能力分配
+        const sharedCapacity = this.calculateSharedHarvestCapacity(targetRoom, mission, spawn);
+        
+        // 升级者不是100%时间采集，需要考虑工作效率
+        const upgraderWorkEfficiency = 0.7; // 假设70%时间用于采集，30%时间用于升级和移动
+        const adjustedMaxUpgraders = Math.floor(sharedCapacity.maxUpgraders / (1 - upgraderWorkEfficiency)); // 采集位置 / 采集时间比例
+        
+        const optimalCount = Math.min(
+            RemoteUpgraderRole.calculateOptimalUpgraderCount(targetRoomObj, optimalBody, expeditionDistance),
+            adjustedMaxUpgraders
+        );
 
-        console.log(`${targetRoom} 升级者状态: 当前${activeUpgraders.length}个, 最优${optimalCount}个`);
+        console.log(`${targetRoom} 升级者状态: 当前${activeUpgraders.length}个, 最优${optimalCount}个 (采集位${sharedCapacity.maxUpgraders}个->调整后${adjustedMaxUpgraders}个)`);
 
         if (activeUpgraders.length < optimalCount) {
             const result = RemoteUpgraderRole.spawn(spawn, targetRoom);
@@ -272,24 +281,32 @@ export class ExpeditionController {
         const mission = missions[targetRoom];
         const activeBuilders = mission.activeCreeps[MissionPhase.BUILDING];
 
-        // 动态计算最优建造者数量
+        // 动态计算最优建造者数量（考虑与升级者的采集位竞争）
         const targetRoomObj = Game.rooms[targetRoom];
-        
-        // 获取远征距离用于修正计算
         const expeditionDistance = ExpeditionPathManager.findPathToRoom(mission.homeRoomName, targetRoom, mission.waypoints)?.totalDistance || 1;
-        
         const optimalBody = RemoteBuilderRole.getOptimalBody(spawn);
-        const optimalCount = RemoteBuilderRole.calculateOptimalBuilderCount(targetRoomObj, optimalBody, expeditionDistance);
         
-        console.log(`${targetRoom} 建造者状态: 当前${activeBuilders.length}个, 最优${optimalCount}个`);
-
+        // 计算基础建造需求
+        const baseBuilderCount = RemoteBuilderRole.calculateOptimalBuilderCount(targetRoomObj, optimalBody, expeditionDistance);
+        
         // 如果不需要建造者，直接返回
-        if (optimalCount === 0) {
+        if (baseBuilderCount === 0) {
             if (activeBuilders.length > 0) {
                 console.log(`${targetRoom} 无建造需求，现有${activeBuilders.length}个建造者将自然死亡`);
             }
             return;
         }
+
+        // 计算共享采集能力分配
+        const sharedCapacity = this.calculateSharedHarvestCapacity(targetRoom, mission, spawn);
+        
+        // 建造者不是100%时间采集，需要考虑工作效率
+        const builderWorkEfficiency = 0.6; // 假设60%时间用于建造，40%时间用于采集和移动
+        const adjustedMaxBuilders = Math.floor(sharedCapacity.maxBuilders / (1 - builderWorkEfficiency)); // 采集位置 / 采集时间比例
+        
+        const optimalCount = Math.min(baseBuilderCount, adjustedMaxBuilders);
+        
+        console.log(`${targetRoom} 建造者状态: 当前${activeBuilders.length}个, 最优${optimalCount}个 (采集位${sharedCapacity.maxBuilders}个->调整后${adjustedMaxBuilders}个)`);
 
         if (activeBuilders.length < optimalCount) {
             const result = RemoteBuilderRole.spawn(spawn, targetRoom);
@@ -300,6 +317,156 @@ export class ExpeditionController {
                 console.log(`🏗️ 派遣建造者 ${name} 前往 ${targetRoom} (${activeBuilders.length}/${optimalCount})`);
             }
         }
+    }
+
+    // 计算升级者和建造者的共享采集能力分配
+    private static calculateSharedHarvestCapacity(targetRoom: string, mission: ExpeditionMissionData, spawn: StructureSpawn): {
+        totalCapacity: number;
+        maxUpgraders: number;
+        maxBuilders: number;
+        currentUpgraders: number;
+        currentBuilders: number;
+    } {
+        const targetRoomObj = Game.rooms[targetRoom];
+        if (!targetRoomObj) {
+            return { totalCapacity: 0, maxUpgraders: 0, maxBuilders: 0, currentUpgraders: 0, currentBuilders: 0 };
+        }
+
+        // 计算总的采集能力
+        const sources = targetRoomObj.find(FIND_SOURCES);
+        let totalHarvestCapacity = 0;
+
+        for (const source of sources) {
+            // 复用建造者的逻辑计算可用位置
+            const accessiblePositions = this.getAccessiblePositionsAroundSource(targetRoomObj, source);
+            const maxCreepsAtSource = accessiblePositions.length;
+
+            // 计算能量矿的产出速度
+            const sourceRegenRate = source.energyCapacity / 300; // 300tick恢复周期
+            
+            // 假设使用标准的WORK部件数量（升级者和建造者body类似）
+            const upgraderBody = RemoteUpgraderRole.getOptimalBody(spawn);
+            const upgraderWorkParts = upgraderBody.filter(part => part === WORK).length;
+            const harvestPowerPerCreep = upgraderWorkParts * 2;
+
+            const maxCreepsAtThisSource = Math.min(
+                Math.ceil(sourceRegenRate / harvestPowerPerCreep),
+                maxCreepsAtSource
+            );
+
+            totalHarvestCapacity += maxCreepsAtThisSource;
+        }
+
+        // 获取当前活跃的creep数量
+        const currentUpgraders = mission.activeCreeps[MissionPhase.UPGRADING].length;
+        const currentBuilders = mission.activeCreeps[MissionPhase.BUILDING].length;
+
+        // 计算分配策略
+        const allocation = this.allocateHarvestCapacity(
+            totalHarvestCapacity,
+            currentUpgraders,
+            currentBuilders,
+            mission.currentPhase
+        );
+
+        console.log(`${targetRoom} 采集能力分配: 总容量${totalHarvestCapacity}, 升级者${allocation.maxUpgraders}个, 建造者${allocation.maxBuilders}个`);
+
+        return {
+            totalCapacity: totalHarvestCapacity,
+            maxUpgraders: allocation.maxUpgraders,
+            maxBuilders: allocation.maxBuilders,
+            currentUpgraders,
+            currentBuilders
+        };
+    }
+
+    // 分配采集能力的策略
+    private static allocateHarvestCapacity(
+        totalCapacity: number,
+        currentUpgraders: number,
+        currentBuilders: number,
+        currentPhase: MissionPhase
+    ): { maxUpgraders: number; maxBuilders: number } {
+        if (totalCapacity === 0) {
+            return { maxUpgraders: 0, maxBuilders: 0 };
+        }
+
+        // 根据当前阶段调整优先级
+        switch (currentPhase) {
+            case MissionPhase.UPGRADING:
+                // 升级阶段优先保证升级者，给建造者预留少量位置
+                const reservedForBuilders = Math.min(2, Math.floor(totalCapacity * 0.3)); // 最多30%给建造者
+                const maxUpgraders = totalCapacity - reservedForBuilders;
+                return {
+                    maxUpgraders: Math.max(1, maxUpgraders),
+                    maxBuilders: reservedForBuilders
+                };
+
+            case MissionPhase.BUILDING:
+                // 建造阶段需要平衡，但升级者仍有一定优先级（因为可能需要继续升级）
+                const currentTotal = currentUpgraders + currentBuilders;
+                if (currentTotal === 0) {
+                    // 没有任何creep时，平均分配
+                    const halfCapacity = Math.floor(totalCapacity / 2);
+                    return {
+                        maxUpgraders: halfCapacity,
+                        maxBuilders: totalCapacity - halfCapacity
+                    };
+                } else {
+                    // 有现有creep时，尽量维持当前比例，但给建造者更多空间
+                    const upgraderRatio = Math.min(0.6, currentUpgraders / currentTotal); // 升级者最多60%
+                    const maxUpgradersInBuilding = Math.floor(totalCapacity * upgraderRatio);
+                    return {
+                        maxUpgraders: maxUpgradersInBuilding,
+                        maxBuilders: totalCapacity - maxUpgradersInBuilding
+                    };
+                }
+
+            default:
+                // 其他阶段平均分配
+                const half = Math.floor(totalCapacity / 2);
+                return {
+                    maxUpgraders: half,
+                    maxBuilders: totalCapacity - half
+                };
+        }
+    }
+
+    // 获取能量矿周围的可访问位置（复用建造者的逻辑）
+    private static getAccessiblePositionsAroundSource(room: Room, source: Source): RoomPosition[] {
+        const positions: RoomPosition[] = [];
+        
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                if (dx === 0 && dy === 0) continue; // 跳过能量矿自身位置
+                
+                const x = source.pos.x + dx;
+                const y = source.pos.y + dy;
+                
+                // 检查位置是否在房间范围内
+                if (x < 1 || x > 48 || y < 1 || y > 48) continue;
+                
+                const pos = new RoomPosition(x, y, room.name);
+                
+                // 检查地形是否可通行
+                const terrain = room.getTerrain().get(x, y);
+                if (terrain === TERRAIN_MASK_WALL) continue;
+                
+                // 检查是否有阻挡的建筑物
+                const structures = pos.lookFor(LOOK_STRUCTURES);
+                const hasBlockingStructure = structures.some(structure => 
+                    structure.structureType !== STRUCTURE_ROAD &&
+                    structure.structureType !== STRUCTURE_CONTAINER &&
+                    structure.structureType !== STRUCTURE_RAMPART
+                );
+                
+                if (!hasBlockingStructure) {
+                    positions.push(pos);
+                }
+            }
+        }
+        
+        return positions;
     }
 
     // 运行所有远征creep

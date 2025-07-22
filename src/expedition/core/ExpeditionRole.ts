@@ -80,22 +80,17 @@ export abstract class ExpeditionRole {
     // 处理在目标房间工作
     private handleWorking(): void {
         const missionData = this.getMissionData();
-
         if (!missionData) {
-            this.log(`❌ 无法获取任务数据，停止工作`);
+            this.log(`远征数据不存在，直接工作`);
+            this.doWork();
             return;
         }
-
         const targetRoom = missionData.targetRoomName;
-
-        // 确保还在目标房间
         if (this.creep.room.name !== targetRoom) {
             this.log(`不在目标房间，重新前往 ${targetRoom}`);
             this.memory.expeditionState = ExpeditionState.TRAVELING;
             return;
         }
-
-        // 执行具体工作
         this.doWork();
     }
 

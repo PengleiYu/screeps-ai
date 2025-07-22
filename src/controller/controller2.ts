@@ -169,7 +169,7 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     {
         role: ROLE_UPGRADER,
         body: BODY_MID_WORKER,
-        maxCnt: 1,
+        maxCnt: 3,
     },
     {
         role: ROLE_HARVESTER,

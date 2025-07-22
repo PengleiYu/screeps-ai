@@ -57,9 +57,15 @@ export abstract class ExpeditionRole {
 
         const targetRoom = missionData.targetRoomName;
 
-
         if (currentRoom === targetRoom) {
-            // 到达目标房间，开始工作
+            const exitDirection = getExitDirectionInEdge(this.creep.pos);
+            if (exitDirection) {
+                const oppositeDirection = getOppositeDirection(exitDirection);
+                const currentPos = `(${this.creep.pos.x},${this.creep.pos.y})`;
+                this.log(`🎯 到达目标房间但在边缘位置${currentPos}，向${getDirectionName(oppositeDirection)}脱离边缘`);
+                this.creep.move(oppositeDirection);
+                return;
+            }
             this.log(`到达目标房间 ${targetRoom}，开始工作`);
             this.memory.expeditionState = ExpeditionState.WORKING;
             this.onArrivedAtTarget();

@@ -90,19 +90,17 @@ export class ExpeditionPathManager {
         return path;
     }
 
-    // 计算移动时间（基于不同的移动速度配置）
+    // 计算移动时间（基于高速Claimer配置）
     private static calculateTravelTime(roomDistance: number): number {
-        // 假设平均每房间50格，考虑不同移动速度
+        // 假设平均每房间50格，使用高速Claimer配置
         const averageDistancePerRoom = 50;
         const totalDistance = roomDistance * averageDistancePerRoom;
         
-        // 保守估计使用较慢的移动速度
-        // 高速creep (1.0格/tick): 直接按距离计算
-        // 中速creep (0.6-0.8格/tick): 增加30-60%时间
-        // 低速creep (0.3-0.5格/tick): 增加100-200%时间
-        const slowSpeedMultiplier = 2.0; // 保守估计，假设较慢移动
+        // 使用高速Claimer配置 (1 CLAIM + 5 MOVE = 1.0格/tick)
+        // 考虑实际地形和路径曲折，增加15%缓冲
+        const highSpeedWithBuffer = 1.15;
         
-        return Math.ceil(totalDistance * slowSpeedMultiplier);
+        return Math.ceil(totalDistance * highSpeedWithBuffer);
     }
 
     // 获取不同身体配置的预估移动时间
@@ -115,9 +113,9 @@ export class ExpeditionPathManager {
         switch (bodyType) {
             case 'claimer':
                 speeds = {
-                    '高速(5MOVE)': 1.0,
-                    '中速(3MOVE)': 0.75, 
-                    '基本(1MOVE)': 0.2
+                    '高速(5MOVE)': 1.0,  // 1 CLAIM + 5 MOVE = 平路1.0格/tick
+                    '中速(3MOVE)': 0.6,  // 1 CLAIM + 3 MOVE = 平路0.6格/tick  
+                    '基本(1MOVE)': 0.2   // 1 CLAIM + 1 MOVE = 平路0.2格/tick
                 };
                 break;
             case 'upgrader':
@@ -146,6 +144,37 @@ export class ExpeditionPathManager {
         }
         
         return result;
+    }
+
+    // 验证Claimer是否能够完成远征任务
+    static validateClaimerMission(roomDistance: number): { canComplete: boolean; travelTime: number; workTime: number; recommendation: string } {
+        const averageDistancePerRoom = 50;
+        const totalDistance = roomDistance * averageDistancePerRoom;
+        const claimerLifetime = 600;
+        
+        // 使用高速Claimer配置计算 (1 CLAIM + 5 MOVE)
+        const highSpeedTravelTime = Math.ceil(totalDistance / 1.0 * 1.15); // 15%缓冲
+        const highSpeedWorkTime = claimerLifetime - highSpeedTravelTime;
+        
+        // 判断是否可行 (需要至少50tick工作时间)
+        const canComplete = highSpeedWorkTime >= 50;
+        
+        let recommendation = '';
+        if (!canComplete) {
+            const maxDistance = Math.floor((claimerLifetime - 50) / (averageDistancePerRoom * 1.15));
+            recommendation = `建议选择距离不超过${maxDistance}房间的目标`;
+        } else if (highSpeedWorkTime < 150) {
+            recommendation = '距离较远，建议使用高能量房间确保能生产高速Claimer';
+        } else {
+            recommendation = '距离合适，Claimer可以顺利完成任务';
+        }
+        
+        return {
+            canComplete,
+            travelTime: highSpeedTravelTime,
+            workTime: highSpeedWorkTime,
+            recommendation
+        };
     }
 
     // 验证路径的完整性和正确性

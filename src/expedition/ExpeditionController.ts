@@ -64,6 +64,31 @@ export class ExpeditionController {
             }
         }
 
+        // 验证Claimer寿命是否足够
+        const finalPath = path || ExpeditionPathManager.findPathToRoom(homeRoom, targetRoom);
+        if (!finalPath) {
+            console.log(`❌ 无法获取有效路径进行距离验证`);
+            return false;
+        }
+
+        // 使用专门的Claimer任务验证
+        const claimerValidation = ExpeditionPathManager.validateClaimerMission(finalPath.totalDistance);
+        
+        if (!claimerValidation.canComplete) {
+            console.log(`❌ 距离过远！Claimer无法完成占领任务:`);
+            console.log(`   路径距离: ${finalPath.totalDistance} 房间`);
+            console.log(`   预估旅行: ${claimerValidation.travelTime} tick`);
+            console.log(`   剩余工作: ${claimerValidation.workTime} tick (需要至少50tick)`);
+            console.log(`💡 ${claimerValidation.recommendation}`);
+            return false;
+        }
+
+        console.log(`✅ Claimer任务可行性验证通过:`);
+        console.log(`   路径距离: ${finalPath.totalDistance} 房间`);
+        console.log(`   预估旅行: ${claimerValidation.travelTime} tick`);
+        console.log(`   剩余工作: ${claimerValidation.workTime} tick`);
+        console.log(`💡 ${claimerValidation.recommendation}`);
+
         const waypointStr = waypoints && waypoints.length > 0 ? ` (经由 ${waypoints.join(' -> ')})` : '';
         console.log(`🏴‍☠️ 开始远征任务: ${homeRoom} -> ${targetRoom}${waypointStr}`);
         ExpeditionPathManager.printPathInfo(homeRoom, targetRoom, waypoints);

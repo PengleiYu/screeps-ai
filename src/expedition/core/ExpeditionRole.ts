@@ -153,9 +153,9 @@ export abstract class ExpeditionRole {
             if (roomDirection === exitDirection) { // 目标方位和移动方向相同，离开房间
                 this.log(`🚶 边缘位置${currentPos} 向${getDirectionName(exitDirection)}离开 ${this.creep.room.name} -> ${roomName}`);
                 return creep.move(exitDirection);
-            } else {// 目标方位和移动方向不同，反向进入房间
+            } else {// 目标方位和移动方向不同，先离开边沿位置，进入房间内部再做计划
                 let oppositeDirection = getOppositeDirection(exitDirection);
-                this.log(`🔄 边缘位置${currentPos} 向${getDirectionName(oppositeDirection)}调整回房间内部 (目标方向: ${getDirectionName(roomDirection)})`);
+                this.log(`🔄 边缘位置${currentPos} 方向不对，向${getDirectionName(oppositeDirection)}进入房间内部重新规划 (正确方向: ${getDirectionName(roomDirection)})`);
                 return creep.move(oppositeDirection);
             }
         }

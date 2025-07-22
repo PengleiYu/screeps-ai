@@ -1,4 +1,4 @@
-import {getClosestCmpFun, getMainSpawn,} from "../../utils";
+import {getClosestCmpFun,} from "../../utils";
 import {
     CanGetSource,
     CanPutSource,
@@ -144,18 +144,28 @@ export function closestNotFullTower(pos: RoomPosition): StructureTower | null {
     })
 }
 
-export function closestConstructionSite(pos: RoomPosition) {
-    return pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES)
+export function closestHighPriorityConstructionSite(pos: RoomPosition): ConstructionSite | null {
+    function findSiteByType(structureType: StructureConstant): ConstructionSite | null {
+        return pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES, {
+            filter: it => it.structureType === structureType,
+        })
+    }
+
+    return findSiteByType(STRUCTURE_SPAWN)
+        ?? findSiteByType(STRUCTURE_EXTENSION)
+        ?? findSiteByType(STRUCTURE_CONTAINER)
+        ?? findSiteByType(STRUCTURE_STORAGE)
+        ?? pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
 }
 
 export function closestHurtStructure(pos: RoomPosition): Structure | null {
-    return getMainSpawn().pos.findClosestByRange(FIND_STRUCTURES, {
+    return pos.findClosestByRange(FIND_STRUCTURES, {
         filter: it => (it.structureType !== STRUCTURE_WALL && it.hits < it.hitsMax),
     })
 }
 
 export function closestHaveEnergyTower(pos: RoomPosition): StructureTower | null {
-    return getMainSpawn().pos.findClosestByRange(FIND_MY_STRUCTURES, {
+    return pos.findClosestByRange(FIND_MY_STRUCTURES, {
         filter: it =>
             // todo 暂定tower有能量即可，后续再改
             it.structureType === STRUCTURE_TOWER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 0

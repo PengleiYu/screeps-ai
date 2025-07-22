@@ -1,21 +1,20 @@
-import {LinkController, TowerController} from "./army";
 import {EVENT_LOOP_END, globalInfo, loopEventBus} from "./utils";
-import {loop2} from "./controller/controller2";
+import {runRoom} from "./controller/controller";
 import {LinkManager} from "./link/LinkManager";
 import {ExpeditionController} from "./expedition/ExpeditionController";
 import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
+import {BodyConfigManager} from "./body/BodyConfigManager";
 
 
 global.LinkManager = LinkManager;
 global.ExpeditionController = ExpeditionController;
 global.ExpeditionPathManager = ExpeditionPathManager;
+global.BodyConfigManager = BodyConfigManager;
 
 export function loop() {
     globalInfo.canSpawn = true;
-    loop2();
-    new TowerController().run();
-    new LinkController().run();
-    
+    Object.values(Game.rooms).forEach(runRoom);
+
     // 运行远征系统
     ExpeditionController.run();
 

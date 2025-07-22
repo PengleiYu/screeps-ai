@@ -1,10 +1,10 @@
 import {CanGetSource, CanPutSource, CanWork} from "../../types";
 import {EnergyRole} from "./EnergyRole";
-import {closestConstructionSite, closestSourceAndCanWithdrawNoSpawn} from "../utils/findUtils";
+import {closestHighPriorityConstructionSite, closestSourceAndCanWithdrawNoSpawn} from "../utils/findUtils";
 
 export class BuilderRole extends EnergyRole {
     protected findCanWork(): CanWork | CanPutSource | null {
-        return closestConstructionSite(this.creep.pos);
+        return closestHighPriorityConstructionSite(this.creep.pos);
     }
 
     protected findCanGetSource(): CanGetSource | null {

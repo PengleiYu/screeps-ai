@@ -1,4 +1,4 @@
-import {EVENT_LOOP_END, findFlag, loopEventBus, Positionable} from "../../utils";
+import {EVENT_LOOP_END, findFlagPos, loopEventBus, Positionable} from "../../utils";
 import {CanGetSource, CanPutSource, CanWork, MyPosition} from "../../types";
 import {EnergyAction, MoveAction} from "./actionTypes";
 import {CreepContext} from "./creepWrapper";
@@ -56,7 +56,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     protected abstract findEnergyPutDown(): EnergyAction<CanPutSource> ;
 
-    private get state(): CreepState {
+    protected get state(): CreepState {
         return this.creep.memory.lifeState ?? CreepState.NONE;
     }
 
@@ -66,7 +66,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private moveState(target: CreepState) {
         if (this.moveStateCalledCnt > 10) {
-            console.log('有问题，moveState调用次数过多', this.moveStateCalledCnt);
+            console.log('有问题，moveState调用次数过多', this.moveStateCalledCnt, this.creep.room.name, this.creep.name);
             return;
         }
         this.moveStateCalledCnt++;
@@ -143,13 +143,16 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private doParking() {
         this.log('doParking')
-        const parking = new MoveAction(this.creep, findFlag());
-        if (!parking.isValid()) {
-            this.log('parking无法运行');
-            this.moveState(CreepState.NONE);
-            return;
+        let flag = findFlagPos(this.creep.room);
+        if (flag) {
+            const parking = new MoveAction(this.creep, flag);
+            if (parking.isValid()) {
+                parking.action();
+                return;
+            }
         }
-        parking.action();
+        this.log('parking无法运行');
+        this.moveState(CreepState.NONE);
     }
 
     private doApproachTarget() {
@@ -270,7 +273,7 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         }
         const result = this.canWork2Action(this.findCanWork());
         this.log('回忆无效，搜索到新work', result.target);
-        if (result.isValid()) {
+        if (this.state === CreepState.WORK && result.isValid()) {
             this.log('记忆work');
             this.setMemoryWork(result.target);
         } else {

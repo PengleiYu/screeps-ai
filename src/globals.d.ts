@@ -32,7 +32,7 @@ declare global {
         targetRoomName?: string;
         missionPhase?: MissionPhase;
         expeditionStartTick?: number;
-        
+
         // 震荡检测
         lastRoomName?: string;
         roomSwitchCount?: number;
@@ -48,5 +48,6 @@ declare global {
         LinkManager: typeof import("./link/LinkManager").LinkManager;
         ExpeditionController: typeof import("./expedition/ExpeditionController").ExpeditionController;
         ExpeditionPathManager: typeof import("./expedition/core/ExpeditionPathManager").ExpeditionPathManager;
+        BodyConfigManager: typeof import("./body/BodyConfigManager").BodyConfigManager;
     };
 }

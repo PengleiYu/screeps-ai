@@ -51,13 +51,13 @@ export function getExitDirectionInEdge(pos: RoomPosition): DirectionConstant | n
     if (pos.x === 49 && pos.y === 0) return TOP_RIGHT;     // 东北角
     if (pos.x === 0 && pos.y === 49) return BOTTOM_LEFT;   // 西南角
     if (pos.x === 49 && pos.y === 49) return BOTTOM_RIGHT; // 东南角
-    
+
     // 处理边缘位置（正交方向）
     if (pos.x === 0) return LEFT;     // 西边缘
     if (pos.x === 49) return RIGHT;   // 东边缘
     if (pos.y === 0) return TOP;      // 北边缘
     if (pos.y === 49) return BOTTOM;  // 南边缘
-    
+
     return null; // 不在边缘
 }
 
@@ -98,4 +98,8 @@ export function getDirectionName(direction: DirectionConstant): string | null {
         default:
             return null;
     }
+}
+
+export function getRoomCenter(room: Room): RoomPosition {
+    return new RoomPosition(25, 25, room.name);
 }

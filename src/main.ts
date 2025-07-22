@@ -2,15 +2,22 @@ import {LinkController, TowerController} from "./army";
 import {EVENT_LOOP_END, globalInfo, loopEventBus} from "./utils";
 import {loop2} from "./controller/controller2";
 import {LinkManager} from "./link/LinkManager";
+import {ExpeditionController} from "./expedition/ExpeditionController";
+import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
 
 
 global.LinkManager = LinkManager;
+global.ExpeditionController = ExpeditionController;
+global.ExpeditionPathManager = ExpeditionPathManager;
 
 export function loop() {
     globalInfo.canSpawn = true;
     loop2();
     new TowerController().run();
     new LinkController().run();
+    
+    // 运行远征系统
+    ExpeditionController.run();
 
     if (Game.time % 20 === 0) {
         lowFrequencyOperation();

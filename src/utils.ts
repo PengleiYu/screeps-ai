@@ -38,18 +38,10 @@ function getSpawnResultStr(result: ScreepsReturnCode): string {
     }
 }
 
-export function trySpawn(room: Room, name: string, body: BodyPartConstant[], memory: CreepMemory): boolean {
-    if (!globalInfo.canSpawn) {
-        return false;
-    }
+export function trySpawn(spawn: StructureSpawn, name: string, body: BodyPartConstant[], memory: CreepMemory): boolean {
 
-    const spawn = getAvailableSpawn(room);
-    if (!spawn) {
-        globalInfo.canSpawn = false;
-        return false;
-    }
     const result = spawn.spawnCreep(body, name, {memory: memory});
-    console.log(`${spawn.name}正在孵化${memory.role}:${name}, result=${getSpawnResultStr(result)}`);
+    console.log(`${spawn.room.name} ${spawn.name}正在孵化${memory.role}:${name}, result=${getSpawnResultStr(result)}`);
     if (result === ERR_NOT_ENOUGH_ENERGY) {
         console.log(`孵化失败，需要能量${(bodyCost(body))}, 可用${(spawn.room.energyAvailable)}, 上限${(spawn.room.energyCapacityAvailable)}`);
     }
@@ -74,3 +66,14 @@ export function findFlagPos(room: Room): RoomPosition | null {
 
 export const loopEventBus = new EventBus();
 export const EVENT_LOOP_END = "event_loop_end";
+
+export function getAllCreeps(room: Room) {
+    let spawningCreeps = room.find(FIND_MY_SPAWNS)
+        .map(it => {
+            const name = it.spawning?.name;
+            return name ? Game.creeps[name] : null;
+        })
+        .filter(it => !!it);
+    let existCreeps = room.find(FIND_MY_CREEPS);
+    return [...existCreeps, ...spawningCreeps];
+}

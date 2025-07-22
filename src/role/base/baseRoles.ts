@@ -56,7 +56,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     protected abstract findEnergyPutDown(): EnergyAction<CanPutSource> ;
 
-    private get state(): CreepState {
+    protected get state(): CreepState {
         return this.creep.memory.lifeState ?? CreepState.NONE;
     }
 
@@ -66,7 +66,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
 
     private moveState(target: CreepState) {
         if (this.moveStateCalledCnt > 10) {
-            console.log('有问题，moveState调用次数过多', this.moveStateCalledCnt);
+            console.log('有问题，moveState调用次数过多', this.moveStateCalledCnt, this.creep.room.name, this.creep.name);
             return;
         }
         this.moveStateCalledCnt++;
@@ -273,7 +273,7 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         }
         const result = this.canWork2Action(this.findCanWork());
         this.log('回忆无效，搜索到新work', result.target);
-        if (result.isValid()) {
+        if (this.state === CreepState.WORK && result.isValid()) {
             this.log('记忆work');
             this.setMemoryWork(result.target);
         } else {

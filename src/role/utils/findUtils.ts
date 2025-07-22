@@ -144,8 +144,18 @@ export function closestNotFullTower(pos: RoomPosition): StructureTower | null {
     })
 }
 
-export function closestConstructionSite(pos: RoomPosition) {
-    return pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES)
+export function closestHighPriorityConstructionSite(pos: RoomPosition): ConstructionSite | null {
+    function findSiteByType(structureType: StructureConstant): ConstructionSite | null {
+        return pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES, {
+            filter: it => it.structureType === structureType,
+        })
+    }
+
+    return findSiteByType(STRUCTURE_SPAWN)
+        ?? findSiteByType(STRUCTURE_EXTENSION)
+        ?? findSiteByType(STRUCTURE_CONTAINER)
+        ?? findSiteByType(STRUCTURE_STORAGE)
+        ?? pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
 }
 
 export function closestHurtStructure(pos: RoomPosition): Structure | null {

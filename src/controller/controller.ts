@@ -13,18 +13,19 @@ import {
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/base/baseRoles";
 import {SpawnSupplierRole} from "../role/logistics/SpawnSupplierRole";
-import {getClosestCmpFun, trySpawn} from "../utils";
+import {getAllCreeps, getAvailableSpawn, getClosestCmpFun, trySpawn} from "../utils";
 import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
 import {
-    closestConstructionSite,
+    closestHighPriorityConstructionSite,
     closestEnergyMineralStructure,
     closestEnergyNotEmptyStorage,
     closestEnergyNotFullContainerNearController,
     closestHaveEnergyTower,
     closestHurtStructure,
     closestMineral,
+    closestNotFullStorage,
     closestNotFullTower
 } from "../role/utils/findUtils";
 import {ContainerToStorageRole} from "../role/logistics/ContainerToStorageRole";
@@ -39,6 +40,8 @@ import {LinkManager} from "../link/LinkManager";
 import {BodyConfigManager} from "../body/BodyConfigManager";
 
 export function runRoom(room: Room) {
+    room.find(FIND_MY_CREEPS).forEach(runCreep);
+
     new TowerController(room).run();
     spawnIfNeed(room, SPAWN_CONFIGS);
     LinkManager.manageLinkNetwork(room.name);
@@ -118,21 +121,24 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
 }
 
 function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
-    const map = room.find(FIND_MY_CREEPS)
+    let allCreeps = getAllCreeps(room);
+    const map = allCreeps
         .map(it => it.memory.role)
         .reduce((map, key) =>
                 key ? map.set(key, (map.get(key) || 0) + 1) : map,
             new Map<string, number>());
-    // console.log('role数量统计', JSON.stringify(mapToObj(map)));
+    let spawn = getAvailableSpawn(room);
+    if (!spawn) return;
 
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
         if (expectCnt > 0 && shouldSpawn(room, config)) {
+            console.log(room.name, config.role, '还差', expectCnt, 'spawn', spawn);
             // 动态生成body配置
             const dynamicBody = BodyConfigManager.getOptimalBody(config.role, config.body, room);
             if (dynamicBody.length === 0) {
                 console.log(`⚠️ 房间 ${room.name} 无法为角色 ${config.role} 生成body，跳过孵化`);
-                continue;
+                break;
             }
 
             const memory: CreepMemory = {
@@ -141,7 +147,7 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
                 logging: false,
                 isJustBorn: true,
             };
-            trySpawn(room, config.role + Date.now(), dynamicBody, memory);
+            trySpawn(spawn, config.role + Date.now(), dynamicBody, memory);
             break;
         }
     }
@@ -151,17 +157,21 @@ function shouldSpawn(room: Room, config: SpawnConfig): boolean {
     let pos = getRoomCenter(room);
     switch (config.role) {
         case ROLE_MINER:
-            return !!closestMineral(pos);
+            return !!closestMineral(pos) && !!closestNotFullStorage(pos);
         case ROLE_STORAGE_2_TOWER_TRANSFER:
             return !!closestNotFullTower(pos);
         case ROLE_BUILDER:
-            return !!closestConstructionSite(pos);
+            return !!closestHighPriorityConstructionSite(pos);
         case ROLE_REPAIRER:
             return !closestHaveEnergyTower(pos) && !!closestHurtStructure(pos);
         case ROLE_CONTAINER_2_STORAGE_TRANSFER:
-            return !!room.controller && !!closestEnergyMineralStructure(pos)
+            return !!room.controller && !!closestEnergyMineralStructure(pos) && !!closestNotFullStorage(pos);
         case ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER:
             return !!closestEnergyNotFullContainerNearController(pos) && !!closestEnergyNotEmptyStorage(pos);
+        case ROLE_HARVESTER_FAR:
+            return room.find(FIND_SOURCES).length > 1;
+        case ROLE_SWEEP_2_STORAGE_TRANSFER:
+            return !!closestNotFullStorage(pos);
     }
     return true;
 }
@@ -189,7 +199,7 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     },
     {
         role: ROLE_UPGRADER,
-        body: BODY_MID_WORKER,
+        body: BODY_SMALL_WORKER,
         maxCnt: 3,
     },
     {
@@ -208,6 +218,16 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         maxCnt: 1,
     },
     {
+        role: ROLE_SWEEP_2_STORAGE_TRANSFER,
+        body: BODY_TRANSFER,
+        maxCnt: 1,
+    },
+    {
+        role: ROLE_REPAIRER,
+        body: BODY_SMALL_WORKER,
+        maxCnt: 1,
+    },
+    {
         role: ROLE_HARVESTER_FAR,
         body: BODY_MID_WORKER,
         maxCnt: 1,
@@ -218,11 +238,6 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         maxCnt: 3,
     },
     {
-        role: ROLE_SWEEP_2_STORAGE_TRANSFER,
-        body: BODY_TRANSFER,
-        maxCnt: 1,
-    },
-    {
         role: ROLE_STORAGE_2_TOWER_TRANSFER,
         body: BODY_TRANSFER,
         maxCnt: 1,
@@ -230,11 +245,6 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     {
         role: ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
         body: BODY_TRANSFER,
-        maxCnt: 1,
-    },
-    {
-        role: ROLE_REPAIRER,
-        body: BODY_SMALL_WORKER,
         maxCnt: 1,
     }
 ] as const;

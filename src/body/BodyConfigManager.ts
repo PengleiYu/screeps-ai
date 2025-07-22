@@ -109,13 +109,13 @@ export class BodyConfigManager {
         // 如果预设模板可以满足，则直接使用
         let bodyCost = this.calculateUnitCost2(body);
         if (bodyCost <= availableEnergy) {
-            console.log(`${role}使用预设模板`);
+            console.log(`房间 ${room.name} ${role}使用预设模板`);
             return body;
         }
 
         let profile = this.getBodyProfile(role);
         if (!profile) {
-            console.log(`⚠️ 未找到角色 ${role} 的body配置模板，使用默认worker配置`);
+            console.log(`⚠️ 房间 ${room.name} 未找到角色 ${role} 的body配置模板，使用默认worker配置`);
             profile = BodyConfigManager.BODY_PROFILES['worker'];
         }
 

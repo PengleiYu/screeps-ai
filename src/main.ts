@@ -1,5 +1,5 @@
 import {EVENT_LOOP_END, globalInfo, loopEventBus} from "./utils";
-import {runCreep, runRoom} from "./controller/controller";
+import {runRoom} from "./controller/controller";
 import {LinkManager} from "./link/LinkManager";
 import {ExpeditionController} from "./expedition/ExpeditionController";
 import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
@@ -13,7 +13,6 @@ global.BodyConfigManager = BodyConfigManager;
 
 export function loop() {
     globalInfo.canSpawn = true;
-    Object.values(Game.creeps).forEach(runCreep)
     Object.values(Game.rooms).forEach(runRoom);
 
     // 运行远征系统

@@ -1,6 +1,6 @@
 // 远征控制器 - 协调三阶段远征任务的核心调度器
 
-import {MissionPhase, ExpeditionMissionData} from './core/ExpeditionStates';
+import {ExpeditionMissionData, MissionPhase} from './core/ExpeditionStates';
 import {RemoteClaimerRole, ROLE_REMOTE_CLAIMER} from './roles/RemoteClaimerRole';
 import {RemoteUpgraderRole, ROLE_REMOTE_UPGRADER} from './roles/RemoteUpgraderRole';
 import {RemoteBuilderRole, ROLE_REMOTE_BUILDER} from './roles/RemoteBuilderRole';
@@ -196,9 +196,6 @@ export class ExpeditionController {
 
         // 优先使用起始房间的Spawn，其次使用任意可用Spawn
         let availableSpawn = this.getAvailableSpawnInRoom(mission.homeRoomName);
-        if (!availableSpawn) {
-            availableSpawn = this.getAvailableSpawn();
-        }
         if (!availableSpawn) return;
 
         switch (mission.currentPhase) {
@@ -516,11 +513,7 @@ export class ExpeditionController {
     }
 
     // 获取可用的Spawn（优先从所有房间中选择）
-    private static getAvailableSpawn(): StructureSpawn | null {
-        return Object.values(Game.spawns).find(spawn => !spawn.spawning) || null;
-    }
-
-    // 获取指定房间中可用的Spawn
+// 获取指定房间中可用的Spawn
     private static getAvailableSpawnInRoom(roomName: string): StructureSpawn | null {
         const room = Game.rooms[roomName];
         if (!room) return null;
@@ -575,7 +568,7 @@ export class ExpeditionController {
 
         // 杀死所有相关的远征creep
         if (killCreeps) {
-            this.killExpeditionCreeps(targetRoom, mission);
+            this.killExpeditionCreeps(mission);
         } else {
             console.log(`⚠️ 远征creep将继续存活，但不会有新的任务指派`);
         }
@@ -608,7 +601,7 @@ export class ExpeditionController {
             const mission = missions[targetRoom];
             
             if (killCreeps) {
-                this.killExpeditionCreeps(targetRoom, mission);
+                this.killExpeditionCreeps(mission);
             }
 
             // 清理路径缓存
@@ -627,7 +620,7 @@ export class ExpeditionController {
     }
 
     // 杀死指定任务的所有远征creep
-    private static killExpeditionCreeps(targetRoom: string, mission: ExpeditionMissionData): void {
+    private static killExpeditionCreeps(mission: ExpeditionMissionData): void {
         let killedCount = 0;
         
         // 杀死所有阶段的creep

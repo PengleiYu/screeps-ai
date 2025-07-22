@@ -199,7 +199,7 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
     },
     {
         role: ROLE_UPGRADER,
-        body: BODY_SMALL_WORKER,
+        body: BODY_MID_WORKER,
         maxCnt: 3,
     },
     {

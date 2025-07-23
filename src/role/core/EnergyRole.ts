@@ -11,7 +11,7 @@ export abstract class EnergyRole extends MemoryRole {
     }
 
     protected isStoreFull(): boolean {
-        return this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0;
+        return this.freeEnergyCapacity() === 0;
     }
 
     protected isStoreEmpty(): boolean {
@@ -24,5 +24,9 @@ export abstract class EnergyRole extends MemoryRole {
 
     protected canGetSource2Action(canGet: CanGetSource | null): EnergyAction<CanGetSource> {
         return actionOfGetSource(this.creep, canGet);
+    }
+
+    protected freeEnergyCapacity() {
+        return this.creep.store.getFreeCapacity(RESOURCE_ENERGY);
     }
 }

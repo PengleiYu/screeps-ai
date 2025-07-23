@@ -20,32 +20,42 @@ export class RemoteInvaderRole extends ExpeditionRole {
             return;
         }
 
-
-        let pos = this.creep.pos;
-        let hostileCreep = pos.findClosestByPath(FIND_HOSTILE_CREEPS);
-        if (hostileCreep != null) {
-            this.attackCreep(hostileCreep);
-            return;
+        // 优先级1: 攻击Invader creeps
+        const invaderCreeps = room.find(FIND_HOSTILE_CREEPS, {
+            filter: creep => creep.owner.username === 'Invader'
+        });
+        if (invaderCreeps.length > 0) {
+            const closestInvader = this.creep.pos.findClosestByRange(invaderCreeps);
+            if (closestInvader) {
+                this.attack(closestInvader);
+                return;
+            }
         }
 
-        // controller被敌人占领了
-        if (!controller.my && controller.owner != null) {
-            this.attackController(controller);
-            return;
+        // 优先级2: 攻击InvaderCore (最重要的威胁源)
+        const invaderCores = room.find(FIND_HOSTILE_STRUCTURES, {
+            filter: structure => structure.structureType === STRUCTURE_INVADER_CORE
+        });
+        if (invaderCores.length > 0) {
+            const closestCore = this.creep.pos.findClosestByRange(invaderCores);
+            if (closestCore) {
+                this.log(`攻击InvaderCore: 等级${closestCore.level} @ (${closestCore.pos.x},${closestCore.pos.y})`);
+                this.attack(closestCore);
+                return;
+            }
         }
 
-        console.log('入侵者', this.creep.name, "没有敌对目标");
+        // 没有Invader威胁时待命
+        this.log('没有发现Invader威胁，在房间中心待命');
+        const target = new RoomPosition(25, 25, this.creep.room.name);
+        if (!this.creep.pos.isNearTo(target)) {
+            this.creep.moveTo(target);
+        }
     }
 
-    private attackController(controller: StructureController) {
-        if (this.creep.attackController(controller) === ERR_NOT_IN_RANGE) {
-            this.creep.moveTo(controller);
-        }
-    }
-
-    private attackCreep(hostileCreep: Creep) {
-        if (this.creep.attack(hostileCreep) === ERR_NOT_IN_RANGE) {
-            this.creep.moveTo(hostileCreep);
+    private attack(hostile: Creep | Structure) {
+        if (this.creep.attack(hostile) === ERR_NOT_IN_RANGE) {
+            this.creep.moveTo(hostile);
         }
     }
 

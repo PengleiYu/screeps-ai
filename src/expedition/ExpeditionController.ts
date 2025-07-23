@@ -112,13 +112,6 @@ export class ExpeditionController {
             }
         };
         this.missionData = missions;
-
-        // 立即派遣第一个占领者
-        const availableSpawn = this.getAvailableSpawnInRoom(homeRoom);
-        if (availableSpawn) {
-            this.spawnClaimerIfNeeded(targetRoom, availableSpawn);
-        }
-
         return true;
     }
 
@@ -171,15 +164,25 @@ export class ExpeditionController {
                 }
                 break;
             case MissionPhase.INVADING:
-                // controller是否被其他人控制
-                if (room.controller && (room.controller.my || room.controller.owner == null)) {
-                    console.log(`✅ 阶段0完成: ${targetRoom} 已被入侵`);
+                if (room == null) break;
+                // 检查是否还有Invader威胁
+                const hasInvaderCreeps = room.find(FIND_HOSTILE_CREEPS, {
+                    filter: creep => creep.owner.username === 'Invader'
+                }).length > 0;
+
+                const hasInvaderCore = room.find(FIND_HOSTILE_STRUCTURES, {
+                    filter: structure => structure.structureType === STRUCTURE_INVADER_CORE
+                }).length > 0;
+
+                if (!hasInvaderCreeps && !hasInvaderCore) {
+                    console.log(`✅ 阶段0完成: ${targetRoom} Invader威胁已清除`);
                     mission.currentPhase = MissionPhase.CLAIMING;
                     mission.phaseStartTick = Game.time;
                     needsUpdate = true;
                 }
                 break;
             case MissionPhase.CLAIMING:
+                if (room == null) break;
                 // 检查房间是否已被占领
                 if (room.controller && room.controller.my) {
                     console.log(`✅ 阶段1完成: ${targetRoom} 已被占领`);
@@ -190,6 +193,7 @@ export class ExpeditionController {
                 break;
 
             case MissionPhase.UPGRADING:
+                if (room == null) break;
                 // 检查是否达到RCL2
                 if (room.controller && room.controller.my && room.controller.level >= 2) {
                     console.log(`✅ 阶段2完成: ${targetRoom} 已升级到RCL2`);
@@ -282,8 +286,11 @@ export class ExpeditionController {
         const mission = missions[targetRoom];
         const activeClaimers = mission.activeCreeps[MissionPhase.CLAIMING];
 
+        let reservationTicks = Game.rooms[targetRoom]?.controller?.reservation?.ticksToEnd ?? 0;
+        const maxCnt = reservationTicks > 100 ? 3 : 1;
+
         // 只需要一个占领者
-        if (activeClaimers.length === 0) {
+        if (activeClaimers.length < maxCnt) {
             const result = RemoteClaimerRole.spawn(spawn, targetRoom);
             if (result === OK) {
                 const name = `remoteClaimer_${Game.time}`;
@@ -537,6 +544,12 @@ export class ExpeditionController {
             const creep = Game.creeps[creepName];
 
             switch (creep.memory.role) {
+                case ROLE_REMOTE_SCOUTER:
+                    new RemoteScouterRole(creep).run();
+                    break;
+                case ROLE_REMOTE_INVADER:
+                    new RemoteInvaderRole(creep).run();
+                    break;
                 case ROLE_REMOTE_CLAIMER:
                     new RemoteClaimerRole(creep).run();
                     break;
@@ -604,7 +617,7 @@ export class ExpeditionController {
             for (const phase in mission.activeCreeps) {
                 const creeps = mission.activeCreeps[phase];
                 if (creeps.length > 0) {
-                    console.log(`  ${phase}: ${creeps.join(', ')}`);
+                    console.log(`  ${phase}: ${creeps.length}个, ${creeps.join(', ')}`);
                 }
             }
             console.log('---');

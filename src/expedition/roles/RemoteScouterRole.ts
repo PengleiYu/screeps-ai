@@ -17,6 +17,10 @@ export class RemoteScouterRole extends ExpeditionRole {
 
     protected doWork(): void {
         // 侦查者不需要工作，站着就行
+        const target = new RoomPosition(25, 25, this.creep.room.name);
+        if (!this.creep.pos.isNearTo(target)) {
+            this.creep.moveTo(target);
+        }
     }
 
     static spawn(spawn: StructureSpawn, targetRoom: string): ScreepsReturnCode {
@@ -42,7 +46,7 @@ export class RemoteScouterRole extends ExpeditionRole {
         const availableEnergy = room.energyCapacityAvailable;
 
         const bodies = [
-            {energy: 50, parts: [MOVE,]},
+            {energy: 50 * 4, parts: [MOVE, MOVE, MOVE, MOVE,]},
         ];
 
         for (const bodyConfig of bodies) {

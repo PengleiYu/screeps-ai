@@ -1,12 +1,12 @@
 // 远程占领角色 - 阶段1：占领目标房间控制器
 
-import { ExpeditionRole } from '../core/ExpeditionRole';
-import { MissionPhase } from '../core/ExpeditionStates';
+import {ExpeditionRole} from '../core/ExpeditionRole';
+import {MissionPhase} from '../core/ExpeditionStates';
 
 export const ROLE_REMOTE_CLAIMER = 'remoteClaimer';
 
 export class RemoteClaimerRole extends ExpeditionRole {
-    
+
     protected doWork(): void {
         const room = this.getTargetRoom();
         if (!room) {
@@ -36,22 +36,34 @@ export class RemoteClaimerRole extends ExpeditionRole {
         // 检查是否被预订
         if (controller.reservation) {
             this.log(`房间被 ${controller.reservation.username} 预订，尝试占领`);
+            this.attackController(controller);
+            return;
         }
 
         // 尝试占领控制器
         this.claimController(controller);
     }
 
+    private attackController(controller: StructureController) {
+        let errCode = this.creep.attackController(controller);
+        if (errCode === OK) return
+        if (errCode === ERR_NOT_IN_RANGE) {
+            this.creep.moveTo(controller);
+        } else {
+            console.log("攻击controller， 结果=", errCode);
+        }
+    }
+
     private claimController(controller: StructureController): void {
         const result = this.creep.claimController(controller);
-        
+
         switch (result) {
             case OK:
                 this.log('成功占领/维持控制器');
                 break;
             case ERR_NOT_IN_RANGE:
                 this.creep.moveTo(controller, {
-                    visualizePathStyle: { stroke: '#ffaa00', lineStyle: 'solid', opacity: 0.8 }
+                    visualizePathStyle: {stroke: '#ffaa00', lineStyle: 'solid', opacity: 0.8}
                 });
                 break;
             case ERR_INVALID_TARGET:
@@ -83,11 +95,11 @@ export class RemoteClaimerRole extends ExpeditionRole {
     static spawn(spawn: StructureSpawn, targetRoom: string): ScreepsReturnCode {
         const name = `remoteClaimer_${Game.time}`;
         const body = RemoteClaimerRole.getOptimalBody(spawn);
-        
+
         if (body.length === 0) {
             return ERR_NOT_ENOUGH_ENERGY;
         }
-        
+
         return ExpeditionRole.spawnExpeditionCreep(
             spawn,
             name,
@@ -102,14 +114,14 @@ export class RemoteClaimerRole extends ExpeditionRole {
     static getOptimalBody(spawn: StructureSpawn): BodyPartConstant[] {
         const room = spawn.room;
         const availableEnergy = room.energyCapacityAvailable;
-        
+
         const bodies = [
             // 高速配置：1 CLAIM + 5 MOVE = 850 能量 (平路1格/tick，沼泽2格/tick)
-            { energy: 850, parts: [CLAIM, MOVE, MOVE, MOVE, MOVE, MOVE] },
+            {energy: 850, parts: [CLAIM, MOVE, MOVE, MOVE, MOVE, MOVE]},
             // 中速配置：1 CLAIM + 3 MOVE = 750 能量 (平路0.6格/tick，沼泽1.2格/tick) 
-            { energy: 750, parts: [CLAIM, MOVE, MOVE, MOVE] },
+            {energy: 750, parts: [CLAIM, MOVE, MOVE, MOVE]},
             // 基本配置：1 CLAIM + 1 MOVE = 650 能量 (平路0.2格/tick，沼泽0.4格/tick)
-            { energy: 650, parts: [CLAIM, MOVE] }
+            {energy: 650, parts: [CLAIM, MOVE]}
         ];
 
         for (const bodyConfig of bodies) {
@@ -118,7 +130,7 @@ export class RemoteClaimerRole extends ExpeditionRole {
                 return bodyConfig.parts;
             }
         }
-        
+
         // 能量不足，无法创建占领者
         return [];
     }

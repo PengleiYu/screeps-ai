@@ -5,7 +5,8 @@ import {
     CanWithdraw,
     STRUCTURE_HAVE_STORE_CONST,
     STRUCTURE_HAVE_STORE_NO_SPAWN_CONST,
-    StructureHaveStore
+    StructureHaveStore,
+    StructureWithSpawn
 } from "../../types";
 
 type CanWithdrawFilter = (it: CanWithdraw) => boolean;
@@ -58,15 +59,11 @@ export function closestCanPutDown(pos: RoomPosition, resType: ResourceConstant) 
 // 最近的孵化建筑
 export function closestCanSpawn(center: RoomPosition): CanPutSource | null {
     // 优先extension
-    const extension: StructureExtension | null = center.findClosestByRange(FIND_MY_STRUCTURES, {
-        filter: obj =>
-            obj.structureType === STRUCTURE_EXTENSION && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-    })
-    if (extension) return extension;
-    // 其次spawn
-    return center.findClosestByRange(FIND_MY_SPAWNS, {
-        filter: obj => obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-    });
+    return center.findClosestByRange(FIND_MY_STRUCTURES, {
+        filter: (obj: StructureWithSpawn) =>
+            (obj.structureType === STRUCTURE_EXTENSION
+                || obj.structureType === STRUCTURE_SPAWN) && obj.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+    }) as StructureSpawn | StructureExtension | null;
 }
 
 // 最近的可获取资源的container，优先返回装载能量的，其次返回装载其他的
@@ -112,6 +109,20 @@ export function closestEnergyNotEmptyStorage(pos: RoomPosition): StructureStorag
     });
 }
 
+export function closestEnergyNotEmptyStorableOutRangeController(pos: RoomPosition): CanWithdraw | null {
+    const room = Game.rooms[pos.roomName];
+    const controller = room.controller;
+    if (!room || !controller) return null;
+
+    return room.find(FIND_STRUCTURES, {
+        filter: it =>
+            (it.structureType === STRUCTURE_STORAGE || it.structureType === STRUCTURE_CONTAINER)
+    }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
+        .filter(it => it.pos.getRangeTo(controller) > 3)
+        .sort(getClosestCmpFun(pos))
+        [0];
+}
+
 // 最近的残渣、墓碑、废墟
 export function closestRuinRemnantTomb(pos: RoomPosition): CanGetSource | null {
     const remnant = pos.findClosestByRange(FIND_DROPPED_RESOURCES);
@@ -146,7 +157,8 @@ export function closestNotFullTower(pos: RoomPosition): StructureTower | null {
 
 export function closestHighPriorityConstructionSite(pos: RoomPosition): ConstructionSite | null {
     function findSiteByType(structureType: StructureConstant): ConstructionSite | null {
-        return pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES, {
+        // pos可能在墙上，导致没有path，所以用range
+        return pos.findClosestByRange(FIND_MY_CONSTRUCTION_SITES, {
             filter: it => it.structureType === structureType,
         })
     }
@@ -155,7 +167,7 @@ export function closestHighPriorityConstructionSite(pos: RoomPosition): Construc
         ?? findSiteByType(STRUCTURE_EXTENSION)
         ?? findSiteByType(STRUCTURE_CONTAINER)
         ?? findSiteByType(STRUCTURE_STORAGE)
-        ?? pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES);
+        ?? pos.findClosestByRange(FIND_MY_CONSTRUCTION_SITES);
 }
 
 export function closestHurtStructure(pos: RoomPosition): Structure | null {

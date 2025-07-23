@@ -166,6 +166,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
                 return;
             }
         }
+        this.clearApproachTarget();
         this.moveState(CreepState.NONE);
     }
 
@@ -203,6 +204,11 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         const position = this.creep.memory.targetPosition;
         if (!position) return null;
         return MyPosition.fromJson(position).toRoomPosition();
+    }
+
+    public clearApproachTarget() {
+        let memory = this.creep.memory;
+        if (memory.targetPosition) memory.targetPosition = undefined;
     }
 
     // todo 好像creep未孵化完成，就在执行任务了

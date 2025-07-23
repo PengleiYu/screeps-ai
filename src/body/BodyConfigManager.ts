@@ -1,6 +1,7 @@
 // 动态Body配置管理器 - 根据房间能量容量生成最优body配置
 
 import {ROLE_SPAWN_ASSISTANT} from "../constants";
+import {BODY_SMALL_WORKER} from "../controller/controller";
 
 export interface BodyTemplate {
     // 基础部件比例配置
@@ -67,8 +68,8 @@ export class BodyConfigManager {
         // 升级者角色 - 专注升级
         upgrader: {
             name: 'upgrader',
-            template: {work: 3, carry: 1, move: 2},
-            minEnergy: 450,  // 3W + 1C + 2M
+            template: {work: 2, carry: 2, move: 2},
+            minEnergy: 400,  // 2W + 2C + 2M
             maxParts: 50,
             priorityOrder: [WORK, CARRY, MOVE]
         },
@@ -204,7 +205,7 @@ export class BodyConfigManager {
      * 根据模板和能量限制生成具体的body配置
      */
     private static generateBody(profile: BodyProfile, energyCapacity: number): BodyPartConstant[] {
-        const body: BodyPartConstant[] = [];
+        let body: BodyPartConstant[] = [];
         let remainingEnergy = energyCapacity;
         let totalParts = 0;
 
@@ -247,12 +248,11 @@ export class BodyConfigManager {
 
         // 确保body有效性
         if (body.length === 0) {
-            console.log(`❌ 无法为角色生成有效的body配置`);
-            return [];
-        }
-        if (!body.find(it => it === MOVE)) {
-            console.log(`❌ body配置没有MOVE`);
-            return [];
+            console.log(`❌ 无法为角色生成有效的body配置，使用默认配置`);
+            body = BODY_SMALL_WORKER
+        } else if (!body.find(it => it === MOVE)) {
+            console.log(`❌ body配置没有MOVE`, body, "使用默认配置", BODY_SMALL_WORKER);
+            body = BODY_SMALL_WORKER;
         }
 
         // 记录生成的body信息

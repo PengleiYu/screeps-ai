@@ -18,11 +18,11 @@ import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
 import {
-    closestHighPriorityConstructionSite,
     closestEnergyMineralStructure,
     closestEnergyNotEmptyStorage,
     closestEnergyNotFullContainerNearController,
     closestHaveEnergyTower,
+    closestHighPriorityConstructionSite,
     closestHurtStructure,
     closestMineral,
     closestNotFullStorage,
@@ -132,24 +132,30 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
 
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
-        if (expectCnt > 0 && shouldSpawn(room, config)) {
-            console.log(room.name, config.role, '还差', expectCnt, 'spawn', spawn);
-            // 动态生成body配置
-            const dynamicBody = BodyConfigManager.getOptimalBody(config.role, config.body, room);
-            if (dynamicBody.length === 0) {
-                console.log(`⚠️ 房间 ${room.name} 无法为角色 ${config.role} 生成body，跳过孵化`);
-                break;
-            }
-
-            const memory: CreepMemory = {
-                role: config.role,
-                lifeState: CreepState.INITIAL,
-                logging: false,
-                isJustBorn: true,
-            };
-            trySpawn(spawn, config.role + Date.now(), dynamicBody, memory);
+        if (expectCnt <= 0) continue;
+        let shouldSpawn1 = shouldSpawn(room, config);
+        if (!shouldSpawn1) {
+            // if (room.name === "W56S43") {
+            //     console.log(room.name, config.role, "expectCnt", expectCnt, "但未达到孵化条件");
+            // }
+            continue;
+        }
+        console.log(room.name, spawn, config.role, '还差', expectCnt);
+        // 动态生成body配置
+        const dynamicBody = BodyConfigManager.getOptimalBody(config.role, config.body, room);
+        if (dynamicBody.length === 0) {
+            console.log(`⚠️ 房间 ${room.name} 无法为角色 ${config.role} 生成body，跳过孵化`);
             break;
         }
+
+        const memory: CreepMemory = {
+            role: config.role,
+            lifeState: CreepState.INITIAL,
+            logging: false,
+            isJustBorn: true,
+        };
+        trySpawn(spawn, config.role + Date.now(), dynamicBody, memory);
+        break;
     }
 }
 
@@ -187,7 +193,7 @@ const BODY_MID_WORKER = [
     MOVE, MOVE, MOVE, MOVE, MOVE,
     CARRY,
 ];
-const BODY_SMALL_WORKER = [MOVE, MOVE, WORK, CARRY, CARRY];
+export const BODY_SMALL_WORKER = [MOVE, MOVE, WORK, CARRY, CARRY];
 
 const BODY_TRANSFER = [MOVE, MOVE, MOVE, CARRY, CARRY, CARRY,];
 

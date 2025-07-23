@@ -1,9 +1,18 @@
 module.exports = function (grunt) {
-    let config = require('../.screeps.json')
+    // CI环境下不需要.screeps.json配置
+    let config = {};
+    try {
+        config = require('../.screeps.json');
+    } catch (e) {
+        console.log('No .screeps.json found (normal for CI environment):', e.message);
+        // 如果需要详细调试信息，可以打印完整堆栈
+        // console.error(e.stack);
+    }
+    
     let screepsConfig = {
-        token: grunt.option('token') || config.token,
-        branch: grunt.option('branch') || config.branch,
-        ptr: grunt.option('ptr') || config.ptr
+        token: grunt.option('token') || (config.token || ''),
+        branch: grunt.option('branch') || (config.branch || 'default'),
+        ptr: grunt.option('ptr') || (config.ptr || false)
     }
 
     // 配置各个任务数据

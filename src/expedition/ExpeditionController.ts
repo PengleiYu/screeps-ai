@@ -5,6 +5,8 @@ import {RemoteClaimerRole, ROLE_REMOTE_CLAIMER} from './roles/RemoteClaimerRole'
 import {RemoteUpgraderRole, ROLE_REMOTE_UPGRADER} from './roles/RemoteUpgraderRole';
 import {RemoteBuilderRole, ROLE_REMOTE_BUILDER} from './roles/RemoteBuilderRole';
 import {ExpeditionPathManager, MIN_EXPEDITION_WORK_TICK_CNT} from './core/ExpeditionPathManager';
+import {RemoteScouterRole, ROLE_REMOTE_SCOUTER} from "./roles/RemoteScouterRole";
+import {RemoteInvaderRole, ROLE_REMOTE_INVADER} from "./roles/RemoteInvaderRole";
 
 export class ExpeditionController {
     private static get missionData(): { [targetRoom: string]: ExpeditionMissionData } {
@@ -99,9 +101,11 @@ export class ExpeditionController {
             targetRoomName: targetRoom,
             homeRoomName: homeRoom,
             waypoints: waypoints,
-            currentPhase: MissionPhase.CLAIMING,
+            currentPhase: MissionPhase.SCOUTING,
             phaseStartTick: Game.time,
             activeCreeps: {
+                [MissionPhase.SCOUTING]: [],
+                [MissionPhase.INVADING]: [],
                 [MissionPhase.CLAIMING]: [],
                 [MissionPhase.UPGRADING]: [],
                 [MissionPhase.BUILDING]: []
@@ -153,13 +157,28 @@ export class ExpeditionController {
     private static checkPhaseProgression(targetRoom: string): void {
         const missions = this.missionData;
         const mission = missions[targetRoom];
-        const room = Game.rooms[targetRoom];
-
-        if (!room) return;
+        let room: Room | undefined = Game.rooms[targetRoom];
 
         let needsUpdate = false;
 
         switch (mission.currentPhase) {
+            case MissionPhase.SCOUTING:
+                if (room != null && room.controller) {
+                    console.log(`✅ 阶段-1完成: ${targetRoom} 已侦查`);
+                    mission.currentPhase = MissionPhase.INVADING;
+                    mission.phaseStartTick = Game.time;
+                    needsUpdate = true;
+                }
+                break;
+            case MissionPhase.INVADING:
+                // controller是否被其他人控制
+                if (room.controller && (room.controller.my || room.controller.owner == null)) {
+                    console.log(`✅ 阶段0完成: ${targetRoom} 已被入侵`);
+                    mission.currentPhase = MissionPhase.CLAIMING;
+                    mission.phaseStartTick = Game.time;
+                    needsUpdate = true;
+                }
+                break;
             case MissionPhase.CLAIMING:
                 // 检查房间是否已被占领
                 if (room.controller && room.controller.my) {
@@ -183,6 +202,8 @@ export class ExpeditionController {
             case MissionPhase.BUILDING:
                 // 在manageMission中已检查Spawn建设完成
                 break;
+            case MissionPhase.COMPLETED:
+                break;
         }
 
         if (needsUpdate) {
@@ -199,6 +220,12 @@ export class ExpeditionController {
         if (!availableSpawn) return;
 
         switch (mission.currentPhase) {
+            case MissionPhase.SCOUTING:
+                this.spawnScouterIfNeeded(targetRoom, availableSpawn);
+                break;
+            case MissionPhase.INVADING:
+                this.spawnInvaderIfNeeded(targetRoom, availableSpawn);
+                break;
             case MissionPhase.CLAIMING:
                 this.spawnClaimerIfNeeded(targetRoom, availableSpawn);
                 break;
@@ -208,6 +235,44 @@ export class ExpeditionController {
             case MissionPhase.BUILDING:
                 this.spawnBuilderIfNeeded(targetRoom, availableSpawn);
                 break;
+            case MissionPhase.COMPLETED:
+                break;
+        }
+    }
+
+    // 派遣侦查侦查者
+    private static spawnScouterIfNeeded(targetRoom: string, spawn: StructureSpawn) {
+        const missions = this.missionData;
+        const mission = missions[targetRoom];
+        const activeScouters = mission.activeCreeps[MissionPhase.SCOUTING];
+
+        // 只需要一个侦查者
+        if (activeScouters.length === 0) {
+            const result = RemoteScouterRole.spawn(spawn, targetRoom);
+            if (result === OK) {
+                const name = `${ROLE_REMOTE_SCOUTER}_${Game.time}`;
+                activeScouters.push(name);
+                this.missionData = missions;
+                console.log(`🏃 派遣侦查者 ${name} 前往 ${targetRoom}`);
+            }
+        }
+    }
+
+    // 派遣入侵者
+    private static spawnInvaderIfNeeded(targetRoom: string, spawn: StructureSpawn) {
+        const missions = this.missionData;
+        const mission = missions[targetRoom];
+        const activeInvaders = mission.activeCreeps[MissionPhase.INVADING];
+
+        // 只需要一个占领者
+        if (activeInvaders.length < 4) {
+            const result = RemoteInvaderRole.spawn(spawn, targetRoom);
+            if (result === OK) {
+                const name = `${ROLE_REMOTE_INVADER}_${Game.time}`;
+                activeInvaders.push(name);
+                this.missionData = missions;
+                console.log(`🏃 派遣入侵者 ${name} 前往 ${targetRoom}`);
+            }
         }
     }
 
@@ -326,7 +391,7 @@ export class ExpeditionController {
     } {
         const targetRoomObj = Game.rooms[targetRoom];
         if (!targetRoomObj) {
-            return { totalCapacity: 0, maxUpgraders: 0, maxBuilders: 0, currentUpgraders: 0, currentBuilders: 0 };
+            return {totalCapacity: 0, maxUpgraders: 0, maxBuilders: 0, currentUpgraders: 0, currentBuilders: 0};
         }
 
         // 计算总的采集能力
@@ -385,7 +450,7 @@ export class ExpeditionController {
         currentPhase: MissionPhase
     ): { maxUpgraders: number; maxBuilders: number } {
         if (totalCapacity === 0) {
-            return { maxUpgraders: 0, maxBuilders: 0 };
+            return {maxUpgraders: 0, maxBuilders: 0};
         }
 
         // 根据当前阶段调整优先级

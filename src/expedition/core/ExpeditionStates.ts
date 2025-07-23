@@ -6,6 +6,8 @@ export enum ExpeditionState {
 }
 
 export enum MissionPhase {
+    SCOUTING = "scouting",
+    INVADING = "invading",       // 阶段0：入侵房间
     CLAIMING = "claiming",      // 阶段1：占领房间
     UPGRADING = "upgrading",    // 阶段2：升级到RCL2
     BUILDING = "building",      // 阶段3：建造Spawn
@@ -17,7 +19,7 @@ export interface ExpeditionMemory extends CreepMemory {
     targetRoomName: string;
     missionPhase: MissionPhase;
     expeditionStartTick: number;
-    
+
     // 震荡检测
     lastRoomName?: string;
     roomSwitchCount?: number;

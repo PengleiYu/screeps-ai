@@ -26,6 +26,22 @@ export function isStructureHaveStoreNoSpawn(input: any): input is StructureHaveS
         || input instanceof StructureTower;
 }
 
+export type EnergyProviderForWork =
+    | StructureContainer | StructureStorage | StructureLink // 建筑
+    | Tombstone | Ruin // 残骸废墟
+    | Resource // 掉落资源
+    | Source //能量源
+    ;
+
+export function isEnergyProviderForWork(input: any): input is EnergyProviderForWork {
+    return input instanceof StructureContainer
+        || input instanceof StructureStorage
+        || input instanceof StructureLink
+        || input instanceof Tombstone
+        || input instanceof Ruin
+        || input instanceof Resource
+        || input instanceof Source;
+}
 
 export type StructureHaveStore =
     | StructureWithSpawn

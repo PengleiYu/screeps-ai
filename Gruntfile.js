@@ -20,7 +20,26 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON('package.json'),
         exec: {
             tsupBuild: {
-                command: 'tsup ./src/main.ts --out-dir ./dist'
+                command: 'tsup ./src/main.ts --out-dir ./dist',
+                options: {
+                    failOnError: true,  // 子进程失败时grunt也失败
+                    callback: function(error, stdout, stderr) {
+                        if (error) {
+                            grunt.log.error('Build failed with error:', error);
+                            grunt.fail.fatal('TypeScript compilation failed');
+                        }
+                        if (stderr) {
+                            grunt.log.error('Build stderr:', stderr);
+                        }
+                        grunt.log.ok('Build completed successfully');
+                    }
+                }
+            },
+            tsc: {
+                command: 'npx tsc --noEmit',  // 只做类型检查，不生成文件
+                options: {
+                    failOnError: true
+                }
             }
         },
         watch: {
@@ -49,5 +68,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-exec');
     grunt.loadNpmTasks('grunt-screeps');
     // 配置默认任务，用于命令行直接执行grunt
-    grunt.registerTask('default', ['exec:tsupBuild', 'screeps']);
+    grunt.registerTask('default', ['exec:tsc', 'exec:tsupBuild', 'screeps']);
+    grunt.registerTask('push', ['exec:tsc', 'exec:tsupBuild', 'screeps']);
+    // 单独的构建任务（带类型检查）
+    grunt.registerTask('build', ['exec:tsc', 'exec:tsupBuild']);
 }

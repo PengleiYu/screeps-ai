@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "grunt exec:tsupBuild",
-    "push": "grunt",
+    "build": "grunt build",
+    "typecheck": "npx tsc --noEmit",
+    "push": "grunt push",
     "dev": "grunt watch",
     "test": "echo \"No tests configured for this project\" && exit 0"
   },

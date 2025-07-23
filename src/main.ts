@@ -4,12 +4,14 @@ import {LinkManager} from "./link/LinkManager";
 import {ExpeditionController} from "./expedition/ExpeditionController";
 import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
 import {BodyConfigManager} from "./body/BodyConfigManager";
+import {debugInvaderIssue} from "./debugUtils";
 
 
 global.LinkManager = LinkManager;
 global.ExpeditionController = ExpeditionController;
 global.ExpeditionPathManager = ExpeditionPathManager;
 global.BodyConfigManager = BodyConfigManager;
+global.debugInvaderIssue = debugInvaderIssue
 
 export function loop() {
     globalInfo.canSpawn = true;

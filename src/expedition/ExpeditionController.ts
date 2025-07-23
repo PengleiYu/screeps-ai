@@ -4,7 +4,9 @@ import {ExpeditionMissionData, MissionPhase} from './core/ExpeditionStates';
 import {RemoteClaimerRole, ROLE_REMOTE_CLAIMER} from './roles/RemoteClaimerRole';
 import {RemoteUpgraderRole, ROLE_REMOTE_UPGRADER} from './roles/RemoteUpgraderRole';
 import {RemoteBuilderRole, ROLE_REMOTE_BUILDER} from './roles/RemoteBuilderRole';
-import {ExpeditionPathManager} from './core/ExpeditionPathManager';
+import {ExpeditionPathManager, MIN_EXPEDITION_WORK_TICK_CNT} from './core/ExpeditionPathManager';
+import {RemoteScouterRole, ROLE_REMOTE_SCOUTER} from "./roles/RemoteScouterRole";
+import {RemoteInvaderRole, ROLE_REMOTE_INVADER} from "./roles/RemoteInvaderRole";
 
 export class ExpeditionController {
     private static get missionData(): { [targetRoom: string]: ExpeditionMissionData } {
@@ -78,7 +80,7 @@ export class ExpeditionController {
             console.log(`❌ 距离过远！Claimer无法完成占领任务:`);
             console.log(`   路径距离: ${finalPath.totalDistance} 房间`);
             console.log(`   预估旅行: ${claimerValidation.travelTime} tick`);
-            console.log(`   剩余工作: ${claimerValidation.workTime} tick (需要至少50tick)`);
+            console.log(`   剩余工作: ${claimerValidation.workTime} tick (需要至少${MIN_EXPEDITION_WORK_TICK_CNT}tick)`);
             console.log(`💡 ${claimerValidation.recommendation}`);
             return false;
         }
@@ -99,22 +101,17 @@ export class ExpeditionController {
             targetRoomName: targetRoom,
             homeRoomName: homeRoom,
             waypoints: waypoints,
-            currentPhase: MissionPhase.CLAIMING,
+            currentPhase: MissionPhase.SCOUTING,
             phaseStartTick: Game.time,
             activeCreeps: {
+                [MissionPhase.SCOUTING]: [],
+                [MissionPhase.INVADING]: [],
                 [MissionPhase.CLAIMING]: [],
                 [MissionPhase.UPGRADING]: [],
                 [MissionPhase.BUILDING]: []
             }
         };
         this.missionData = missions;
-
-        // 立即派遣第一个占领者
-        const availableSpawn = this.getAvailableSpawnInRoom(homeRoom);
-        if (availableSpawn) {
-            this.spawnClaimerIfNeeded(targetRoom, availableSpawn);
-        }
-
         return true;
     }
 
@@ -153,14 +150,39 @@ export class ExpeditionController {
     private static checkPhaseProgression(targetRoom: string): void {
         const missions = this.missionData;
         const mission = missions[targetRoom];
-        const room = Game.rooms[targetRoom];
-
-        if (!room) return;
+        let room: Room | undefined = Game.rooms[targetRoom];
 
         let needsUpdate = false;
 
         switch (mission.currentPhase) {
+            case MissionPhase.SCOUTING:
+                if (room != null && room.controller) {
+                    console.log(`✅ 阶段-1完成: ${targetRoom} 已侦查`);
+                    mission.currentPhase = MissionPhase.INVADING;
+                    mission.phaseStartTick = Game.time;
+                    needsUpdate = true;
+                }
+                break;
+            case MissionPhase.INVADING:
+                if (room == null) break;
+                // 检查是否还有Invader威胁
+                const hasInvaderCreeps = room.find(FIND_HOSTILE_CREEPS, {
+                    filter: creep => creep.owner.username === 'Invader'
+                }).length > 0;
+
+                const hasInvaderCore = room.find(FIND_HOSTILE_STRUCTURES, {
+                    filter: structure => structure.structureType === STRUCTURE_INVADER_CORE
+                }).length > 0;
+
+                if (!hasInvaderCreeps && !hasInvaderCore) {
+                    console.log(`✅ 阶段0完成: ${targetRoom} Invader威胁已清除`);
+                    mission.currentPhase = MissionPhase.CLAIMING;
+                    mission.phaseStartTick = Game.time;
+                    needsUpdate = true;
+                }
+                break;
             case MissionPhase.CLAIMING:
+                if (room == null) break;
                 // 检查房间是否已被占领
                 if (room.controller && room.controller.my) {
                     console.log(`✅ 阶段1完成: ${targetRoom} 已被占领`);
@@ -171,6 +193,7 @@ export class ExpeditionController {
                 break;
 
             case MissionPhase.UPGRADING:
+                if (room == null) break;
                 // 检查是否达到RCL2
                 if (room.controller && room.controller.my && room.controller.level >= 2) {
                     console.log(`✅ 阶段2完成: ${targetRoom} 已升级到RCL2`);
@@ -182,6 +205,8 @@ export class ExpeditionController {
 
             case MissionPhase.BUILDING:
                 // 在manageMission中已检查Spawn建设完成
+                break;
+            case MissionPhase.COMPLETED:
                 break;
         }
 
@@ -199,6 +224,12 @@ export class ExpeditionController {
         if (!availableSpawn) return;
 
         switch (mission.currentPhase) {
+            case MissionPhase.SCOUTING:
+                this.spawnScouterIfNeeded(targetRoom, availableSpawn);
+                break;
+            case MissionPhase.INVADING:
+                this.spawnInvaderIfNeeded(targetRoom, availableSpawn);
+                break;
             case MissionPhase.CLAIMING:
                 this.spawnClaimerIfNeeded(targetRoom, availableSpawn);
                 break;
@@ -208,6 +239,44 @@ export class ExpeditionController {
             case MissionPhase.BUILDING:
                 this.spawnBuilderIfNeeded(targetRoom, availableSpawn);
                 break;
+            case MissionPhase.COMPLETED:
+                break;
+        }
+    }
+
+    // 派遣侦查侦查者
+    private static spawnScouterIfNeeded(targetRoom: string, spawn: StructureSpawn) {
+        const missions = this.missionData;
+        const mission = missions[targetRoom];
+        const activeScouters = mission.activeCreeps[MissionPhase.SCOUTING];
+
+        // 只需要一个侦查者
+        if (activeScouters.length === 0) {
+            const result = RemoteScouterRole.spawn(spawn, targetRoom);
+            if (result === OK) {
+                const name = `${ROLE_REMOTE_SCOUTER}_${Game.time}`;
+                activeScouters.push(name);
+                this.missionData = missions;
+                console.log(`🏃 派遣侦查者 ${name} 前往 ${targetRoom}`);
+            }
+        }
+    }
+
+    // 派遣入侵者
+    private static spawnInvaderIfNeeded(targetRoom: string, spawn: StructureSpawn) {
+        const missions = this.missionData;
+        const mission = missions[targetRoom];
+        const activeInvaders = mission.activeCreeps[MissionPhase.INVADING];
+
+        // 只需要一个占领者
+        if (activeInvaders.length < 4) {
+            const result = RemoteInvaderRole.spawn(spawn, targetRoom);
+            if (result === OK) {
+                const name = `${ROLE_REMOTE_INVADER}_${Game.time}`;
+                activeInvaders.push(name);
+                this.missionData = missions;
+                console.log(`🏃 派遣入侵者 ${name} 前往 ${targetRoom}`);
+            }
         }
     }
 
@@ -217,8 +286,11 @@ export class ExpeditionController {
         const mission = missions[targetRoom];
         const activeClaimers = mission.activeCreeps[MissionPhase.CLAIMING];
 
+        let reservationTicks = Game.rooms[targetRoom]?.controller?.reservation?.ticksToEnd ?? 0;
+        const maxCnt = reservationTicks > 100 ? 3 : 1;
+
         // 只需要一个占领者
-        if (activeClaimers.length === 0) {
+        if (activeClaimers.length < maxCnt) {
             const result = RemoteClaimerRole.spawn(spawn, targetRoom);
             if (result === OK) {
                 const name = `remoteClaimer_${Game.time}`;
@@ -246,14 +318,14 @@ export class ExpeditionController {
         // 动态计算最优升级者数量（考虑与建造者的采集位竞争）
         const expeditionDistance = ExpeditionPathManager.findPathToRoom(mission.homeRoomName, targetRoom, mission.waypoints)?.totalDistance || 1;
         const optimalBody = RemoteUpgraderRole.getOptimalBody(spawn);
-        
+
         // 计算共享采集能力分配
         const sharedCapacity = this.calculateSharedHarvestCapacity(targetRoom, mission, spawn);
-        
+
         // 升级者不是100%时间采集，需要考虑工作效率
         const upgraderWorkEfficiency = 0.7; // 假设70%时间用于采集，30%时间用于升级和移动
         const adjustedMaxUpgraders = Math.floor(sharedCapacity.maxUpgraders / (1 - upgraderWorkEfficiency)); // 采集位置 / 采集时间比例
-        
+
         const optimalCount = Math.min(
             RemoteUpgraderRole.calculateOptimalUpgraderCount(targetRoomObj, optimalBody, expeditionDistance),
             adjustedMaxUpgraders
@@ -282,10 +354,10 @@ export class ExpeditionController {
         const targetRoomObj = Game.rooms[targetRoom];
         const expeditionDistance = ExpeditionPathManager.findPathToRoom(mission.homeRoomName, targetRoom, mission.waypoints)?.totalDistance || 1;
         const optimalBody = RemoteBuilderRole.getOptimalBody(spawn);
-        
+
         // 计算基础建造需求
         const baseBuilderCount = RemoteBuilderRole.calculateOptimalBuilderCount(targetRoomObj, optimalBody, expeditionDistance);
-        
+
         // 如果不需要建造者，直接返回
         if (baseBuilderCount === 0) {
             if (activeBuilders.length > 0) {
@@ -296,13 +368,13 @@ export class ExpeditionController {
 
         // 计算共享采集能力分配
         const sharedCapacity = this.calculateSharedHarvestCapacity(targetRoom, mission, spawn);
-        
+
         // 建造者不是100%时间采集，需要考虑工作效率
         const builderWorkEfficiency = 0.6; // 假设60%时间用于建造，40%时间用于采集和移动
         const adjustedMaxBuilders = Math.floor(sharedCapacity.maxBuilders / (1 - builderWorkEfficiency)); // 采集位置 / 采集时间比例
-        
+
         const optimalCount = Math.min(baseBuilderCount, adjustedMaxBuilders);
-        
+
         console.log(`${targetRoom} 建造者状态: 当前${activeBuilders.length}个, 最优${optimalCount}个 (采集位${sharedCapacity.maxBuilders}个->调整后${adjustedMaxBuilders}个)`);
 
         if (activeBuilders.length < optimalCount) {
@@ -326,7 +398,7 @@ export class ExpeditionController {
     } {
         const targetRoomObj = Game.rooms[targetRoom];
         if (!targetRoomObj) {
-            return { totalCapacity: 0, maxUpgraders: 0, maxBuilders: 0, currentUpgraders: 0, currentBuilders: 0 };
+            return {totalCapacity: 0, maxUpgraders: 0, maxBuilders: 0, currentUpgraders: 0, currentBuilders: 0};
         }
 
         // 计算总的采集能力
@@ -340,7 +412,7 @@ export class ExpeditionController {
 
             // 计算能量矿的产出速度
             const sourceRegenRate = source.energyCapacity / 300; // 300tick恢复周期
-            
+
             // 假设使用标准的WORK部件数量（升级者和建造者body类似）
             const upgraderBody = RemoteUpgraderRole.getOptimalBody(spawn);
             const upgraderWorkParts = upgraderBody.filter(part => part === WORK).length;
@@ -385,7 +457,7 @@ export class ExpeditionController {
         currentPhase: MissionPhase
     ): { maxUpgraders: number; maxBuilders: number } {
         if (totalCapacity === 0) {
-            return { maxUpgraders: 0, maxBuilders: 0 };
+            return {maxUpgraders: 0, maxBuilders: 0};
         }
 
         // 根据当前阶段调整优先级
@@ -432,37 +504,37 @@ export class ExpeditionController {
     // 获取能量矿周围的可访问位置（复用建造者的逻辑）
     private static getAccessiblePositionsAroundSource(room: Room, source: Source): RoomPosition[] {
         const positions: RoomPosition[] = [];
-        
+
         for (let dx = -1; dx <= 1; dx++) {
             for (let dy = -1; dy <= 1; dy++) {
                 if (dx === 0 && dy === 0) continue; // 跳过能量矿自身位置
-                
+
                 const x = source.pos.x + dx;
                 const y = source.pos.y + dy;
-                
+
                 // 检查位置是否在房间范围内
                 if (x < 1 || x > 48 || y < 1 || y > 48) continue;
-                
+
                 const pos = new RoomPosition(x, y, room.name);
-                
+
                 // 检查地形是否可通行
                 const terrain = room.getTerrain().get(x, y);
                 if (terrain === TERRAIN_MASK_WALL) continue;
-                
+
                 // 检查是否有阻挡的建筑物
                 const structures = pos.lookFor(LOOK_STRUCTURES);
-                const hasBlockingStructure = structures.some(structure => 
+                const hasBlockingStructure = structures.some(structure =>
                     structure.structureType !== STRUCTURE_ROAD &&
                     structure.structureType !== STRUCTURE_CONTAINER &&
                     structure.structureType !== STRUCTURE_RAMPART
                 );
-                
+
                 if (!hasBlockingStructure) {
                     positions.push(pos);
                 }
             }
         }
-        
+
         return positions;
     }
 
@@ -472,6 +544,12 @@ export class ExpeditionController {
             const creep = Game.creeps[creepName];
 
             switch (creep.memory.role) {
+                case ROLE_REMOTE_SCOUTER:
+                    new RemoteScouterRole(creep).run();
+                    break;
+                case ROLE_REMOTE_INVADER:
+                    new RemoteInvaderRole(creep).run();
+                    break;
                 case ROLE_REMOTE_CLAIMER:
                     new RemoteClaimerRole(creep).run();
                     break;
@@ -539,7 +617,7 @@ export class ExpeditionController {
             for (const phase in mission.activeCreeps) {
                 const creeps = mission.activeCreeps[phase];
                 if (creeps.length > 0) {
-                    console.log(`  ${phase}: ${creeps.join(', ')}`);
+                    console.log(`  ${phase}: ${creeps.length}个, ${creeps.join(', ')}`);
                 }
             }
             console.log('---');
@@ -558,7 +636,7 @@ export class ExpeditionController {
     static stopExpedition(targetRoom: string, killCreeps: boolean = true): boolean {
         const missions = this.missionData;
         const mission = missions[targetRoom];
-        
+
         if (!mission) {
             console.log(`❌ 远征任务 ${targetRoom} 不存在`);
             return false;
@@ -599,7 +677,7 @@ export class ExpeditionController {
         const targetRooms = Object.keys(missions);
         for (const targetRoom of targetRooms) {
             const mission = missions[targetRoom];
-            
+
             if (killCreeps) {
                 this.killExpeditionCreeps(mission);
             }
@@ -622,7 +700,7 @@ export class ExpeditionController {
     // 杀死指定任务的所有远征creep
     private static killExpeditionCreeps(mission: ExpeditionMissionData): void {
         let killedCount = 0;
-        
+
         // 杀死所有阶段的creep
         for (const phase in mission.activeCreeps) {
             const creepNames = mission.activeCreeps[phase];
@@ -663,7 +741,7 @@ export class ExpeditionController {
             const mission = missions[targetRoom];
             const totalCreeps = Object.values(mission.activeCreeps).reduce((sum, creeps) => sum + creeps.length, 0);
             const waypointStr = mission.waypoints && mission.waypoints.length > 0 ? ` (经由 ${mission.waypoints.join('->')})` : '';
-            
+
             console.log(`📍 ${mission.homeRoomName} -> ${targetRoom}${waypointStr}`);
             console.log(`   阶段: ${mission.currentPhase} | Creep数量: ${totalCreeps} | 开始时间: ${mission.phaseStartTick}`);
         }

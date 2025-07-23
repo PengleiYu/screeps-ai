@@ -4,6 +4,7 @@ import {LinkManager} from "./link/LinkManager";
 import {ExpeditionController} from "./expedition/ExpeditionController";
 import {ExpeditionPathManager, ExpeditionPath} from "./expedition/core/ExpeditionPathManager";
 import {ExpeditionState, MissionPhase, ExpeditionMissionData} from "./expedition/core/ExpeditionStates";
+import {debugInvaderIssue} from "./debugUtils";
 
 declare global {
     interface CreepMemory {
@@ -49,5 +50,6 @@ declare global {
         ExpeditionController: typeof import("./expedition/ExpeditionController").ExpeditionController;
         ExpeditionPathManager: typeof import("./expedition/core/ExpeditionPathManager").ExpeditionPathManager;
         BodyConfigManager: typeof import("./body/BodyConfigManager").BodyConfigManager;
+        debugInvaderIssue: typeof import("./debugUtils").debugInvaderIssue;
     };
 }

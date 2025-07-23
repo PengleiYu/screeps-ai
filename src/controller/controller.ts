@@ -18,7 +18,7 @@ import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
 import {
-    closestEnergyMineralStructure,
+    closestEnergyMineralStructure, closestEnergyNotEmptyStorableOutRangeController,
     closestEnergyNotEmptyStorage,
     closestEnergyNotFullContainerNearController,
     closestHaveEnergyTower,
@@ -173,7 +173,7 @@ function shouldSpawn(room: Room, config: SpawnConfig): boolean {
         case ROLE_CONTAINER_2_STORAGE_TRANSFER:
             return !!room.controller && !!closestEnergyMineralStructure(pos) && !!closestNotFullStorage(pos);
         case ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER:
-            return !!closestEnergyNotFullContainerNearController(pos) && !!closestEnergyNotEmptyStorage(pos);
+            return !!closestEnergyNotFullContainerNearController(pos) && !!closestEnergyNotEmptyStorableOutRangeController(pos);
         case ROLE_HARVESTER_FAR:
             return room.find(FIND_SOURCES).length > 1;
         case ROLE_SWEEP_2_STORAGE_TRANSFER:

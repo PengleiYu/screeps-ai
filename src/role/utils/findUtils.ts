@@ -109,6 +109,20 @@ export function closestEnergyNotEmptyStorage(pos: RoomPosition): StructureStorag
     });
 }
 
+export function closestEnergyNotEmptyStorableOutRangeController(pos: RoomPosition): CanWithdraw | null {
+    const room = Game.rooms[pos.roomName];
+    const controller = room.controller;
+    if (!room || !controller) return null;
+
+    return room.find(FIND_STRUCTURES, {
+        filter: it =>
+            (it.structureType === STRUCTURE_STORAGE || it.structureType === STRUCTURE_CONTAINER)
+    }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
+        .filter(it => it.pos.getRangeTo(controller) > 3)
+        .sort(getClosestCmpFun(pos))
+        [0];
+}
+
 // 最近的残渣、墓碑、废墟
 export function closestRuinRemnantTomb(pos: RoomPosition): CanGetSource | null {
     const remnant = pos.findClosestByRange(FIND_DROPPED_RESOURCES);

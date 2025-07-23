@@ -203,6 +203,12 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         body: BODY_SMALL_WORKER,
         maxCnt: 2,
     },
+    // 孵化助手之后优先建造extension、container等
+    {
+        role: ROLE_BUILDER,
+        body: [WORK, CARRY, CARRY, MOVE],
+        maxCnt: 3,
+    },
     {
         role: ROLE_UPGRADER,
         body: BODY_MID_WORKER,
@@ -212,11 +218,6 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         role: ROLE_HARVESTER,
         body: BODY_MID_WORKER,
         maxCnt: 1,
-    },
-    {
-        role: ROLE_BUILDER,
-        body: [WORK, CARRY, CARRY, MOVE],
-        maxCnt: 3,
     },
     {
         role: ROLE_CONTAINER_2_STORAGE_TRANSFER,

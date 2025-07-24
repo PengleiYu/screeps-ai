@@ -8,6 +8,7 @@ import {ExpeditionPathManager, MIN_EXPEDITION_WORK_TICK_CNT} from './core/Expedi
 import {RemoteScouterRole, ROLE_REMOTE_SCOUTER} from "./roles/RemoteScouterRole";
 import {RemoteInvaderRole, ROLE_REMOTE_INVADER} from "./roles/RemoteInvaderRole";
 import {SpawnPlaceHelper} from "./utils/SpawnPlaceHelper";
+import profiler from "screeps-profiler";
 
 export class ExpeditionController {
     private static get missionData(): { [targetRoom: string]: ExpeditionMissionData } {
@@ -766,4 +767,9 @@ export class ExpeditionController {
             console.log(`   阶段: ${mission.currentPhase} | Creep数量: ${totalCreeps} | 开始时间: ${mission.phaseStartTick}`);
         }
     }
+}
+
+// 注册性能监测
+if (typeof profiler !== 'undefined') {
+    profiler.registerClass(ExpeditionController, 'ExpeditionController');
 }

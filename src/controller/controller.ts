@@ -38,6 +38,7 @@ import {getRoomCenter, getRoomCenterWalkablePos} from "../utils/PositionUtils";
 import {TowerController} from "../army";
 import {LinkManager} from "../link/LinkManager";
 import {BodyConfigManager} from "../body/BodyConfigManager";
+import profiler from "screeps-profiler";
 
 export function runRoom(room: Room) {
     room.find(FIND_MY_CREEPS).forEach(runCreep);
@@ -252,3 +253,11 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         maxCnt: 1,
     }
 ] as const;
+
+// 注册性能监测（在函数声明后）
+if (typeof profiler !== 'undefined') {
+    profiler.registerFN(runRoom, 'controller.runRoom');
+    profiler.registerFN(runCreep, 'controller.runCreep');
+    profiler.registerFN(spawnIfNeed, 'controller.spawnIfNeed');
+    profiler.registerFN(shouldSpawn, 'controller.shouldSpawn');
+}

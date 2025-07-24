@@ -14,7 +14,7 @@ global.ExpeditionPathManager = ExpeditionPathManager;
 global.BodyConfigManager = BodyConfigManager;
 global.debugInvaderIssue = debugInvaderIssue
 
-// 性能检测开启
+// 性能检测开启  
 profiler.enable();
 
 export function loop() {
@@ -47,6 +47,10 @@ function lowFrequencyOperation() {
         console.log('=========================', '生产pixel', result, '=========================');
     }
 }
+
+// 在函数声明后注册性能监测
+profiler.registerFN(loopImpl, 'main.loopImpl');
+profiler.registerFN(lowFrequencyOperation, 'main.lowFrequencyOperation');
 
 console.log('🚀 ===============================================');
 console.log('🎉 代码推送成功！时间:', Game.time);

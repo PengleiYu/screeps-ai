@@ -5,6 +5,7 @@ import {ExpeditionController} from "./expedition/ExpeditionController";
 import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
 import {BodyConfigManager} from "./body/BodyConfigManager";
 import {debugInvaderIssue} from "./debugUtils";
+import profiler from "screeps-profiler";
 
 
 global.LinkManager = LinkManager;
@@ -13,7 +14,14 @@ global.ExpeditionPathManager = ExpeditionPathManager;
 global.BodyConfigManager = BodyConfigManager;
 global.debugInvaderIssue = debugInvaderIssue
 
+// 性能检测开启  
+profiler.enable();
+
 export function loop() {
+    profiler.wrap(loopImpl);
+}
+
+function loopImpl() {
     globalInfo.canSpawn = true;
     Object.values(Game.rooms).forEach(runRoom);
 
@@ -39,6 +47,10 @@ function lowFrequencyOperation() {
         console.log('=========================', '生产pixel', result, '=========================');
     }
 }
+
+// 在函数声明后注册性能监测
+profiler.registerFN(loopImpl, 'main.loopImpl');
+profiler.registerFN(lowFrequencyOperation, 'main.lowFrequencyOperation');
 
 console.log('🚀 ===============================================');
 console.log('🎉 代码推送成功！时间:', Game.time);

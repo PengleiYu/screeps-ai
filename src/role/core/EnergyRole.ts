@@ -3,6 +3,7 @@ import {CanGetSource, CanPutSource, CanWork} from "../../types";
 import {EnergyAction} from "../base/actionTypes";
 import {actionOfGetSource, actionOfPutEnergy, actionOfWork2} from "../base/actionUtils";
 import {closestCanPutDown} from "../utils/findUtils";
+import profiler from "screeps-profiler";
 
 export abstract class EnergyRole extends MemoryRole {
 
@@ -29,4 +30,9 @@ export abstract class EnergyRole extends MemoryRole {
     protected freeEnergyCapacity() {
         return this.creep.store.getFreeCapacity(RESOURCE_ENERGY);
     }
+}
+
+// 注册性能监测
+if (typeof profiler !== 'undefined') {
+    profiler.registerClass(EnergyRole, 'EnergyRole');
 }

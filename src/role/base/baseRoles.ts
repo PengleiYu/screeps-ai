@@ -2,6 +2,7 @@ import {EVENT_LOOP_END, findFlagPos, loopEventBus, Positionable} from "../../uti
 import {CanGetSource, CanPutSource, CanWork, MyPosition} from "../../types";
 import {EnergyAction, MoveAction} from "./actionTypes";
 import {CreepContext} from "./creepWrapper";
+import profiler from "screeps-profiler";
 
 export const enum CreepState {
     INITIAL = "initial",
@@ -344,4 +345,10 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
     protected isSourceMemoryEnable(): boolean {
         return true;
     }
+}
+
+// 注册性能监测 - 抽象基类
+if (typeof profiler !== 'undefined') {
+    profiler.registerClass(StatefulRole, 'StatefulRole');
+    profiler.registerClass(MemoryRole, 'MemoryRole');
 }

@@ -1,5 +1,4 @@
 import {closestHurtStructure} from "./role/utils/findUtils";
-import {getRoomCenter} from "./utils/PositionUtils";
 
 export class TowerController {
     constructor(private room: Room) {
@@ -17,9 +16,10 @@ export class TowerController {
             return
         }
 
-        let roomCenter = getRoomCenter(this.room);
+        let posController = this.room.controller?.pos;
+        if (posController == null) return;
 
-        const needHealCreep = roomCenter.findClosestByRange(FIND_MY_CREEPS, {
+        const needHealCreep = posController.findClosestByRange(FIND_MY_CREEPS, {
             filter: it => it.hits < it.hitsMax
         });
         if (needHealCreep) {
@@ -29,7 +29,7 @@ export class TowerController {
             return;
         }
 
-        const needHealStructure = closestHurtStructure(roomCenter)
+        const needHealStructure = closestHurtStructure(posController)
         if (needHealStructure) {
             for (const tower of towerArr) {
                 tower.repair(needHealStructure);

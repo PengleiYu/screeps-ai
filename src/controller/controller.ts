@@ -7,7 +7,7 @@ import {
     ROLE_REPAIRER,
     ROLE_SPAWN_ASSISTANT,
     ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
-    ROLE_STORAGE_2_TOWER_TRANSFER,
+    ROLE_TOWER_TRANSFER,
     ROLE_SWEEP_2_STORAGE_TRANSFER,
     ROLE_UPGRADER
 } from "../constants";
@@ -31,7 +31,7 @@ import {
 import {ContainerToStorageRole} from "../role/logistics/ContainerToStorageRole";
 import {SweepToStorageRole} from "../role/logistics/SweepToStorageRole";
 import {StorageToContainerRole} from "../role/logistics/StorageToContainerRole";
-import {StorageToTowerRole} from "../role/logistics/StorageToTowerRole";
+import {TowerTransferRole} from "../role/logistics/TowerTransferRole";
 import {BuilderRole} from "../role/core/BuilderRole";
 import {RepairerRole} from "../role/maintenance/RepairerRole";
 import {getRoomCenter, getRoomCenterWalkablePos} from "../utils/PositionUtils";
@@ -91,8 +91,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
             return new SweepToStorageRole(creep);
         case ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER:
             return new StorageToContainerRole(creep);
-        case ROLE_STORAGE_2_TOWER_TRANSFER:
-            return new StorageToTowerRole(creep);
+        case ROLE_TOWER_TRANSFER:
+            return new TowerTransferRole(creep);
         case ROLE_HARVESTER:
         case ROLE_HARVESTER_FAR:
             return harvesterRoleFactory(creep);
@@ -161,7 +161,7 @@ function shouldSpawn(room: Room, config: SpawnConfig): boolean {
     switch (config.role) {
         case ROLE_MINER:
             return !!closestMineral(pos) && !!closestNotFullStorage(pos);
-        case ROLE_STORAGE_2_TOWER_TRANSFER:
+        case ROLE_TOWER_TRANSFER:
             return !!closestNotFullTower(pos);
         case ROLE_BUILDER:
             return !!closestHighPriorityConstructionSite(pos);
@@ -242,7 +242,7 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         maxCnt: 3,
     },
     {
-        role: ROLE_STORAGE_2_TOWER_TRANSFER,
+        role: ROLE_TOWER_TRANSFER,
         body: BODY_TRANSFER,
         maxCnt: 1,
     },

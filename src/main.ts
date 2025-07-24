@@ -42,10 +42,10 @@ function lowFrequencyOperation() {
             console.log(`${name}已不存在，删除记忆`);
         }
     }
-    if (Game.cpu.bucket >= 10_000) {
-        const result = Game.cpu.generatePixel();
-        console.log('=========================', '生产pixel', result, '=========================');
-    }
+    // if (Game.cpu.bucket >= 10_000) {
+    //     const result = Game.cpu.generatePixel();
+    //     console.log('=========================', '生产pixel', result, '=========================');
+    // }
 }
 
 // 在函数声明后注册性能监测

@@ -7,6 +7,7 @@ import {RemoteBuilderRole, ROLE_REMOTE_BUILDER} from './roles/RemoteBuilderRole'
 import {ExpeditionPathManager, MIN_EXPEDITION_WORK_TICK_CNT} from './core/ExpeditionPathManager';
 import {RemoteScouterRole, ROLE_REMOTE_SCOUTER} from "./roles/RemoteScouterRole";
 import {RemoteInvaderRole, ROLE_REMOTE_INVADER} from "./roles/RemoteInvaderRole";
+import {SpawnPlaceHelper} from "./utils/SpawnPlaceHelper";
 
 export class ExpeditionController {
     private static get missionData(): { [targetRoom: string]: ExpeditionMissionData } {
@@ -138,6 +139,11 @@ export class ExpeditionController {
 
     // 检查远征是否完成
     private static isExpeditionComplete(targetRoom: string): boolean {
+        let mission = this.missionData[targetRoom];
+        return mission.currentPhase === MissionPhase.COMPLETED;
+    }
+
+    private static isSpawnExist(targetRoom: string) {
         const room = Game.rooms[targetRoom];
         if (!room) return false;
 
@@ -146,7 +152,7 @@ export class ExpeditionController {
         return !!spawn;
     }
 
-    // 检查阶段推进
+// 检查阶段推进
     private static checkPhaseProgression(targetRoom: string): void {
         const missions = this.missionData;
         const mission = missions[targetRoom];
@@ -204,7 +210,21 @@ export class ExpeditionController {
                 break;
 
             case MissionPhase.BUILDING:
+                if (room == null) break;
                 // 在manageMission中已检查Spawn建设完成
+                if (this.isSpawnExist(targetRoom)) {
+                    mission.currentPhase = MissionPhase.COMPLETED;
+                    mission.phaseStartTick = Game.time;
+                    needsUpdate = true;
+                    break;
+                }
+                console.log(room, '没有spawn工地，需要寻找位置新建');
+                const spawnSite = room.find(FIND_MY_CONSTRUCTION_SITES, {
+                    filter: site => site.structureType === STRUCTURE_SPAWN
+                });
+                if (spawnSite == null) {
+                    new SpawnPlaceHelper().placeSpawnConstructionSite(room);
+                }
                 break;
             case MissionPhase.COMPLETED:
                 break;

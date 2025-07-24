@@ -297,14 +297,13 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
     protected abstract findCanGetSource(): CanGetSource | null;
 
     protected onBeginWorkFlow() {
+        this.log('新工作流开始，清除source和work记忆');
         const memory = this.creep.memory;
         if (memory.lastSourceId) {
             memory.lastSourceId = undefined;
-            this.log('清除source记忆');
         }
         if (memory.lastWorkId) {
             memory.lastWorkId = undefined;
-            this.log('清除work记忆');
         }
     }
 

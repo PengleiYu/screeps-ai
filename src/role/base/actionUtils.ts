@@ -12,7 +12,7 @@ import {CanGetSource, CanPutSource, CanWork, isCanPutSource} from "../../types";
 export function actionOfGetSource(creep: Creep, source: CanGetSource | null): EnergyAction<CanGetSource> {
     if (source instanceof Source || source instanceof Mineral) return new HarvestAction(creep, source);
     if (source instanceof Resource) return new PickupAction(creep, source);
-    if (source instanceof Structure) return new WithdrawEnergyAction(creep, source);
+    if (source instanceof Structure || source instanceof Ruin || source instanceof Tombstone) return new WithdrawEnergyAction(creep, source);
     return EnergyAction.invalidInstance;
 }
 

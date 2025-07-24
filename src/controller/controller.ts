@@ -5,11 +5,12 @@ import {
     ROLE_HARVESTER_FAR,
     ROLE_MINER,
     ROLE_REPAIRER,
+    ROLE_SOLDER,
     ROLE_SPAWN_ASSISTANT,
     ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
-    ROLE_TOWER_TRANSFER,
     ROLE_SWEEP_2_STORAGE_TRANSFER,
-    ROLE_UPGRADER, ROLE_SOLDER
+    ROLE_TOWER_TRANSFER,
+    ROLE_UPGRADER
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/base/baseRoles";
 import {SpawnSupplierRole} from "../role/logistics/SpawnSupplierRole";
@@ -23,10 +24,11 @@ import {
     closestEnergyNotFullContainerNearController,
     closestHaveEnergyTower,
     closestHighPriorityConstructionSite,
+    closestHostileUnit,
     closestHurtStructure,
     closestMineral,
     closestNotFullStorage,
-    closestNotFullTower, closestHostileUnit
+    closestNotFullTower
 } from "../role/utils/findUtils";
 import {ContainerToStorageRole} from "../role/logistics/ContainerToStorageRole";
 import {SweepToStorageRole} from "../role/logistics/SweepToStorageRole";
@@ -34,7 +36,6 @@ import {StorageToContainerRole} from "../role/logistics/StorageToContainerRole";
 import {TowerTransferRole} from "../role/logistics/TowerTransferRole";
 import {BuilderRole} from "../role/core/BuilderRole";
 import {RepairerRole} from "../role/maintenance/RepairerRole";
-import {getRoomCenter, getRoomCenterWalkablePos} from "../utils/PositionUtils";
 import {TowerController} from "../army";
 import {LinkManager} from "../link/LinkManager";
 import {BodyConfigManager} from "../body/BodyConfigManager";
@@ -59,9 +60,9 @@ function harvesterRoleFactory(creep: Creep): StatefulRole<any, any> | null {
     if (!harHarvester.isJustBorn) return harHarvester;
 
     // 刚出生时设置移动目标
-    let mainSpawn = getRoomCenter(creep.room);
-    if (!mainSpawn) return null;
-    const sources = creep.room.find(FIND_SOURCES).sort(getClosestCmpFun(mainSpawn));
+    let controller = creep.room.controller;
+    if (!controller) return null;
+    const sources = creep.room.find(FIND_SOURCES).sort(getClosestCmpFun(controller));
     let source: Source;
     // todo 应该想办法把两个role合并
     switch (role) {
@@ -161,7 +162,8 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
 }
 
 function shouldSpawn(room: Room, config: SpawnConfig): boolean {
-    let pos = getRoomCenterWalkablePos(room);
+    let pos = room.controller?.pos;
+    if (pos == null) return false;
     switch (config.role) {
         case ROLE_SOLDER:
             return !!closestHostileUnit(pos);

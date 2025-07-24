@@ -148,7 +148,8 @@ export function closestHighPriorityConstructionSite(pos: RoomPosition): Construc
         })
     }
 
-    return findSiteByType(STRUCTURE_SPAWN)
+    return findSiteByType(STRUCTURE_TOWER) // 塔最高优
+        ?? findSiteByType(STRUCTURE_SPAWN)
         ?? findSiteByType(STRUCTURE_EXTENSION)
         ?? findSiteByType(STRUCTURE_CONTAINER)
         ?? findSiteByType(STRUCTURE_STORAGE)
@@ -167,4 +168,8 @@ export function closestHaveEnergyTower(pos: RoomPosition): StructureTower | null
             // todo 暂定tower有能量即可，后续再改
             it.structureType === STRUCTURE_TOWER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 0
     });
+}
+
+export function closestHostileUnit(pos: RoomPosition) {
+    return pos.findClosestByPath(FIND_HOSTILE_CREEPS);
 }

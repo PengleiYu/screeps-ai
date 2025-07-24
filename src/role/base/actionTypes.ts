@@ -165,3 +165,13 @@ export class RepairAction extends EnergyAction<Structure> {
         return this.target.hits < this.target.hitsMax;
     }
 }
+
+export class AttachAction extends EnergyAction<Creep | Structure> {
+    protected actionImpl(): ActionReturnCode {
+        return this.creep.attack(this.target);
+    }
+
+    isValid(): boolean {
+        return this.target != null;
+    }
+}

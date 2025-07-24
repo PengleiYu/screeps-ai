@@ -9,3 +9,4 @@ export const ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER = "storage2ControllerC
 export const ROLE_TOWER_TRANSFER = 'storage2TowerTransfer';
 export const ROLE_BUILDER = 'builder';
 export const ROLE_REPAIRER = 'repairer';
+export const ROLE_SOLDER = "solder";

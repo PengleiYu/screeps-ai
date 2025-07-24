@@ -20,7 +20,7 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON('package.json'),
         exec: {
             tsupBuild: {
-                command: 'tsup ./src/main.ts --out-dir ./dist',
+                command: 'tsup',
                 options: {
                     failOnError: true,  // 子进程失败时grunt也失败
                     callback: function(error, stdout, stderr) {

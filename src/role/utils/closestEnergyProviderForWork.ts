@@ -53,7 +53,7 @@ function getFindConstantGroups(): Map<FindConstant, EnergySearchConfig[]> {
     return _findConstantGroupsCache;
 }
 
-export function closestEnergyProviderForWork(pos: RoomPosition, minEnergy: number = 0): EnergyProviderForWork | null {
+export function closestEnergyProviderForWork(pos: RoomPosition, minEnergy: number = 1): EnergyProviderForWork | null {
     // 先在附近快速搜索
     const defaultRange = 15;
     const nearbyResult = searchInRange(pos, minEnergy, defaultRange);
@@ -122,14 +122,14 @@ function getEnergyAmount(provider: EnergyProviderForWork): number {
     return provider;
 }
 
-// 获取类型权重的辅助函数
+// 获取类型权重的辅助函数，存活时间短的优先
 function getTypeWeight(provider: EnergyProviderForWork): number {
-    if (provider instanceof StructureStorage) return 10; // 优先取Storage
-    if (provider instanceof StructureContainer) return 8; // Container其次
-    if (provider instanceof StructureLink) return 8;     // Link能量正常拿
-    if (provider instanceof Tombstone) return 6;         // Tombstone
-    if (provider instanceof Ruin) return 6;              // Ruin
-    if (provider instanceof Resource) return 4;          // Resource
+    if (provider instanceof Resource) return 10;          // Resource
+    if (provider instanceof Tombstone) return 8;         // Tombstone
+    if (provider instanceof Ruin) return 8;              // Ruin
+    if (provider instanceof StructureContainer) return 6; // Container其次
+    if (provider instanceof StructureLink) return 4;     // Link
+    if (provider instanceof StructureStorage) return 4; // Storage
     if (provider instanceof Source) return 2;            // Source； 挖矿最慢，放最后
 
     // 编译时检查：如果新增类型但未处理，这里会报错

@@ -20,6 +20,10 @@ function findCloseStructure(pos: RoomPosition, constantArr: StructureConstant[],
     });
 }
 
+/**
+ * @deprecated 请使用{@link closestEnergyProviderForWork}
+ * @param pos
+ */
 // 最近可获取能量的地方，除了孵化建筑
 export function closestSourceAndCanWithdrawNoSpawn(pos: RoomPosition): Source | CanWithdraw | null {
     const filter: CanWithdrawFilter = it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0;

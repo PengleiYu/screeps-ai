@@ -40,4 +40,6 @@ function lowFrequencyOperation() {
     }
 }
 
-console.log('新代码推送成功', Game.time);
+console.log('🚀 ===============================================');
+console.log('🎉 代码推送成功！时间:', Game.time);
+console.log('🚀 ===============================================');

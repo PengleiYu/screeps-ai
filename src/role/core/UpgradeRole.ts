@@ -1,6 +1,6 @@
 import {CanGetSource, CanPutSource, CanWork} from "../../types";
-import {closestSourceAndCanWithdrawNoSpawn} from "../utils/findUtils";
 import {EnergyRole} from "./EnergyRole";
+import {closestEnergyProviderForWork} from "../utils/closestEnergyProviderForWork";
 
 export class UpgradeRole extends EnergyRole {
     protected findCanWork(): CanWork | CanPutSource | null {
@@ -8,10 +8,6 @@ export class UpgradeRole extends EnergyRole {
     }
 
     protected findCanGetSource(): CanGetSource | null {
-        return closestSourceAndCanWithdrawNoSpawn(this.creep.pos);
-    }
-
-    protected isSourceMemoryEnable(): boolean {
-        return false;
+        return closestEnergyProviderForWork(this.creep.pos);
     }
 }

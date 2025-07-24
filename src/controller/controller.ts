@@ -7,7 +7,7 @@ import {
     ROLE_REPAIRER,
     ROLE_SPAWN_ASSISTANT,
     ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
-    ROLE_STORAGE_2_TOWER_TRANSFER,
+    ROLE_TOWER_TRANSFER,
     ROLE_SWEEP_2_STORAGE_TRANSFER,
     ROLE_UPGRADER
 } from "../constants";
@@ -18,8 +18,8 @@ import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
 import {
-    closestEnergyMineralStructure, closestEnergyNotEmptyStorableOutRangeController,
-    closestEnergyNotEmptyStorage,
+    closestEnergyMineralStructure,
+    closestEnergyNotEmptyStorableOutRangeController,
     closestEnergyNotFullContainerNearController,
     closestHaveEnergyTower,
     closestHighPriorityConstructionSite,
@@ -31,10 +31,10 @@ import {
 import {ContainerToStorageRole} from "../role/logistics/ContainerToStorageRole";
 import {SweepToStorageRole} from "../role/logistics/SweepToStorageRole";
 import {StorageToContainerRole} from "../role/logistics/StorageToContainerRole";
-import {StorageToTowerRole} from "../role/logistics/StorageToTowerRole";
+import {TowerTransferRole} from "../role/logistics/TowerTransferRole";
 import {BuilderRole} from "../role/core/BuilderRole";
 import {RepairerRole} from "../role/maintenance/RepairerRole";
-import {getRoomCenter} from "../utils/PositionUtils";
+import {getRoomCenter, getRoomCenterWalkablePos} from "../utils/PositionUtils";
 import {TowerController} from "../army";
 import {LinkManager} from "../link/LinkManager";
 import {BodyConfigManager} from "../body/BodyConfigManager";
@@ -91,8 +91,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
             return new SweepToStorageRole(creep);
         case ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER:
             return new StorageToContainerRole(creep);
-        case ROLE_STORAGE_2_TOWER_TRANSFER:
-            return new StorageToTowerRole(creep);
+        case ROLE_TOWER_TRANSFER:
+            return new TowerTransferRole(creep);
         case ROLE_HARVESTER:
         case ROLE_HARVESTER_FAR:
             return harvesterRoleFactory(creep);
@@ -133,11 +133,8 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
         if (expectCnt <= 0) continue;
-        let shouldSpawn1 = shouldSpawn(room, config);
-        if (!shouldSpawn1) {
-            // if (room.name === "W56S43") {
-            //     console.log(room.name, config.role, "expectCnt", expectCnt, "但未达到孵化条件");
-            // }
+        if (!shouldSpawn(room, config)) {
+            // console.log(room, config.role, '不满足孵化条件，跳过');
             continue;
         }
         console.log(room.name, spawn, config.role, '还差', expectCnt);
@@ -160,11 +157,11 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
 }
 
 function shouldSpawn(room: Room, config: SpawnConfig): boolean {
-    let pos = getRoomCenter(room);
+    let pos = getRoomCenterWalkablePos(room);
     switch (config.role) {
         case ROLE_MINER:
             return !!closestMineral(pos) && !!closestNotFullStorage(pos);
-        case ROLE_STORAGE_2_TOWER_TRANSFER:
+        case ROLE_TOWER_TRANSFER:
             return !!closestNotFullTower(pos);
         case ROLE_BUILDER:
             return !!closestHighPriorityConstructionSite(pos);
@@ -245,7 +242,7 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         maxCnt: 3,
     },
     {
-        role: ROLE_STORAGE_2_TOWER_TRANSFER,
+        role: ROLE_TOWER_TRANSFER,
         body: BODY_TRANSFER,
         maxCnt: 1,
     },

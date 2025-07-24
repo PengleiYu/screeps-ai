@@ -1,6 +1,6 @@
 import {CanGetSource, CanPutSource, CanWork} from "../../types";
 import {EnergyRole} from "./EnergyRole";
-import {closestHighPriorityConstructionSite, closestSourceAndCanWithdrawNoSpawn} from "../utils/findUtils";
+import {closestHighPriorityConstructionSite} from "../utils/findUtils";
 import {closestEnergyProviderForWork} from "../utils/closestEnergyProviderForWork";
 
 export class BuilderRole extends EnergyRole {

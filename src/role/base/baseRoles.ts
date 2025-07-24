@@ -248,18 +248,22 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         this.log('回忆source', memorySource);
         if (memorySource) {
             const result = this.canGetSource2Action(memorySource);
-            if (result.isValid()) {
-                this.log('回忆有效');
+            let valid = result.isValid();
+            this.log(result, '是否有效', valid)
+            if (valid) {
                 return result;
             }
+            this.log('清除source记忆');
+            this.setMemorySource(null);
         }
         const result = this.canGetSource2Action(this.findCanGetSource());
-        this.log('回忆无效，搜索到新source', result.target);
-        if (result.isValid()) {
-            this.log('记忆source');
-            this.setMemorySource(result.target);
-        } else {
-            this.log('新source也无效');
+        let valid = result.isValid();
+        this.log('搜索到新source', result, '是否有效', valid);
+        if (valid) {
+            if (this.state === CreepState.HARVEST_SOURCE) {
+                this.log('记忆source');
+                this.setMemorySource(result.target);
+            }
         }
         return result;
     }
@@ -272,18 +276,21 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         this.log('回忆work', memoryWork);
         if (memoryWork) {
             const result = this.canWork2Action(memoryWork);
-            if (result.isValid()) {
-                this.log('回忆有效');
+            let valid = result.isValid();
+            this.log(result, '是否有效', valid);
+            if (valid) {
                 return result;
+            } else {
+                this.log('清除工作记忆');
+                this.setMemoryWork(null);
             }
         }
         const result = this.canWork2Action(this.findCanWork());
-        this.log('回忆无效，搜索到新work', result.target);
-        if (this.state === CreepState.WORK && result.isValid()) {
+        let valid = result.isValid();
+        this.log('搜索到新work', result, '是否有效', valid);
+        if (valid && this.state === CreepState.WORK) {
             this.log('记忆work');
             this.setMemoryWork(result.target);
-        } else {
-            this.log('新work也无效');
         }
         return result;
     }
@@ -314,9 +321,9 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         return Game.getObjectById(lastSourceId as Id<CanWork>);
     }
 
-    protected setMemoryWork(work: CanWork | CanPutSource) {
+    protected setMemoryWork(work: CanWork | CanPutSource | null) {
         this.log('setMemoryWork', work, 'called');
-        this.creep.memory.lastWorkId = work.id as Id<CanWork | CanPutSource>;
+        this.creep.memory.lastWorkId = work?.id as Id<CanWork | CanPutSource>;
     }
 
     protected getMemorySource(): CanGetSource | null {
@@ -325,9 +332,9 @@ export abstract class MemoryRole extends StatefulRole<CanGetSource, CanPutSource
         return Game.getObjectById(lastSourceId);
     }
 
-    protected setMemorySource(source: CanGetSource) {
+    protected setMemorySource(source: CanGetSource | null) {
         this.log('setMemorySource', source, 'called');
-        this.creep.memory.lastSourceId = source.id;
+        this.creep.memory.lastSourceId = source?.id;
     }
 
     protected isWorkMemoryEnable(): boolean {

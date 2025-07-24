@@ -24,6 +24,6 @@
   "dependencies": {
     "@types/screeps": "^3.3.8",
     "@types/screeps-profiler": "^1.2.6",
-    "screeps-profiler": "^2.0.1"
+    "screeps-profiler": "github:screepers/screeps-profiler#v3.0.0"
   }
 }

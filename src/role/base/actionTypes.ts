@@ -8,8 +8,8 @@ export abstract class EnergyAction<T extends Positionable> extends CreepContext 
         super(creep);
     }
 
-    printSelf() {
-        console.log('creep', this.creep, 'target', this.target);
+    override toString(): string {
+        return `[${this.constructor.name}: ${this.creep.name} -> ${this.target}]`;
     }
 
     protected abstract actionImpl(): ActionReturnCode;

@@ -1,11 +1,12 @@
 import {EnergyRole} from "../core/EnergyRole";
 import {CanGetSource, CanPutSource, CanWork} from "../../types";
-import {closestHurtStructure, closestSourceAndCanWithdrawNoSpawn} from "../utils/findUtils";
+import {closestHurtStructure} from "../utils/findUtils";
 import {EnergyAction, RepairAction} from "../base/actionTypes";
+import {closestEnergyProviderForWork} from "../utils/closestEnergyProviderForWork";
 
 export class RepairerRole extends EnergyRole {
     protected findCanGetSource(): CanGetSource | null {
-        return closestSourceAndCanWithdrawNoSpawn(this.creep.pos);
+        return closestEnergyProviderForWork(this.creep.pos);
     }
 
     protected findCanWork(): CanWork | CanPutSource | null {

@@ -103,3 +103,53 @@ export function getDirectionName(direction: DirectionConstant): string | null {
 export function getRoomCenter(room: Room): RoomPosition {
     return new RoomPosition(25, 25, room.name);
 }
+
+export function getRoomCenterWalkablePos(room: Room): RoomPosition {
+    // 检查中央位置是否可用
+    const centerX = 25, centerY = 25;
+    if (isPositionWalkable(room, centerX, centerY)) {
+        return new RoomPosition(25, 25, room.name);
+    }
+
+    // 从中央位置开始螺旋搜索最近的可通行位置
+    for (let radius = 1; radius <= 24; radius++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+            for (let dy = -radius; dy <= radius; dy++) {
+                // 只检查当前半径边界上的位置（螺旋外圈）
+                if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue;
+
+                const x = centerX + dx;
+                const y = centerY + dy;
+
+                // 检查位置是否在房间范围内
+                if (x < 1 || x > 48 || y < 1 || y > 48) continue;
+
+                if (isPositionWalkable(room, x, y)) {
+                    return new RoomPosition(x, y, room.name);
+                }
+            }
+        }
+    }
+
+    // 如果找不到可用位置，返回中央位置作为后备
+    return new RoomPosition(centerX, centerY, room.name);
+}
+
+
+// 辅助函数：检查位置是否可通行
+function isPositionWalkable(room: Room, x: number, y: number): boolean {
+    // 检查地形是否可通行
+    const terrain = room.getTerrain().get(x, y);
+    if (terrain === TERRAIN_MASK_WALL) {
+        return false;
+    }
+
+    // 检查是否有阻挡的建筑物
+    const structures = room.lookForAt(LOOK_STRUCTURES, x, y);
+    const hasBlockingStructure = structures.some(structure =>
+        structure.structureType !== STRUCTURE_ROAD &&
+        structure.structureType !== STRUCTURE_CONTAINER &&
+        structure.structureType !== STRUCTURE_RAMPART
+    );
+    return !hasBlockingStructure;
+}

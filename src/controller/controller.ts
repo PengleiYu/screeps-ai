@@ -18,8 +18,8 @@ import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
 import {
-    closestEnergyMineralStructure, closestEnergyNotEmptyStorableOutRangeController,
-    closestEnergyNotEmptyStorage,
+    closestEnergyMineralStructure,
+    closestEnergyNotEmptyStorableOutRangeController,
     closestEnergyNotFullContainerNearController,
     closestHaveEnergyTower,
     closestHighPriorityConstructionSite,
@@ -34,7 +34,7 @@ import {StorageToContainerRole} from "../role/logistics/StorageToContainerRole";
 import {StorageToTowerRole} from "../role/logistics/StorageToTowerRole";
 import {BuilderRole} from "../role/core/BuilderRole";
 import {RepairerRole} from "../role/maintenance/RepairerRole";
-import {getRoomCenter} from "../utils/PositionUtils";
+import {getRoomCenter, getRoomCenterWalkablePos} from "../utils/PositionUtils";
 import {TowerController} from "../army";
 import {LinkManager} from "../link/LinkManager";
 import {BodyConfigManager} from "../body/BodyConfigManager";
@@ -133,11 +133,8 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
     for (const config of configs) {
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
         if (expectCnt <= 0) continue;
-        let shouldSpawn1 = shouldSpawn(room, config);
-        if (!shouldSpawn1) {
-            // if (room.name === "W56S43") {
-            //     console.log(room.name, config.role, "expectCnt", expectCnt, "但未达到孵化条件");
-            // }
+        if (!shouldSpawn(room, config)) {
+            // console.log(room, config.role, '不满足孵化条件，跳过');
             continue;
         }
         console.log(room.name, spawn, config.role, '还差', expectCnt);
@@ -160,7 +157,7 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
 }
 
 function shouldSpawn(room: Room, config: SpawnConfig): boolean {
-    let pos = getRoomCenter(room);
+    let pos = getRoomCenterWalkablePos(room);
     switch (config.role) {
         case ROLE_MINER:
             return !!closestMineral(pos) && !!closestNotFullStorage(pos);

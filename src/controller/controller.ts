@@ -9,7 +9,7 @@ import {
     ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
     ROLE_TOWER_TRANSFER,
     ROLE_SWEEP_2_STORAGE_TRANSFER,
-    ROLE_UPGRADER
+    ROLE_UPGRADER, ROLE_SOLDER
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/base/baseRoles";
 import {SpawnSupplierRole} from "../role/logistics/SpawnSupplierRole";
@@ -26,7 +26,7 @@ import {
     closestHurtStructure,
     closestMineral,
     closestNotFullStorage,
-    closestNotFullTower
+    closestNotFullTower, closestHostileUnit
 } from "../role/utils/findUtils";
 import {ContainerToStorageRole} from "../role/logistics/ContainerToStorageRole";
 import {SweepToStorageRole} from "../role/logistics/SweepToStorageRole";
@@ -38,6 +38,7 @@ import {getRoomCenter, getRoomCenterWalkablePos} from "../utils/PositionUtils";
 import {TowerController} from "../army";
 import {LinkManager} from "../link/LinkManager";
 import {BodyConfigManager} from "../body/BodyConfigManager";
+import {SolderRole} from "../role/core/SolderRole";
 import profiler from "screeps-profiler";
 
 export function runRoom(room: Room) {
@@ -82,6 +83,8 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
     switch (role) {
         case ROLE_SPAWN_ASSISTANT:
             return new SpawnSupplierRole(creep);
+        case ROLE_SOLDER:
+            return new SolderRole(creep);
         case ROLE_REPAIRER:
             return new RepairerRole(creep);
         case ROLE_BUILDER:
@@ -160,6 +163,8 @@ function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
 function shouldSpawn(room: Room, config: SpawnConfig): boolean {
     let pos = getRoomCenterWalkablePos(room);
     switch (config.role) {
+        case ROLE_SOLDER:
+            return !!closestHostileUnit(pos);
         case ROLE_MINER:
             return !!closestMineral(pos) && !!closestNotFullStorage(pos);
         case ROLE_TOWER_TRANSFER:
@@ -200,6 +205,11 @@ const SPAWN_CONFIGS: SpawnConfig[] = [
         role: ROLE_SPAWN_ASSISTANT,
         body: BODY_SMALL_WORKER,
         maxCnt: 2,
+    },
+    {
+        role: ROLE_SOLDER,
+        body: [TOUGH, TOUGH, TOUGH, MOVE, MOVE, ATTACK,],
+        maxCnt: 4,
     },
     // 孵化助手之后优先建造extension、container等
     {

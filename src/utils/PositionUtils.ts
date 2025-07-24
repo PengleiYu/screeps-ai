@@ -100,6 +100,10 @@ export function getDirectionName(direction: DirectionConstant): string | null {
     }
 }
 
+export function getRoomCenter(room: Room): RoomPosition {
+    return new RoomPosition(25, 25, room.name);
+}
+
 export function getRoomCenterWalkablePos(room: Room): RoomPosition {
     // 检查中央位置是否可用
     const centerX = 25, centerY = 25;

@@ -1,4 +1,5 @@
 import {EventBus} from "./eventBus";
+import {getRoomCenter} from "./utils/PositionUtils";
 
 export type Positionable = RoomPosition | { pos: RoomPosition };
 export var globalInfo = {
@@ -57,7 +58,7 @@ export function getClosestCmpFun<T extends RoomPosition | Positionable | null, E
 }
 
 export function findFlagPos(room: Room): RoomPosition | null {
-    const pos = room.controller?.pos ?? null;
+    const pos = getRoomCenter(room);
     return pos?.findClosestByRange(FIND_FLAGS, {
         filter: it => it.name === 'Parking'
     })?.pos ?? pos;

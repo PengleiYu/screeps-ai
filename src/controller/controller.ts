@@ -25,7 +25,7 @@ import {
     closestHighPriorityConstructionSite,
     closestHostileUnit,
     closestHurtStructure,
-    closestMineral,
+    closestMineral, closestNotEmptyTower,
     closestNotFullStorage,
     closestNotFullTower,
     getEnergyMineralContainerUsedCapacity,
@@ -189,7 +189,7 @@ function shouldSpawn(room: Room, config: SpawnConfig): boolean {
     let pos = getRoomCenterWalkablePos(room);
     switch (config.role) {
         case ROLE_SOLDER:
-            return !!closestHostileUnit(pos);
+            return !closestNotEmptyTower(pos) && !!closestHostileUnit(pos);
         case ROLE_MINER:
             return !!closestMineral(pos) && !!closestNotFullStorage(pos);
         case ROLE_TOWER_TRANSFER:

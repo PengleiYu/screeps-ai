@@ -169,6 +169,12 @@ export function closestNotFullTower(pos: RoomPosition): StructureTower | null {
     })
 }
 
+export function closestNotEmptyTower(pos: RoomPosition): StructureTower | null {
+    return pos.findClosestByPath(FIND_MY_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_TOWER && it.store.getUsedCapacity(RESOURCE_ENERGY) > 50
+    })
+}
+
 export function closestHighPriorityConstructionSite(pos: RoomPosition): ConstructionSite | null {
     function findSiteByType(structureType: StructureConstant): ConstructionSite | null {
         // pos可能在墙上，导致没有path，所以用range

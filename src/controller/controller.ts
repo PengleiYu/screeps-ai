@@ -40,8 +40,32 @@ import {LinkManager} from "../link/LinkManager";
 import {BodyConfigManager} from "../body/BodyConfigManager";
 import {SolderRole} from "../role/core/SolderRole";
 import profiler from "screeps-profiler";
+import {getRoomThreatLevel} from "../debugUtils";
+
+// 返回房间描述：是我的还是敌人（包括名字）还是中立，controller级别，房间名
+function getRoomDes(room: Room) {
+    const controller = room.controller;
+    const roomName = room.name;
+
+    if (!controller) {
+        return `${roomName}: 中立房间 (无控制器)`;
+    }
+
+    const level = controller.level;
+
+    if (controller.my) {
+        return `${roomName}: 我的房间 (等级${level})`;
+    } else if (controller.owner) {
+        return `${roomName}: 敌人房间 (${controller.owner.username}, 等级${level})`;
+    } else if (controller.reservation) {
+        return `${roomName}: 预定房间 (${controller.reservation.username}, 等级${level})`;
+    } else {
+        return `${roomName}: 中立房间 (等级${level})`;
+    }
+}
 
 export function runRoom(room: Room) {
+    console.log('运行', getRoomDes(room),);
     room.find(FIND_MY_CREEPS).forEach(runCreep);
 
     new TowerController(room).run();

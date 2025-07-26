@@ -22,6 +22,7 @@ export function loop() {
 }
 
 function loopImpl() {
+    console.log("========循环开始========")
     globalInfo.canSpawn = true;
     Object.values(Game.rooms).forEach(runRoom);
 

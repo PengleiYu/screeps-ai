@@ -150,8 +150,8 @@ function calculateEnergyProviderScore(pos: RoomPosition, minEnergy: number, prov
     }
     const typeWeight = getTypeWeight(provider);
     const energyScore = Math.min(energyAmount / 100, 10); // 压低能量分数：防止远距离的storage分数过大
-    const distancePenalty = provider.pos.getRangeTo(pos) * 2; // 距离惩罚：每格距离扣2分
+    const distancePenalty = Math.max(1, provider.pos.getRangeTo(pos)); // 距离惩罚：每格距离扣2分
 
     // 综合评分公式：类型权重 + 能量分数 - 距离惩罚
-    return typeWeight + energyScore - distancePenalty;
+    return typeWeight * energyScore / distancePenalty;
 }

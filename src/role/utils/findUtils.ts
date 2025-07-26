@@ -205,6 +205,12 @@ export function closestHaveEnergyTower(pos: RoomPosition): StructureTower | null
     });
 }
 
-export function closestHostileUnit(pos: RoomPosition) {
-    return pos.findClosestByPath(FIND_HOSTILE_CREEPS);
+function getHealBodyCnt(creep: Creep) {
+    return creep.body.filter(it => it.type === HEAL).length;
+}
+
+export function findHostileCreep(room: Room): Creep | null {
+    return room.find(FIND_HOSTILE_CREEPS)
+        .sort((a, b) => getHealBodyCnt(b) - getHealBodyCnt(a))
+        [0] ?? null;
 }

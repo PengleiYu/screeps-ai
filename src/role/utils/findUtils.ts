@@ -4,7 +4,6 @@ import {
     CanPutSource,
     CanWithdraw,
     STRUCTURE_HAVE_STORE_CONST,
-    STRUCTURE_HAVE_STORE_NO_SPAWN_CONST,
     StructureHaveStore,
     StructureWithSpawn
 } from "../../types";
@@ -86,6 +85,20 @@ export function closestEnergyMineralStructure(pos: RoomPosition): CanWithdraw | 
     return [...containers, ...links].sort(getClosestCmpFun(pos)) [0] ?? null;
 }
 
+export function getEnergyMineralContainerUsedCapacity(room: Room): number {
+    return room.find(FIND_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_CONTAINER
+    })
+        .filter(it => {
+            let nearSource = it.pos.findInRange(FIND_SOURCES, 3).length > 0;
+            if (nearSource) return true;
+            return it.pos.findInRange(FIND_MY_STRUCTURES, 3, {
+                filter: it => it.structureType === STRUCTURE_EXTRACTOR
+            }).length > 0;
+        })
+        .reduce((prev, curr) => prev + curr.store.getUsedCapacity(), 0);
+}
+
 // 最近的未满storage，包括任意种类资源
 export function closestNotFullStorage(pos: RoomPosition): StructureStorage | null {
     return pos.findClosestByPath(FIND_MY_STRUCTURES, {
@@ -127,6 +140,16 @@ export function closestRuinRemnantTomb(pos: RoomPosition): CanGetSource | null {
         .filter(it => !!it)
         .sort(getClosestCmpFun(pos))
         [0];
+}
+
+export function getRuinTombResourceCount(room: Room): number {
+    const resource = room.find(FIND_DROPPED_RESOURCES)
+        .reduce((prev, curr) => prev + curr.amount, 0);
+    const ruin = room.find(FIND_RUINS)
+        .reduce((prev, curr) => prev + curr.store.getUsedCapacity(), 0);
+    const tomb = room.find(FIND_TOMBSTONES,)
+        .reduce((prev, curr) => prev + curr.store.getUsedCapacity(), 0);
+    return resource + ruin + tomb;
 }
 
 // 最近的controller附近的能量未满的Container

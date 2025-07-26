@@ -151,5 +151,7 @@ function isPositionWalkable(room: Room, x: number, y: number): boolean {
         structure.structureType !== STRUCTURE_CONTAINER &&
         structure.structureType !== STRUCTURE_RAMPART
     );
-    return !hasBlockingStructure;
+    if (hasBlockingStructure) return false;
+
+    return !!room.lookForAt(LOOK_CREEPS, x, y)[0]
 }

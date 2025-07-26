@@ -5,11 +5,12 @@ import {
     ROLE_HARVESTER_FAR,
     ROLE_MINER,
     ROLE_REPAIRER,
+    ROLE_SOLDER,
     ROLE_SPAWN_ASSISTANT,
     ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER,
-    ROLE_TOWER_TRANSFER,
     ROLE_SWEEP_2_STORAGE_TRANSFER,
-    ROLE_UPGRADER, ROLE_SOLDER
+    ROLE_TOWER_TRANSFER,
+    ROLE_UPGRADER
 } from "../constants";
 import {CreepState, StatefulRole} from "../role/base/baseRoles";
 import {SpawnSupplierRole} from "../role/logistics/SpawnSupplierRole";
@@ -18,15 +19,17 @@ import {HarvestRole} from "../role/core/HarvestRole";
 import {UpgradeRole} from "../role/core/UpgradeRole";
 import {MinerRole} from "../role/core/MinerRole";
 import {
-    closestEnergyMineralStructure,
     closestEnergyNotEmptyStorableOutRangeController,
     closestEnergyNotFullContainerNearController,
     closestHaveEnergyTower,
     closestHighPriorityConstructionSite,
+    closestHostileUnit,
     closestHurtStructure,
     closestMineral,
     closestNotFullStorage,
-    closestNotFullTower, closestHostileUnit
+    closestNotFullTower,
+    getEnergyMineralContainerUsedCapacity,
+    getRuinTombResourceCount
 } from "../role/utils/findUtils";
 import {ContainerToStorageRole} from "../role/logistics/ContainerToStorageRole";
 import {SweepToStorageRole} from "../role/logistics/SweepToStorageRole";
@@ -40,7 +43,6 @@ import {LinkManager} from "../link/LinkManager";
 import {BodyConfigManager} from "../body/BodyConfigManager";
 import {SolderRole} from "../role/core/SolderRole";
 import profiler from "screeps-profiler";
-import {getRoomThreatLevel} from "../debugUtils";
 
 // 返回房间描述：是我的还是敌人（包括名字）还是中立，controller级别，房间名
 function getRoomDes(room: Room) {
@@ -149,22 +151,21 @@ function roleFactory(creep: Creep): StatefulRole<any, any> | null {
 }
 
 function spawnIfNeed(room: Room, configs: SpawnConfig[]) {
+    if (!(room.controller?.my ?? false)) return;
+    let spawn = getAvailableSpawn(room);
+    if (!spawn) return;
+
     let allCreeps = getAllCreeps(room);
     const map = allCreeps
         .map(it => it.memory.role)
         .reduce((map, key) =>
                 key ? map.set(key, (map.get(key) || 0) + 1) : map,
             new Map<string, number>());
-    let spawn = getAvailableSpawn(room);
-    if (!spawn) return;
 
     for (const config of configs) {
+        if (!shouldSpawn(room, config)) continue;
         const expectCnt = config.maxCnt - (map.get(config.role) || 0);
         if (expectCnt <= 0) continue;
-        if (!shouldSpawn(room, config)) {
-            // console.log(room, config.role, '不满足孵化条件，跳过');
-            continue;
-        }
         console.log(room.name, spawn, config.role, '还差', expectCnt);
         // 动态生成body配置
         const dynamicBody = BodyConfigManager.getOptimalBody(config.role, config.body, room);
@@ -198,13 +199,25 @@ function shouldSpawn(room: Room, config: SpawnConfig): boolean {
         case ROLE_REPAIRER:
             return !closestHaveEnergyTower(pos) && !!closestHurtStructure(pos);
         case ROLE_CONTAINER_2_STORAGE_TRANSFER:
-            return !!room.controller && !!closestEnergyMineralStructure(pos) && !!closestNotFullStorage(pos);
+            // todo 待简化
+            let storeExist = !!closestNotFullStorage(pos);
+            if (!storeExist) return false;
+            let capacity = getEnergyMineralContainerUsedCapacity(room);
+            let cnt = Math.min(5, Math.ceil(capacity / 2000));
+            config.maxCnt = cnt;
+            return cnt > 0;
         case ROLE_STORAGE_2_CONTROLLER_CONTAINER_TRANSFER:
             return !!closestEnergyNotFullContainerNearController(pos) && !!closestEnergyNotEmptyStorableOutRangeController(pos);
         case ROLE_HARVESTER_FAR:
             return room.find(FIND_SOURCES).length > 1;
         case ROLE_SWEEP_2_STORAGE_TRANSFER:
-            return !!closestNotFullStorage(pos);
+            // todo 待简化
+            let storageExist = closestNotFullStorage(pos);
+            if (!storageExist) return false;
+            let ruinTombResourceCount = getRuinTombResourceCount(room);
+            let count = Math.min(4, Math.ceil(ruinTombResourceCount / 450));
+            config.maxCnt = count;
+            return count > 0;
     }
     return true;
 }

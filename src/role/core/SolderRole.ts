@@ -1,7 +1,7 @@
 import {StatefulRole} from "../base/baseRoles";
 import {AttachAction, EnergyAction} from "../base/actionTypes";
 import {CanPutSource} from "../../types";
-import {closestHostileUnit} from "../utils/findUtils";
+import {findHostileCreep} from "../utils/findUtils";
 
 // TODO 需要重构
 export class SolderRole extends StatefulRole<any, Creep | Structure> {
@@ -14,8 +14,7 @@ export class SolderRole extends StatefulRole<any, Creep | Structure> {
     }
 
     protected findWorkTarget(): EnergyAction<Creep | Structure> {
-        let pos = this.creep.pos;
-        let hostileCreep = closestHostileUnit(pos);
+        let hostileCreep = findHostileCreep(this.creep.room);
         if (hostileCreep != null) return new AttachAction(this.creep, hostileCreep);
         return EnergyAction.invalidInstance;
     }

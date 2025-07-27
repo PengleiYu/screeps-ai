@@ -59,8 +59,8 @@ export function getClosestCmpFun<T extends RoomPosition | Positionable | null, E
 
 export function findFlagPos(room: Room): RoomPosition | null {
     const pos = getRoomCenter(room);
-    return pos?.findClosestByRange(FIND_FLAGS, {
-        filter: it => it.name === 'Parking'
+    return pos.findClosestByRange(FIND_FLAGS, {
+        filter: it => it.name.toLowerCase().startsWith('parking')
     })?.pos ?? pos;
 }
 

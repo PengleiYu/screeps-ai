@@ -7,6 +7,8 @@ import {ExpeditionState, MissionPhase, ExpeditionMissionData} from "./expedition
 import {debugInvaderIssue} from "./debugUtils";
 
 declare global {
+    import ParkingData = MemorySpace.ParkingData;
+
     interface CreepMemory {
         role?: string,
         working?: boolean;
@@ -43,6 +45,7 @@ declare global {
     interface Memory {
         expeditions?: { [targetRoom: string]: ExpeditionMissionData };
         expeditionPathCache?: { [cacheKey: string]: ExpeditionPath };
+        parkingData?: ParkingData
     }
 
     const global: typeof globalThis & {

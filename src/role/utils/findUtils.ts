@@ -122,7 +122,7 @@ export function closestEnergyNotEmptyStorableOutRangeController(pos: RoomPositio
         filter: it =>
             (it.structureType === STRUCTURE_STORAGE || it.structureType === STRUCTURE_CONTAINER)
     }).filter(it => it.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
-        .filter(it => it.pos.getRangeTo(controller) > 3)
+        .filter(it => it.pos.getRangeTo(controller) > 4)
         .sort(getClosestCmpFun(pos))
         [0];
 }

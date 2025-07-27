@@ -57,6 +57,12 @@ export function getClosestCmpFun<T extends RoomPosition | Positionable | null, E
     };
 }
 
+/**
+ * Returns the position of the closest flag in the room whose name starts with "parking" (case-insensitive), or the room center if none are found.
+ *
+ * @param room - The room in which to search for the flag
+ * @returns The position of the closest matching flag, or the room center position if no such flag exists
+ */
 export function findFlagPos(room: Room): RoomPosition | null {
     const pos = getRoomCenter(room);
     return pos.findClosestByRange(FIND_FLAGS, {

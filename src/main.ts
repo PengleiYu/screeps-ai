@@ -22,6 +22,9 @@ export function loop() {
     profiler.wrap(loopImpl);
 }
 
+/**
+ * Executes the main logic for each game tick, including room management, expedition control, periodic maintenance, parking memory updates, and event emission.
+ */
 function loopImpl() {
     console.log("========循环开始========")
     globalInfo.canSpawn = true;

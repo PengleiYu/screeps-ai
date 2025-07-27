@@ -1,4 +1,4 @@
-import {closestHurtStructure} from "./role/utils/findUtils";
+import {closestHurtStructure, findHostileCreep} from "./role/utils/findUtils";
 import {getRoomCenter} from "./utils/PositionUtils";
 
 export class TowerController {
@@ -6,7 +6,7 @@ export class TowerController {
     }
 
     run() {
-        const hostileCreep = this.room.find(FIND_HOSTILE_CREEPS)[0];
+        const hostileCreep = findHostileCreep(this.room);
         const towerArr = this.room.find(FIND_MY_STRUCTURES, {
             filter: it => it.structureType === STRUCTURE_TOWER
         });

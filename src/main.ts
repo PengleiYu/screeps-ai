@@ -6,6 +6,7 @@ import {ExpeditionPathManager} from "./expedition/core/ExpeditionPathManager";
 import {BodyConfigManager} from "./body/BodyConfigManager";
 import {debugInvaderIssue} from "./debugUtils";
 import profiler from "screeps-profiler";
+import {ParkingMemory} from "./memory/ParkingMemory";
 
 
 global.LinkManager = LinkManager;
@@ -32,6 +33,8 @@ function loopImpl() {
     if (Game.time % 20 === 0) {
         lowFrequencyOperation();
     }
+
+    ParkingMemory.onLoop();
 
     loopEventBus.emit(EVENT_LOOP_END);
 }

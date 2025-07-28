@@ -86,7 +86,7 @@ export function closestEnergyMineralStructure(pos: RoomPosition): CanWithdraw | 
 }
 
 export function getEnergyMineralContainerUsedCapacity(room: Room): number {
-    return room.find(FIND_STRUCTURES, {
+    let containers = room.find(FIND_STRUCTURES, {
         filter: it => it.structureType === STRUCTURE_CONTAINER
     })
         .filter(it => {
@@ -96,7 +96,17 @@ export function getEnergyMineralContainerUsedCapacity(room: Room): number {
                 filter: it => it.structureType === STRUCTURE_EXTRACTOR
             }).length > 0;
         })
-        .reduce((prev, curr) => prev + curr.store.getUsedCapacity(), 0);
+        .map(it => it.store.getUsedCapacity());
+    let links = room.find(FIND_MY_STRUCTURES, {
+        filter: it => it.structureType === STRUCTURE_LINK
+    })
+        .filter(it => it.pos.findInRange(FIND_MY_STRUCTURES, 3, {
+            filter: it => it.structureType === STRUCTURE_STORAGE
+        }).length > 0)
+        .map(it => it.store.getUsedCapacity(RESOURCE_ENERGY));
+
+    return [...containers, ...links]
+        .reduce((prev, curr) => prev + curr, 0);
 }
 
 // 最近的未满storage，包括任意种类资源

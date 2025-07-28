@@ -219,6 +219,17 @@ function shouldSpawn(room: Room, config: SpawnConfig): boolean {
             let count = Math.min(4, Math.ceil(ruinTombResourceCount / 450));
             config.maxCnt = count;
             return count > 0;
+        case ROLE_UPGRADER: {
+            let storage = room.find(FIND_MY_STRUCTURES, {
+                filter: it => it.structureType === STRUCTURE_STORAGE
+            })[0];
+            if (storage != null) {
+                let store = storage.store;
+                config.maxCnt = store.getUsedCapacity(RESOURCE_ENERGY) / store.getCapacity(RESOURCE_ENERGY) > 0.5
+                    ? 3 : 1;
+            }
+            return true;
+        }
     }
     return true;
 }

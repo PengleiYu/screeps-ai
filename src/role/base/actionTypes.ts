@@ -3,6 +3,7 @@ import {ActionReturnCode, CanHarvest, CanPickup, CanPutSource, CanWithdraw} from
 import {CreepContext} from "./creepWrapper";
 import {getStoreResourceTypes} from "../../typeUtils";
 
+
 export abstract class EnergyAction<T extends Positionable> extends CreepContext {
     public constructor(creep: Creep, public target: T) {
         super(creep);
@@ -153,6 +154,16 @@ export class MoveAction extends EnergyAction<Positionable> {
 
     isValid(): boolean {
         return !this.creep.pos.isNearTo(this.target);
+    }
+}
+
+export class ApproachAction extends EnergyAction<RoomPosition> {
+    protected actionImpl(): ActionReturnCode {
+        return this.visualizeMoveTo(this.target);
+    }
+
+    isValid(): boolean {
+        return !this.creep.pos.inRangeTo(this.target, 2);
     }
 }
 

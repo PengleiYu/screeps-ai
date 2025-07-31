@@ -1,6 +1,6 @@
 import {EVENT_LOOP_END, loopEventBus, Positionable} from "../../utils";
 import {CanGetSource, CanPutSource, CanWork, MyPosition} from "../../types";
-import {EnergyAction, MoveAction} from "./actionTypes";
+import {ApproachAction, EnergyAction, MoveAction} from "./actionTypes";
 import {CreepContext} from "./creepWrapper";
 import profiler from "screeps-profiler";
 import {ParkingMemory} from "../../memory/ParkingMemory";
@@ -162,7 +162,7 @@ export abstract class StatefulRole<S extends Positionable, W extends Positionabl
         this.log('doApproachTarget', target);
         if (target) {
             this.log('正在接近目标', target);
-            const action = new MoveAction(this.creep, target);
+            const action = new ApproachAction(this.creep, target);
             if (action.isValid()) {
                 action.action();
                 return;
